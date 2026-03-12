@@ -39,24 +39,22 @@ android {
         jvmTarget = "11"
     }
 
-    // ACTIVAR VIEWBINDING
     buildFeatures {
         viewBinding = true
     }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
 
-    // ROOM DATABASE
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    // ROOM DATABASE 2.7.0-beta
+    implementation("androidx.room:room-runtime:2.7.0-beta01")
+    implementation("androidx.room:room-ktx:2.7.0-beta01")
+    kapt("androidx.room:room-compiler:2.7.0-beta01")
 
-    // LIFECYCLE (ViewModel + LiveData + StateFlow)
+    // LIFECYCLE
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
