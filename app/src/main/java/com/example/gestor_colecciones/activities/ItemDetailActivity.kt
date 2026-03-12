@@ -2,7 +2,6 @@ package com.example.gestor_colecciones.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.databinding.ActivityItemDetailBinding
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.entities.Item

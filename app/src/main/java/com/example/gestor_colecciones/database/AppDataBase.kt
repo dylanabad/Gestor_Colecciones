@@ -3,7 +3,6 @@ package com.example.gestor_colecciones.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-
 import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.entities.Categoria
 import com.example.gestor_colecciones.entities.Persona

@@ -13,15 +13,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
 import com.example.gestor_colecciones.adapters.ItemAdapter
-import com.example.gestor_colecciones.entities.Categoria
-import com.example.gestor_colecciones.entities.Coleccion
-import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.Date
 
 class ItemListFragment : Fragment() {
 
