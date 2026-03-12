@@ -13,11 +13,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
 import com.example.gestor_colecciones.adapters.ItemAdapter
+import com.example.gestor_colecciones.entities.Categoria
+import com.example.gestor_colecciones.entities.Coleccion
+import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.Date
 
 class ItemListFragment : Fragment() {
 
@@ -50,6 +54,65 @@ class ItemListFragment : Fragment() {
             this,
             ItemViewModelFactory(repo)
         )[ItemViewModel::class.java]
+
+        // Insertar datos de prueba solo si la base de datos está vacía
+        lifecycleScope.launch {
+            // Comprobar si ya hay ítems en la base de datos
+            val itemCount = db.itemDao().getTotalItems()
+            if (itemCount == 0) {
+                // 1. Categorías
+                val cat1Id = db.categoriaDao().insert(Categoria(nombre = "Monedas")).toInt()
+                val cat2Id = db.categoriaDao().insert(Categoria(nombre = "Sellos")).toInt()
+                val cat3Id = db.categoriaDao().insert(Categoria(nombre = "Figuras")).toInt()
+
+                // 2. Colecciones
+                val col1Id = db.coleccionDao().insert(
+                    Coleccion(nombre = "Colección principal", descripcion = "Mi colección favorita", fechaCreacion = Date())
+                ).toInt()
+                val col2Id = db.coleccionDao().insert(
+                    Coleccion(nombre = "Colección secundaria", descripcion = null, fechaCreacion = Date())
+                ).toInt()
+
+                // 3. Items
+                val sampleItems = listOf(
+                    Item(
+                        titulo = "Moneda antigua",
+                        categoriaId = cat1Id,
+                        collectionId = col1Id,
+                        fechaAdquisicion = Date(),
+                        valor = 12.5,
+                        estado = "Bueno",
+                        calificacion = 4.5f,
+                        imagenPath = null,
+                        descripcion = "Moneda de colección"
+                    ),
+                    Item(
+                        titulo = "Sello raro",
+                        categoriaId = cat2Id,
+                        collectionId = col1Id,
+                        fechaAdquisicion = Date(),
+                        valor = 5.0,
+                        estado = "Excelente",
+                        calificacion = 5.0f,
+                        imagenPath = null,
+                        descripcion = "Sello histórico"
+                    ),
+                    Item(
+                        titulo = "Figura de acción",
+                        categoriaId = cat3Id,
+                        collectionId = col2Id,
+                        fechaAdquisicion = Date(),
+                        valor = 25.0,
+                        estado = "Nuevo",
+                        calificacion = 4.0f,
+                        imagenPath = null,
+                        descripcion = "Figura de edición limitada"
+                    )
+                )
+
+                sampleItems.forEach { db.itemDao().insert(it) }
+            }
+        }
 
         // Observar lista de ítems
         lifecycleScope.launch {
