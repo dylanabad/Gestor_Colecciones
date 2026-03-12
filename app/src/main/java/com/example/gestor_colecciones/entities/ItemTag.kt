@@ -1,13 +1,12 @@
 package com.example.gestor_colecciones.entities
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
-import java.util.Date
 
 @Entity(
-    tableName = "Movimiento",
+    tableName = "item_tags",
+    primaryKeys = ["itemId", "tagId"],
     foreignKeys = [
         ForeignKey(
             entity = Item::class,
@@ -16,24 +15,17 @@ import java.util.Date
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = Persona::class,
+            entity = Tag::class,
             parentColumns = ["id"],
-            childColumns = ["personaId"],
-            onDelete = ForeignKey.SET_NULL
+            childColumns = ["tagId"],
+            onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("itemId"), Index("personaId")]
+    indices = [Index("itemId"), Index("tagId")]
 )
-data class Movimiento(
-
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+data class ItemTag(
 
     val itemId: Int,
 
-    val tipo: String,
-
-    val personaId: Int?,
-
-    val fechaHora: Date
+    val tagId: Int
 )
