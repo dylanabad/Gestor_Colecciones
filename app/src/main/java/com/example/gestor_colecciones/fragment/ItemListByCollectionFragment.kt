@@ -1,8 +1,6 @@
 package com.example.gestor_colecciones.fragment
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,23 +11,26 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
 import com.example.gestor_colecciones.adapters.ItemAdapter
-import com.example.gestor_colecciones.entities.Categoria
-import com.example.gestor_colecciones.entities.Coleccion
-import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.Date
 
-class ItemListFragment : Fragment() {
+class ItemListByCollectionFragment : Fragment() {
 
+    private var collectionId: Int = 0
     private var _binding: FragmentItemListBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var viewModel: ItemViewModel
     private lateinit var adapter: ItemAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Recoger el ID de la colección pasado en argumentos
+        collectionId = arguments?.getInt(ARG_COLLECTION_ID) ?: 0
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,11 +43,6 @@ class ItemListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Configurar RecyclerView
-        adapter = ItemAdapter(emptyList())
-        binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvItems.adapter = adapter
-
         // Configurar ViewModel
         val db = DatabaseProvider.getDatabase(requireContext())
         val repo = ItemRepository(db.itemDao())
@@ -55,31 +51,33 @@ class ItemListFragment : Fragment() {
             ItemViewModelFactory(repo)
         )[ItemViewModel::class.java]
 
-        // Observar lista de ítems
+        // Configurar RecyclerView
+        adapter = ItemAdapter(emptyList())
+        binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvItems.adapter = adapter
+
+        // Observar los items de la colección
         lifecycleScope.launch {
-            viewModel.items.collectLatest { items ->
+            viewModel.getItemsByCollection(collectionId).collectLatest { items ->
                 adapter.updateList(items)
             }
         }
-
-        // Configurar búsqueda por título
-        binding.etSearch.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                val query = s.toString()
-                lifecycleScope.launch {
-                    viewModel.searchItems(query).collectLatest { items ->
-                        adapter.updateList(items)
-                    }
-                }
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        private const val ARG_COLLECTION_ID = "collection_id"
+
+        fun newInstance(collectionId: Int): ItemListByCollectionFragment {
+            val fragment = ItemListByCollectionFragment()
+            fragment.arguments = Bundle().apply {
+                putInt(ARG_COLLECTION_ID, collectionId)
+            }
+            return fragment
+        }
     }
 }
