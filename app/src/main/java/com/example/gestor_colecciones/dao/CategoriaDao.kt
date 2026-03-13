@@ -18,4 +18,8 @@ interface CategoriaDao {
 
     @Query("SELECT * FROM Categoria ORDER BY nombre ASC")
     fun getAllCategorias(): Flow<List<Categoria>>
-}
+
+
+    @Query("SELECT * FROM Categoria")
+    suspend fun getAllCategoriasOnce(): List<Categoria>
+    }

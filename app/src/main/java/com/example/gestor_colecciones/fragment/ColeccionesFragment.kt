@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -31,6 +32,7 @@ class ColeccionesFragment : Fragment() {
 
     private lateinit var viewModel: ColeccionViewModel
     private lateinit var adapter: ColeccionAdapter
+    private var listaCompleta: List<Coleccion> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -61,28 +63,28 @@ class ColeccionesFragment : Fragment() {
         binding.rvColecciones.layoutManager = LinearLayoutManager(requireContext())
         binding.rvColecciones.adapter = adapter
 
-        // Swipe para eliminar
-        val swipeHandler = object : ItemTouchHelper.SimpleCallback(
-            0,
-            ItemTouchHelper.LEFT
-        ) {
-
+        // Swipe para eliminar con animación
+        val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder
-            ): Boolean {
-                return false
-            }
+            ): Boolean = false
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-
                 val position = viewHolder.adapterPosition
                 val coleccion = adapter.getItem(position)
 
-                lifecycleScope.launch {
-                    viewModel.delete(coleccion)
-                }
+                // Animación fade out
+                viewHolder.itemView.animate()
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction {
+                        lifecycleScope.launch {
+                            viewModel.delete(coleccion)
+                        }
+                    }
+                    .start()
             }
         }
 
@@ -91,14 +93,12 @@ class ColeccionesFragment : Fragment() {
 
         // ViewModel
         val repo = ColeccionRepository(DatabaseProvider.getColeccionDao(requireContext()))
-        viewModel = ViewModelProvider(
-            this,
-            ColeccionViewModelFactory(repo)
-        )[ColeccionViewModel::class.java]
+        viewModel = ViewModelProvider(this, ColeccionViewModelFactory(repo))[ColeccionViewModel::class.java]
 
         // Observar colecciones
         lifecycleScope.launch {
             viewModel.colecciones.collectLatest { lista ->
+                listaCompleta = lista
                 adapter.updateList(lista)
             }
         }
@@ -107,13 +107,24 @@ class ColeccionesFragment : Fragment() {
         binding.fabAddColeccion.setOnClickListener {
             showCreateCollectionDialog()
         }
+
+        // SearchView
+        binding.searchColecciones.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                val texto = newText ?: ""
+                val filtradas = listaCompleta.filter {
+                    it.nombre.lowercase().contains(texto.lowercase())
+                }
+                adapter.updateList(filtradas)
+                return true
+            }
+        })
     }
 
     private fun showCreateCollectionDialog() {
-
-        val view = LayoutInflater.from(requireContext())
-            .inflate(R.layout.dialog_create_collection, null)
-
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_collection, null)
         val etNombre = view.findViewById<EditText>(R.id.etNombre)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
 
@@ -121,18 +132,15 @@ class ColeccionesFragment : Fragment() {
             .setTitle("Nueva colección")
             .setView(view)
             .setPositiveButton("Crear") { _, _ ->
-
                 val nombre = etNombre.text.toString()
                 val descripcion = etDescripcion.text.toString()
-
                 if (nombre.isNotEmpty()) {
-
                     val coleccion = Coleccion(
+                        id = 0, // Room autogenerará
                         nombre = nombre,
                         descripcion = descripcion,
                         fechaCreacion = Date()
                     )
-
                     lifecycleScope.launch {
                         viewModel.insert(coleccion)
                     }
@@ -143,10 +151,7 @@ class ColeccionesFragment : Fragment() {
     }
 
     private fun showEditCollectionDialog(coleccion: Coleccion) {
-
-        val view = LayoutInflater.from(requireContext())
-            .inflate(R.layout.dialog_create_collection, null)
-
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_collection, null)
         val etNombre = view.findViewById<EditText>(R.id.etNombre)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
 
@@ -157,12 +162,10 @@ class ColeccionesFragment : Fragment() {
             .setTitle("Editar colección")
             .setView(view)
             .setPositiveButton("Guardar") { _, _ ->
-
                 val actualizado = coleccion.copy(
                     nombre = etNombre.text.toString(),
                     descripcion = etDescripcion.text.toString()
                 )
-
                 lifecycleScope.launch {
                     viewModel.update(actualizado)
                 }

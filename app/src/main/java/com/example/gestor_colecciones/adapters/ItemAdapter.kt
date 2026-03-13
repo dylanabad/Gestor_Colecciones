@@ -8,21 +8,32 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.entities.Item
 
-class ItemAdapter(private var items: List<Item>) :
-    RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
+class ItemAdapter(
+    var items: List<Item>, // <- Cambiado a var para que sea accesible desde el fragment
+    private val onItemClick: ((Item) -> Unit)? = null, // Click normal
+    private val onItemLongClick: ((Item) -> Unit)? = null // Click largo
+) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
-    class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    inner class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val title: TextView = view.findViewById(R.id.tv_item_title)
         val value: TextView = view.findViewById(R.id.tv_item_value)
+
+        init {
+            view.setOnClickListener {
+                onItemClick?.invoke(items[adapterPosition])
+            }
+            view.setOnLongClickListener {
+                onItemLongClick?.invoke(items[adapterPosition])
+                true
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-        val view =
-            LayoutInflater.from(parent.context).inflate(R.layout.item_row, parent, false)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_row, parent, false)
         return ItemViewHolder(view)
     }
-
-    override fun getItemCount() = items.size
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
         val item = items[position]
@@ -30,8 +41,12 @@ class ItemAdapter(private var items: List<Item>) :
         holder.value.text = "Valor: ${item.valor} €"
     }
 
+    override fun getItemCount() = items.size
+
     fun updateList(newItems: List<Item>) {
         items = newItems
         notifyDataSetChanged()
     }
+
+    fun getItem(position: Int): Item = items[position] // Útil para swipes o ediciones
 }

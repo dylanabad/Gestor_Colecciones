@@ -1,11 +1,10 @@
 package com.example.gestor_colecciones.fragment
 
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -38,12 +37,12 @@ class ItemListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Configurar RecyclerView
+        // RecyclerView
         adapter = ItemAdapter(emptyList())
         binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
         binding.rvItems.adapter = adapter
 
-        // Configurar ViewModel
+        // ViewModel
         val db = DatabaseProvider.getDatabase(requireContext())
         val repo = ItemRepository(db.itemDao())
         viewModel = ViewModelProvider(
@@ -58,19 +57,27 @@ class ItemListFragment : Fragment() {
             }
         }
 
-        // Configurar búsqueda por título
-        binding.etSearch.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                val query = s.toString()
+        // Configurar búsqueda usando SearchView
+        binding.searchItems.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                // Cuando el usuario presiona "Enter"
+                query?.let { search(it) }
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                // Cada vez que cambia el texto
+                newText?.let { search(it) }
+                return true
+            }
+
+            private fun search(query: String) {
                 lifecycleScope.launch {
                     viewModel.searchItems(query).collectLatest { items ->
                         adapter.updateList(items)
                     }
                 }
             }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
     }
 
