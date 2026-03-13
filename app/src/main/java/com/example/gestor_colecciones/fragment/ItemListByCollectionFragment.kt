@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ItemAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
@@ -22,7 +23,6 @@ import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
 import kotlinx.coroutines.launch
 import java.util.Date
-import com.example.gestor_colecciones.R
 
 class ItemListByCollectionFragment : Fragment() {
 
@@ -50,13 +50,24 @@ class ItemListByCollectionFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Inicializar ViewModel
         val repo = ItemRepository(DatabaseProvider.getDatabase(requireContext()).itemDao())
         viewModel = ViewModelProvider(this, ItemViewModelFactory(repo))[ItemViewModel::class.java]
 
+        // Mostrar nombre de la colección
+        lifecycleScope.launch {
+            val collection = DatabaseProvider.getDatabase(requireContext()).coleccionDao()
+                .getColeccionById(collectionId)
+            collection?.let {
+                binding.tvCollectionName.text = it.nombre
+                binding.tvCollectionName.visibility = View.VISIBLE
+            }
+        }
+
+        // Configurar adapter
         adapter = ItemAdapter(
             fullItemList,
             onItemClick = { item ->
-                // Abrir ItemDetailFragment
                 val fragment = ItemDetailFragment.newInstance(item.id)
                 parentFragmentManager.beginTransaction()
                     .replace(R.id.fragment_container, fragment)
@@ -71,7 +82,7 @@ class ItemListByCollectionFragment : Fragment() {
         binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
         binding.rvItems.adapter = adapter
 
-        // Swipe para borrar
+        // Swipe para borrar items
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             override fun onMove(
                 recyclerView: androidx.recyclerview.widget.RecyclerView,
@@ -96,6 +107,7 @@ class ItemListByCollectionFragment : Fragment() {
             }
         }
 
+        // Crear nuevo item
         binding.fabAddItem.setOnClickListener { showCreateItemDialog() }
 
         // Búsqueda
@@ -111,13 +123,13 @@ class ItemListByCollectionFragment : Fragment() {
 
     private fun showCreateItemDialog() {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_item, null)
-
         val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
         val etValor = view.findViewById<EditText>(R.id.etValor)
 
         val spinnerCategoria = Spinner(requireContext())
         val categoriaRepo = CategoriaRepository(DatabaseProvider.getDatabase(requireContext()).categoriaDao())
 
+        // Cargar categorías en spinner
         suspend fun loadCategorias() {
             val categorias = categoriaRepo.allCategoriasOnce()
             val nombres = if (categorias.isNotEmpty()) categorias.map { it.nombre } else listOf("Sin categoría")
@@ -125,7 +137,6 @@ class ItemListByCollectionFragment : Fragment() {
             adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spinnerCategoria.adapter = adapterSpinner
         }
-
         lifecycleScope.launch { loadCategorias() }
 
         (view as LinearLayout).addView(spinnerCategoria, 1)
@@ -154,8 +165,8 @@ class ItemListByCollectionFragment : Fragment() {
                             descripcion = null,
                             calificacion = 0f
                         )
-                        // Usar callback para obtener el id si lo necesitas
-                        viewModel.insert(item) { /* id del item insertado, si quieres usarlo */ }
+                        // Pasamos un callback vacío para cumplir el parámetro obligatorio
+                        viewModel.insert(item) {}
                     }
                 }
             }
