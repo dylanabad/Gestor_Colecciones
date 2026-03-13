@@ -5,10 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.Spinner
+import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -17,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestor_colecciones.adapters.ItemAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
+import com.example.gestor_colecciones.entities.Categoria
 import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemRepository
@@ -52,16 +50,14 @@ class ItemListByCollectionFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Adapter
         adapter = ItemAdapter(emptyList(),
-            onItemClick = { /* Detalle del item */ },
+            onItemClick = { /* abrir detalle */ },
             onItemLongClick = { item -> showEditItemDialog(item) }
         )
 
         binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
         binding.rvItems.adapter = adapter
 
-        // Swipe para eliminar
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             override fun onMove(
                 recyclerView: androidx.recyclerview.widget.RecyclerView,
@@ -70,24 +66,16 @@ class ItemListByCollectionFragment : Fragment() {
             ): Boolean = false
 
             override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {
-                val position = viewHolder.adapterPosition
-                val item = adapter.getItem(position)
-                viewHolder.itemView.animate()
-                    .alpha(0f)
-                    .setDuration(300)
-                    .withEndAction {
-                        lifecycleScope.launch { viewModel.delete(item) }
-                    }.start()
+                val item = adapter.getItem(viewHolder.adapterPosition)
+                viewHolder.itemView.animate().alpha(0f).setDuration(300).withEndAction {
+                    lifecycleScope.launch { viewModel.delete(item) }
+                }.start()
             }
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvItems)
 
-        // ViewModel
         val repo = ItemRepository(DatabaseProvider.getDatabase(requireContext()).itemDao())
-        viewModel = ViewModelProvider(
-            this,
-            ItemViewModelFactory(repo)
-        )[ItemViewModel::class.java]
+        viewModel = ViewModelProvider(this, ItemViewModelFactory(repo))[ItemViewModel::class.java]
 
         // Observamos items de la colección
         lifecycleScope.launch {
@@ -97,16 +85,13 @@ class ItemListByCollectionFragment : Fragment() {
             }
         }
 
-        // FAB para añadir item
         binding.fabAddItem.setOnClickListener { showCreateItemDialog() }
 
-        // SearchView
         binding.searchItems.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
                 val texto = newText ?: ""
-                val filtered = fullItemList.filter { it.titulo.contains(texto, ignoreCase = true) }
-                adapter.updateList(filtered)
+                adapter.updateList(fullItemList.filter { it.titulo.contains(texto, ignoreCase = true) })
                 return true
             }
         })
@@ -122,10 +107,8 @@ class ItemListByCollectionFragment : Fragment() {
         val spinnerCategoria = Spinner(requireContext())
         val categoriaRepo = CategoriaRepository(DatabaseProvider.getDatabase(requireContext()).categoriaDao())
 
-        val vm = viewModel // capturamos el viewModel para usar dentro del lambda
-
-        // Cargamos las categorías para el spinner
-        lifecycleScope.launch {
+        // Función para cargar categorías en el spinner
+        suspend fun loadCategorias() {
             val categorias = categoriaRepo.allCategoriasOnce()
             val nombres = if (categorias.isNotEmpty()) categorias.map { it.nombre } else listOf("Sin categoría")
             val adapterSpinner = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, nombres)
@@ -133,21 +116,24 @@ class ItemListByCollectionFragment : Fragment() {
             spinnerCategoria.adapter = adapterSpinner
         }
 
-        (view as LinearLayout).addView(spinnerCategoria, 1) // insertamos el spinner en el layout
+        // Cargar categorías inicial
+        lifecycleScope.launch { loadCategorias() }
+
+        (view as LinearLayout).addView(spinnerCategoria, 1)
 
         AlertDialog.Builder(requireContext())
             .setTitle("Nuevo item")
             .setView(view)
             .setPositiveButton("Crear") { _, _ ->
-                val titulo = etTitulo.text.toString()
-                val valor = etValor.text.toString().toDoubleOrNull() ?: 0.0
+                lifecycleScope.launch {
+                    val titulo = etTitulo.text.toString()
+                    val valor = etValor.text.toString().toDoubleOrNull() ?: 0.0
 
-                if (titulo.isNotBlank()) {
-                    lifecycleScope.launch {
-                        val categorias = categoriaRepo.allCategoriasOnce()
-                        val selectedPosition = spinnerCategoria.selectedItemPosition
-                        val categoriaId = if (categorias.isNotEmpty()) categorias[selectedPosition].id else 0
+                    val categorias = categoriaRepo.allCategoriasOnce()
+                    val selectedPosition = spinnerCategoria.selectedItemPosition
+                    val categoriaId = if (categorias.isNotEmpty()) categorias[selectedPosition].id else 0
 
+                    if (titulo.isNotBlank()) {
                         val item = Item(
                             titulo = titulo,
                             categoriaId = categoriaId,
@@ -159,7 +145,36 @@ class ItemListByCollectionFragment : Fragment() {
                             descripcion = null,
                             calificacion = 0f
                         )
-                        vm.insert(item)
+                        viewModel.insert(item)
+                    }
+                }
+            }
+            .setNeutralButton("Nueva categoría") { _, _ ->
+                showCreateCategoriaDialog(categoriaRepo, spinnerCategoria)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun showCreateCategoriaDialog(categoriaRepo: CategoriaRepository, spinner: Spinner) {
+        val etNombre = EditText(requireContext())
+        etNombre.hint = "Nombre de categoría"
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Nueva categoría")
+            .setView(etNombre)
+            .setPositiveButton("Crear") { _, _ ->
+                val nombre = etNombre.text.toString()
+                if (nombre.isNotBlank()) {
+                    lifecycleScope.launch {
+                        categoriaRepo.insert(Categoria(nombre = nombre))
+                        // Recargar spinner
+                        val categorias = categoriaRepo.allCategoriasOnce()
+                        val nombres = categorias.map { it.nombre }
+                        val adapterSpinner = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, nombres)
+                        adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                        spinner.adapter = adapterSpinner
+                        spinner.setSelection(nombres.size - 1) // seleccionamos la nueva categoría
                     }
                 }
             }
