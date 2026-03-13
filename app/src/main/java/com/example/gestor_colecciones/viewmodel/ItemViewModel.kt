@@ -1,6 +1,5 @@
 package com.example.gestor_colecciones.viewmodel
 
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestor_colecciones.entities.Item
@@ -17,9 +16,11 @@ class ItemViewModel(private val repository: ItemRepository) : ViewModel() {
             emptyList()
         )
 
-    fun insert(item: Item) {
+    // Función de insert que devuelve el ID del item insertado mediante callback
+    fun insert(item: Item, onInserted: (Int) -> Unit) {
         viewModelScope.launch {
-            repository.insert(item)
+            val id = repository.insert(item).toInt() // insert devuelve Long, convertimos a Int
+            onInserted(id) // llamamos al callback con el ID
         }
     }
 
@@ -49,4 +50,8 @@ class ItemViewModel(private val repository: ItemRepository) : ViewModel() {
 
     suspend fun getTotalValor() =
         repository.getTotalValor()
+
+    // --- NUEVO ---
+    suspend fun getItemById(id: Int): Item? =
+        repository.getItemById(id)
 }

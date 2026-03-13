@@ -12,11 +12,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
 import com.example.gestor_colecciones.adapters.ItemAdapter
+import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.*
+import com.example.gestor_colecciones.R
 
 class ItemListFragment : Fragment() {
 
@@ -50,7 +53,7 @@ class ItemListFragment : Fragment() {
             ItemViewModelFactory(repo)
         )[ItemViewModel::class.java]
 
-        // Observar lista de ítems
+        // Observar lista de items
         lifecycleScope.launch {
             viewModel.items.collectLatest { items ->
                 adapter.updateList(items)
@@ -60,13 +63,11 @@ class ItemListFragment : Fragment() {
         // Configurar búsqueda usando SearchView
         binding.searchItems.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                // Cuando el usuario presiona "Enter"
                 query?.let { search(it) }
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                // Cada vez que cambia el texto
                 newText?.let { search(it) }
                 return true
             }
@@ -79,6 +80,30 @@ class ItemListFragment : Fragment() {
                 }
             }
         })
+
+        // --- FAB: agregar item y abrir detalle ---
+        binding.fabAddItem.setOnClickListener {
+            val newItem = Item(
+                titulo = "Nuevo item",
+                categoriaId = 1,
+                collectionId = 1,
+                fechaAdquisicion = Date(),
+                valor = 50.0,
+                imagenPath = null,
+                estado = "Nuevo",
+                descripcion = "Descripción de prueba",
+                calificacion = 4.5f
+            )
+
+            // Insertar usando ViewModel y abrir detalle con callback
+            viewModel.insert(newItem) { id ->
+                val fragment = ItemDetailFragment.newInstance(id)
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, fragment) // coincide con tu Activity
+                    .addToBackStack(null)
+                    .commit()
+            }
+        }
     }
 
     override fun onDestroyView() {

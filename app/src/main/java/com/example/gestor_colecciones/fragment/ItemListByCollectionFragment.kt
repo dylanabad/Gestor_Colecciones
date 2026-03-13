@@ -50,14 +50,28 @@ class ItemListByCollectionFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        adapter = ItemAdapter(emptyList(),
-            onItemClick = { /* abrir detalle */ },
-            onItemLongClick = { item -> showEditItemDialog(item) }
+        val repo = ItemRepository(DatabaseProvider.getDatabase(requireContext()).itemDao())
+        viewModel = ViewModelProvider(this, ItemViewModelFactory(repo))[ItemViewModel::class.java]
+
+        adapter = ItemAdapter(
+            fullItemList,
+            onItemClick = { item ->
+                // Abrir ItemDetailFragment
+                val fragment = ItemDetailFragment.newInstance(item.id)
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack(null)
+                    .commit()
+            },
+            onItemLongClick = { item ->
+                showEditItemDialog(item)
+            }
         )
 
         binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
         binding.rvItems.adapter = adapter
 
+        // Swipe para borrar
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             override fun onMove(
                 recyclerView: androidx.recyclerview.widget.RecyclerView,
@@ -74,10 +88,7 @@ class ItemListByCollectionFragment : Fragment() {
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvItems)
 
-        val repo = ItemRepository(DatabaseProvider.getDatabase(requireContext()).itemDao())
-        viewModel = ViewModelProvider(this, ItemViewModelFactory(repo))[ItemViewModel::class.java]
-
-        // Observamos items de la colección
+        // Observar items de la colección
         lifecycleScope.launch {
             viewModel.getItemsByCollection(collectionId).collect { items ->
                 fullItemList = items
@@ -87,8 +98,9 @@ class ItemListByCollectionFragment : Fragment() {
 
         binding.fabAddItem.setOnClickListener { showCreateItemDialog() }
 
+        // Búsqueda
         binding.searchItems.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean = false
+            override fun onQueryTextSubmit(query: String?) = false
             override fun onQueryTextChange(newText: String?): Boolean {
                 val texto = newText ?: ""
                 adapter.updateList(fullItemList.filter { it.titulo.contains(texto, ignoreCase = true) })
@@ -98,8 +110,7 @@ class ItemListByCollectionFragment : Fragment() {
     }
 
     private fun showCreateItemDialog() {
-        val view = LayoutInflater.from(requireContext())
-            .inflate(R.layout.dialog_create_item, null)
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_item, null)
 
         val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
         val etValor = view.findViewById<EditText>(R.id.etValor)
@@ -107,7 +118,6 @@ class ItemListByCollectionFragment : Fragment() {
         val spinnerCategoria = Spinner(requireContext())
         val categoriaRepo = CategoriaRepository(DatabaseProvider.getDatabase(requireContext()).categoriaDao())
 
-        // Función para cargar categorías en el spinner
         suspend fun loadCategorias() {
             val categorias = categoriaRepo.allCategoriasOnce()
             val nombres = if (categorias.isNotEmpty()) categorias.map { it.nombre } else listOf("Sin categoría")
@@ -116,7 +126,6 @@ class ItemListByCollectionFragment : Fragment() {
             spinnerCategoria.adapter = adapterSpinner
         }
 
-        // Cargar categorías inicial
         lifecycleScope.launch { loadCategorias() }
 
         (view as LinearLayout).addView(spinnerCategoria, 1)
@@ -145,7 +154,8 @@ class ItemListByCollectionFragment : Fragment() {
                             descripcion = null,
                             calificacion = 0f
                         )
-                        viewModel.insert(item)
+                        // Usar callback para obtener el id si lo necesitas
+                        viewModel.insert(item) { /* id del item insertado, si quieres usarlo */ }
                     }
                 }
             }
@@ -168,13 +178,12 @@ class ItemListByCollectionFragment : Fragment() {
                 if (nombre.isNotBlank()) {
                     lifecycleScope.launch {
                         categoriaRepo.insert(Categoria(nombre = nombre))
-                        // Recargar spinner
                         val categorias = categoriaRepo.allCategoriasOnce()
                         val nombres = categorias.map { it.nombre }
                         val adapterSpinner = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, nombres)
                         adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                         spinner.adapter = adapterSpinner
-                        spinner.setSelection(nombres.size - 1) // seleccionamos la nueva categoría
+                        spinner.setSelection(nombres.size - 1)
                     }
                 }
             }
@@ -183,9 +192,7 @@ class ItemListByCollectionFragment : Fragment() {
     }
 
     private fun showEditItemDialog(item: Item) {
-        val view = LayoutInflater.from(requireContext())
-            .inflate(R.layout.dialog_create_item, null)
-
+        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_item, null)
         val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
         val etValor = view.findViewById<EditText>(R.id.etValor)
 
