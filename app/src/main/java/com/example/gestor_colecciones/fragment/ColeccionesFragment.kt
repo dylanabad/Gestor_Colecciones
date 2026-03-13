@@ -1,6 +1,7 @@
 package com.example.gestor_colecciones.fragment
 
 import android.app.AlertDialog
+import android.graphics.Rect
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,9 +11,7 @@ import android.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.*
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ColeccionAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
@@ -45,7 +44,7 @@ class ColeccionesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // RecyclerView
+        // Adapter
         adapter = ColeccionAdapter(
             emptyList(),
             onClick = { coleccion ->
@@ -60,11 +59,18 @@ class ColeccionesFragment : Fragment() {
             }
         )
 
-        binding.rvColecciones.layoutManager = LinearLayoutManager(requireContext())
+        // Grid layout (2 columnas)
+        binding.rvColecciones.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.rvColecciones.adapter = adapter
 
-        // Swipe para eliminar con animación
+        // Espaciado entre cards
+        binding.rvColecciones.addItemDecoration(
+            GridSpacingItemDecoration(2, 32, true)
+        )
+
+        // Swipe para eliminar
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
@@ -72,10 +78,10 @@ class ColeccionesFragment : Fragment() {
             ): Boolean = false
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+
                 val position = viewHolder.adapterPosition
                 val coleccion = adapter.getItem(position)
 
-                // Animación fade out
                 viewHolder.itemView.animate()
                     .alpha(0f)
                     .setDuration(300)
@@ -88,12 +94,14 @@ class ColeccionesFragment : Fragment() {
             }
         }
 
-        val itemTouchHelper = ItemTouchHelper(swipeHandler)
-        itemTouchHelper.attachToRecyclerView(binding.rvColecciones)
+        ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvColecciones)
 
         // ViewModel
         val repo = ColeccionRepository(DatabaseProvider.getColeccionDao(requireContext()))
-        viewModel = ViewModelProvider(this, ColeccionViewModelFactory(repo))[ColeccionViewModel::class.java]
+        viewModel = ViewModelProvider(
+            this,
+            ColeccionViewModelFactory(repo)
+        )[ColeccionViewModel::class.java]
 
         // Observar colecciones
         lifecycleScope.launch {
@@ -103,28 +111,36 @@ class ColeccionesFragment : Fragment() {
             }
         }
 
-        // Botón flotante crear colección
+        // Crear colección
         binding.fabAddColeccion.setOnClickListener {
             showCreateCollectionDialog()
         }
 
-        // SearchView
+        // Buscador
         binding.searchColecciones.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+
             override fun onQueryTextSubmit(query: String?): Boolean = false
 
             override fun onQueryTextChange(newText: String?): Boolean {
+
                 val texto = newText ?: ""
+
                 val filtradas = listaCompleta.filter {
                     it.nombre.lowercase().contains(texto.lowercase())
                 }
+
                 adapter.updateList(filtradas)
+
                 return true
             }
         })
     }
 
     private fun showCreateCollectionDialog() {
-        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_collection, null)
+
+        val view = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_create_collection, null)
+
         val etNombre = view.findViewById<EditText>(R.id.etNombre)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
 
@@ -132,15 +148,19 @@ class ColeccionesFragment : Fragment() {
             .setTitle("Nueva colección")
             .setView(view)
             .setPositiveButton("Crear") { _, _ ->
+
                 val nombre = etNombre.text.toString()
                 val descripcion = etDescripcion.text.toString()
+
                 if (nombre.isNotEmpty()) {
+
                     val coleccion = Coleccion(
-                        id = 0, // Room autogenerará
+                        id = 0,
                         nombre = nombre,
                         descripcion = descripcion,
                         fechaCreacion = Date()
                     )
+
                     lifecycleScope.launch {
                         viewModel.insert(coleccion)
                     }
@@ -151,7 +171,10 @@ class ColeccionesFragment : Fragment() {
     }
 
     private fun showEditCollectionDialog(coleccion: Coleccion) {
-        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_collection, null)
+
+        val view = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_create_collection, null)
+
         val etNombre = view.findViewById<EditText>(R.id.etNombre)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
 
@@ -162,10 +185,12 @@ class ColeccionesFragment : Fragment() {
             .setTitle("Editar colección")
             .setView(view)
             .setPositiveButton("Guardar") { _, _ ->
+
                 val actualizado = coleccion.copy(
                     nombre = etNombre.text.toString(),
                     descripcion = etDescripcion.text.toString()
                 )
+
                 lifecycleScope.launch {
                     viewModel.update(actualizado)
                 }
@@ -177,5 +202,47 @@ class ColeccionesFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+}
+
+/*
+   Clase para añadir espacio entre elementos del Grid
+*/
+class GridSpacingItemDecoration(
+    private val spanCount: Int,
+    private val spacing: Int,
+    private val includeEdge: Boolean
+) : RecyclerView.ItemDecoration() {
+
+    override fun getItemOffsets(
+        outRect: Rect,
+        view: View,
+        parent: RecyclerView,
+        state: RecyclerView.State
+    ) {
+
+        val position = parent.getChildAdapterPosition(view)
+        val column = position % spanCount
+
+        if (includeEdge) {
+
+            outRect.left = spacing - column * spacing / spanCount
+            outRect.right = (column + 1) * spacing / spanCount
+
+            if (position < spanCount) {
+                outRect.top = spacing
+            }
+
+            outRect.bottom = spacing
+
+        } else {
+
+            outRect.left = column * spacing / spanCount
+            outRect.right = spacing - (column + 1) * spacing / spanCount
+
+            if (position >= spanCount) {
+                outRect.top = spacing
+            }
+        }
     }
 }

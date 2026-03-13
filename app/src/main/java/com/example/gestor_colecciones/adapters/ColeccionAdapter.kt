@@ -1,12 +1,13 @@
 package com.example.gestor_colecciones.adapters
 
-import androidx.recyclerview.widget.RecyclerView
-import com.example.gestor_colecciones.entities.Coleccion
-import android.view.View
-import android.widget.TextView
-import android.view.ViewGroup
 import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
 import com.example.gestor_colecciones.R
+import com.example.gestor_colecciones.entities.Coleccion
 
 class ColeccionAdapter(
     private var colecciones: List<Coleccion>,
@@ -15,20 +16,17 @@ class ColeccionAdapter(
 ) : RecyclerView.Adapter<ColeccionAdapter.ColeccionViewHolder>() {
 
     inner class ColeccionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
         val tvNombre = itemView.findViewById<TextView>(R.id.tvNombreColeccion)
+        val tvDescripcion = itemView.findViewById<TextView>(R.id.tvDescripcionColeccion)
+        val ivColeccion = itemView.findViewById<ImageView>(R.id.ivColeccion)
 
         init {
-
-            // Click normal → abrir colección
             itemView.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     onClick(colecciones[position])
                 }
             }
-
-            // Click largo → editar colección
             itemView.setOnLongClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
@@ -46,7 +44,12 @@ class ColeccionAdapter(
     }
 
     override fun onBindViewHolder(holder: ColeccionViewHolder, position: Int) {
-        holder.tvNombre.text = colecciones[position].nombre
+        val coleccion = colecciones[position]
+        holder.tvNombre.text = coleccion.nombre
+        holder.tvDescripcion.text = coleccion.descripcion ?: "Sin descripción"
+
+        // Imagen por defecto, puedes cambiar según tu lógica
+        holder.ivColeccion.setImageResource(R.drawable.ic_collection_default)
     }
 
     override fun getItemCount() = colecciones.size
@@ -56,7 +59,5 @@ class ColeccionAdapter(
         notifyDataSetChanged()
     }
 
-    fun getItem(position: Int): Coleccion {
-        return colecciones[position]
-    }
+    fun getItem(position: Int): Coleccion = colecciones[position]
 }
