@@ -13,5 +13,12 @@ data class Coleccion(
 
     val descripcion: String?,
 
-    val fechaCreacion: Date
+    val fechaCreacion: Date,
+
+    val imagenPath: String? = null,
+
+    var itemsCount: Int = 0,
+    var totalValue: Double = 0.0
+
+
 )

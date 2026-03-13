@@ -42,6 +42,8 @@ class ItemViewModel(private val repository: ItemRepository) : ViewModel() {
     fun getItemsByCategoria(categoriaId: Int) =
         repository.getItemsByCategoria(categoriaId)
 
+    fun getItemsByCollectionFlow(collectionId: Int) = repository.getItemsByCollectionFlow(collectionId)
+
     fun searchItems(search: String) =
         repository.searchItemsByTitle(search)
 
@@ -55,3 +57,4 @@ class ItemViewModel(private val repository: ItemRepository) : ViewModel() {
     suspend fun getItemById(id: Int): Item? =
         repository.getItemById(id)
 }
+

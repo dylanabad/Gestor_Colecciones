@@ -37,4 +37,14 @@ interface ItemDao {
 
     @Query("SELECT SUM(valor) FROM Item")
     suspend fun getTotalValor(): Double
+
+    @Query("SELECT COUNT(*) FROM item WHERE collectionId = :collectionId")
+    suspend fun countItemsByCollection(collectionId: Int): Int
+
+    @Query("SELECT SUM(valor) FROM item WHERE collectionId = :collectionId")
+    suspend fun getTotalValueByCollection(collectionId: Int): Double?
+
+    @Query("SELECT * FROM Item WHERE collectionId = :id")
+    suspend fun getItemsByCollectionOnce(id: Int): List<Item>
+
 }

@@ -41,8 +41,21 @@
                 android:textSize="14sp"
                 android:textColor="@android:color/darker_gray"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"/>
+
+            <!-- NUEVO: estadísticas de la colección -->
+            <TextView
+                android:id="@+id/tvStatsColeccion"
+                android:textSize="13sp"
+                android:textColor="#666666"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="0 items · 0€"/>
+
         </LinearLayout>
 
     </LinearLayout>
+
 </com.google.android.material.card.MaterialCardView>

@@ -12,18 +12,27 @@ object DatabaseProvider {
 
     fun getDatabase(context: Context): AppDataBase {
         return instance ?: synchronized(this) {
+
             val db = Room.databaseBuilder(
                 context.applicationContext,
                 AppDataBase::class.java,
                 "gestor_colecciones_db"
-            ).build()
+            )
+                .fallbackToDestructiveMigration() // recrea la BD si cambia el esquema
+                .build()
+
             instance = db
             db
         }
     }
 
-    // Funciones helper para acceder a los DAOs
-    fun getColeccionDao(context: Context): ColeccionDao = getDatabase(context).coleccionDao()
-    fun getItemDao(context: Context): ItemDao = getDatabase(context).itemDao()
-    fun getCategoriaDao(context: Context): CategoriaDao = getDatabase(context).categoriaDao()
+    // Acceso rápido a DAOs
+    fun getColeccionDao(context: Context): ColeccionDao =
+        getDatabase(context).coleccionDao()
+
+    fun getItemDao(context: Context): ItemDao =
+        getDatabase(context).itemDao()
+
+    fun getCategoriaDao(context: Context): CategoriaDao =
+        getDatabase(context).categoriaDao()
 }
