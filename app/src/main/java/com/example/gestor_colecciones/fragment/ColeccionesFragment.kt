@@ -1,13 +1,18 @@
 package com.example.gestor_colecciones.fragment
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ColeccionAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentColeccionesBinding
@@ -17,6 +22,7 @@ import com.example.gestor_colecciones.viewmodel.ColeccionViewModel
 import com.example.gestor_colecciones.viewmodel.ColeccionViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.Date
 
 class ColeccionesFragment : Fragment() {
 
@@ -38,16 +44,50 @@ class ColeccionesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // RecyclerView
-        adapter = ColeccionAdapter(emptyList()) { coleccion ->
-            // Acción al pulsar una colección (ir a items de esa colección)
-            val fragment = ItemListByCollectionFragment.newInstance(coleccion.id)
-            parentFragmentManager.beginTransaction()
-                .replace(id, fragment)
-                .addToBackStack(null)
-                .commit()
-        }
+        adapter = ColeccionAdapter(
+            emptyList(),
+            onClick = { coleccion ->
+                val fragment = ItemListByCollectionFragment.newInstance(coleccion.id)
+                parentFragmentManager.beginTransaction()
+                    .replace((view.parent as ViewGroup).id, fragment)
+                    .addToBackStack(null)
+                    .commit()
+            },
+            onLongClick = { coleccion ->
+                showEditCollectionDialog(coleccion)
+            }
+        )
+
         binding.rvColecciones.layoutManager = LinearLayoutManager(requireContext())
         binding.rvColecciones.adapter = adapter
+
+        // Swipe para eliminar
+        val swipeHandler = object : ItemTouchHelper.SimpleCallback(
+            0,
+            ItemTouchHelper.LEFT
+        ) {
+
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+
+                val position = viewHolder.adapterPosition
+                val coleccion = adapter.getItem(position)
+
+                lifecycleScope.launch {
+                    viewModel.delete(coleccion)
+                }
+            }
+        }
+
+        val itemTouchHelper = ItemTouchHelper(swipeHandler)
+        itemTouchHelper.attachToRecyclerView(binding.rvColecciones)
 
         // ViewModel
         val repo = ColeccionRepository(DatabaseProvider.getColeccionDao(requireContext()))
@@ -63,14 +103,72 @@ class ColeccionesFragment : Fragment() {
             }
         }
 
-        // Botón añadir colección
-        binding.btnAddColeccion.setOnClickListener {
-            // Abrir un diálogo o fragmento para crear nueva colección
-            val nueva = Coleccion(nombre = "Nueva colección", descripcion = "", fechaCreacion = java.util.Date())
-            viewModel.insert(nueva)
+        // Botón flotante crear colección
+        binding.fabAddColeccion.setOnClickListener {
+            showCreateCollectionDialog()
         }
+    }
 
-        // Botón editar o eliminar se puede implementar dentro del adapter
+    private fun showCreateCollectionDialog() {
+
+        val view = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_create_collection, null)
+
+        val etNombre = view.findViewById<EditText>(R.id.etNombre)
+        val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Nueva colección")
+            .setView(view)
+            .setPositiveButton("Crear") { _, _ ->
+
+                val nombre = etNombre.text.toString()
+                val descripcion = etDescripcion.text.toString()
+
+                if (nombre.isNotEmpty()) {
+
+                    val coleccion = Coleccion(
+                        nombre = nombre,
+                        descripcion = descripcion,
+                        fechaCreacion = Date()
+                    )
+
+                    lifecycleScope.launch {
+                        viewModel.insert(coleccion)
+                    }
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun showEditCollectionDialog(coleccion: Coleccion) {
+
+        val view = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_create_collection, null)
+
+        val etNombre = view.findViewById<EditText>(R.id.etNombre)
+        val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
+
+        etNombre.setText(coleccion.nombre)
+        etDescripcion.setText(coleccion.descripcion)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Editar colección")
+            .setView(view)
+            .setPositiveButton("Guardar") { _, _ ->
+
+                val actualizado = coleccion.copy(
+                    nombre = etNombre.text.toString(),
+                    descripcion = etDescripcion.text.toString()
+                )
+
+                lifecycleScope.launch {
+                    viewModel.update(actualizado)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     override fun onDestroyView() {

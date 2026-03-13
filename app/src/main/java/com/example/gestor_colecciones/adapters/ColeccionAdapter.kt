@@ -1,4 +1,5 @@
 package com.example.gestor_colecciones.adapters
+
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestor_colecciones.entities.Coleccion
 import android.view.View
@@ -9,14 +10,31 @@ import com.example.gestor_colecciones.R
 
 class ColeccionAdapter(
     private var colecciones: List<Coleccion>,
-    private val onItemClick: (Coleccion) -> Unit
+    private val onClick: (Coleccion) -> Unit,
+    private val onLongClick: (Coleccion) -> Unit
 ) : RecyclerView.Adapter<ColeccionAdapter.ColeccionViewHolder>() {
 
     inner class ColeccionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
         val tvNombre = itemView.findViewById<TextView>(R.id.tvNombreColeccion)
+
         init {
+
+            // Click normal → abrir colección
             itemView.setOnClickListener {
-                onItemClick(colecciones[adapterPosition])
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onClick(colecciones[position])
+                }
+            }
+
+            // Click largo → editar colección
+            itemView.setOnLongClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onLongClick(colecciones[position])
+                }
+                true
             }
         }
     }
@@ -36,5 +54,9 @@ class ColeccionAdapter(
     fun updateList(newList: List<Coleccion>) {
         colecciones = newList
         notifyDataSetChanged()
+    }
+
+    fun getItem(position: Int): Coleccion {
+        return colecciones[position]
     }
 }
