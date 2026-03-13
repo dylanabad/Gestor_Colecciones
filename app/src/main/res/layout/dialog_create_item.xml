@@ -25,10 +25,10 @@
         android:hint="Descripción"
         android:inputType="textMultiLine"/>
 
-    <!-- Spinner para seleccionar categoría -->
     <Spinner
         android:id="@+id/spinnerCategoria"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:spinnerMode="dropdown"
         android:layout_marginTop="8dp"/>
 </LinearLayout>

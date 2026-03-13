@@ -11,4 +11,7 @@ class CategoriaRepository(private val categoriaDao: CategoriaDao) {
     suspend fun insert(categoria: Categoria) = categoriaDao.insert(categoria)
     suspend fun update(categoria: Categoria) = categoriaDao.update(categoria)
     suspend fun delete(categoria: Categoria) = categoriaDao.delete(categoria)
+    suspend fun allCategoriasOnce(): List<Categoria> {
+        return categoriaDao.getAllCategoriasOnce()
+    }
 }
