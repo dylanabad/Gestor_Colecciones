@@ -3,58 +3,64 @@ package com.example.gestor_colecciones.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestor_colecciones.entities.Item
+import com.example.gestor_colecciones.entities.Categoria
 import com.example.gestor_colecciones.repository.ItemRepository
+import com.example.gestor_colecciones.repository.CategoriaRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class ItemViewModel(private val repository: ItemRepository) : ViewModel() {
+class ItemViewModel(
+    private val itemRepository: ItemRepository,
+    private val categoriaRepository: CategoriaRepository? = null // opcional para crear categorías
+) : ViewModel() {
 
     val items: StateFlow<List<Item>> =
-        repository.allItems.stateIn(
+        itemRepository.allItems.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             emptyList()
         )
 
-    // Función de insert que devuelve el ID del item insertado mediante callback
-    fun insert(item: Item, onInserted: (Int) -> Unit) {
+    // Insertar item con callback que devuelve el ID
+    fun insert(item: Item, onInserted: ((Int) -> Unit)? = null) {
         viewModelScope.launch {
-            val id = repository.insert(item).toInt() // insert devuelve Long, convertimos a Int
-            onInserted(id) // llamamos al callback con el ID
+            val id = itemRepository.insert(item).toInt()
+            onInserted?.invoke(id)
         }
     }
 
     fun update(item: Item) {
-        viewModelScope.launch {
-            repository.update(item)
-        }
+        viewModelScope.launch { itemRepository.update(item) }
     }
 
     fun delete(item: Item) {
-        viewModelScope.launch {
-            repository.delete(item)
-        }
+        viewModelScope.launch { itemRepository.delete(item) }
     }
 
-    fun getItemsByCollection(collectionId: Int) =
-        repository.getItemsByCollection(collectionId)
+    fun getItemsByCollection(collectionId: Int) = itemRepository.getItemsByCollection(collectionId)
 
-    fun getItemsByCategoria(categoriaId: Int) =
-        repository.getItemsByCategoria(categoriaId)
+    fun getItemsByCategoria(categoriaId: Int) = itemRepository.getItemsByCategoria(categoriaId)
 
-    fun getItemsByCollectionFlow(collectionId: Int) = repository.getItemsByCollectionFlow(collectionId)
+    fun getItemsByCollectionFlow(collectionId: Int) = itemRepository.getItemsByCollectionFlow(collectionId)
 
-    fun searchItems(search: String) =
-        repository.searchItemsByTitle(search)
+    fun searchItems(search: String) = itemRepository.searchItemsByTitle(search)
 
-    suspend fun getTotalItems() =
-        repository.getTotalItems()
+    suspend fun getTotalItems() = itemRepository.getTotalItems()
 
-    suspend fun getTotalValor() =
-        repository.getTotalValor()
+    suspend fun getTotalValor() = itemRepository.getTotalValor()
 
-    // --- NUEVO ---
-    suspend fun getItemById(id: Int): Item? =
-        repository.getItemById(id)
+    suspend fun getItemById(id: Int) = itemRepository.getItemById(id)
+
+    // --- NUEVO: Funciones para categorías ---
+    suspend fun insertCategoria(nombre: String): Categoria? {
+        return if (categoriaRepository != null && nombre.isNotBlank()) {
+            val categoria = Categoria(nombre = nombre)
+            categoriaRepository.insert(categoria)
+            categoria
+        } else null
+    }
+
+    suspend fun getAllCategorias(): List<Categoria> {
+        return categoriaRepository?.allCategoriasOnce() ?: emptyList()
+    }
 }
-
