@@ -1,15 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
+    <!-- EditText para crear nueva categoría -->
     <EditText
         android:id="@+id/etCategoriaNombre"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Nombre de la categoría"
-        android:inputType="textCapWords"/>
+        android:inputType="text"/>
+
+    <!-- Botón para añadir nueva categoría -->
+    <Button
+        android:id="@+id/btnAddCategoria"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Añadir categoría"
+        android:layout_gravity="end"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- ListView para mostrar categorías existentes -->
+    <ListView
+        android:id="@+id/lvCategorias"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:dividerHeight="1dp"/>
 </LinearLayout>
