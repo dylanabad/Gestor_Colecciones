@@ -21,7 +21,6 @@ import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -33,8 +32,8 @@ class ItemListByCollectionFragment : Fragment() {
 
     private lateinit var viewModel: ItemViewModel
     private lateinit var adapter: ItemAdapter
-    private var fullItemList: List<Item> = emptyList()
     private var categoriasMap: MutableMap<Int, String> = mutableMapOf()
+    private var fullItemList: List<Item> = emptyList()
 
     private lateinit var categoriaRepo: CategoriaRepository
     private lateinit var itemRepo: ItemRepository
@@ -58,31 +57,50 @@ class ItemListByCollectionFragment : Fragment() {
         val db = DatabaseProvider.getDatabase(requireContext())
         itemRepo = ItemRepository(db.itemDao())
         categoriaRepo = CategoriaRepository(db.categoriaDao())
-
         viewModel = ViewModelProvider(this, ItemViewModelFactory(itemRepo))[ItemViewModel::class.java]
 
         adapter = ItemAdapter(fullItemList, categoriasMap)
         binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
         binding.rvItems.adapter = adapter
 
+        adapter.onItemClick = { item ->
+            val fragment = ItemDetailFragment.newInstance(item.id)
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit()
+        }
+
+        adapter.onItemLongClick = { item ->
+            showEditItemDialog(item)
+        }
+
         // Cargar categorías y items
         lifecycleScope.launch {
             val categorias = categoriaRepo.allCategoriasOnce()
             categoriasMap.putAll(categorias.associate { it.id to it.nombre })
+            updateFabState()
 
-            val items = viewModel.getItemsByCollection(collectionId)
-            items.collect { list ->
+            val itemsFlow = viewModel.getItemsByCollection(collectionId)
+            itemsFlow.collect { list ->
                 fullItemList = list
                 adapter.updateList(list)
             }
         }
 
         // FAB para crear item
-        binding.fabAddItem.setOnClickListener { showCreateItemDialog() }
+        binding.fabAddItem.setOnClickListener {
+            if (categoriasMap.isEmpty()) {
+                Toast.makeText(requireContext(), "No puedes crear un item sin categorías", Toast.LENGTH_SHORT).show()
+            } else {
+                showCreateItemDialog()
+            }
+        }
 
         // FAB para crear/editar categorías
-        val fabAddCategory: FloatingActionButton = view.findViewById(R.id.fabAddCategory)
-        fabAddCategory.setOnClickListener { showManageCategoriesDialog() }
+        binding.fabAddCategory.setOnClickListener {
+            showCreateCategoriaDialog()
+        }
 
         // Swipe para eliminar items
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
@@ -98,39 +116,25 @@ class ItemListByCollectionFragment : Fragment() {
             }
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvItems)
+    }
 
-        // Búsqueda
-        binding.searchItems.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?) = false
-            override fun onQueryTextChange(newText: String?): Boolean {
-                val texto = newText ?: ""
-                adapter.updateList(fullItemList.filter { it.titulo.contains(texto, ignoreCase = true) })
-                return true
-            }
-        })
-
-        // Click y long click en items
-        adapter.onItemClick = { item ->
-            val fragment = ItemDetailFragment.newInstance(item.id)
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .addToBackStack(null)
-                .commit()
-        }
-        adapter.onItemLongClick = { item ->
-            showEditItemDialog(item)
-        }
+    private fun updateFabState() {
+        binding.fabAddItem.isEnabled = categoriasMap.isNotEmpty()
+        binding.fabAddItem.alpha = if (categoriasMap.isNotEmpty()) 1f else 0.5f
+        adapter.categoriasMap = categoriasMap
     }
 
     // --- CREAR ITEM ---
     private fun showCreateItemDialog() {
+        val categoriasList = categoriasMap.entries.toList()
+        if (categoriasList.isEmpty()) return
+
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_item, null)
         val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
         val etValor = view.findViewById<EditText>(R.id.etValor)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
         val spinnerCategoria = view.findViewById<Spinner>(R.id.spinnerCategoria)
 
-        val categoriasList = categoriasMap.entries.toList()
         val adapterSpinner = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
@@ -139,38 +143,49 @@ class ItemListByCollectionFragment : Fragment() {
         adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerCategoria.adapter = adapterSpinner
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Nuevo Item")
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("Nuevo item")
             .setView(view)
-            .setPositiveButton("Crear") { _, _ ->
-                lifecycleScope.launch {
-                    val titulo = etTitulo.text.toString()
-                    val valor = etValor.text.toString().toDoubleOrNull() ?: 0.0
-                    val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
-                    val categoriaId = if (categoriasList.isNotEmpty()) categoriasList[spinnerCategoria.selectedItemPosition].key else 0
-
-                    if (titulo.isNotBlank()) {
-                        val newItem = Item(
-                            titulo = titulo,
-                            categoriaId = categoriaId,
-                            collectionId = collectionId,
-                            fechaAdquisicion = Date(),
-                            valor = valor,
-                            imagenPath = null,
-                            estado = "Nuevo",
-                            descripcion = descripcion,
-                            calificacion = 0f
-                        )
-                        viewModel.insert(newItem) { /* No necesitas acción extra */ }
-                    }
-                }
-            }
+            .setPositiveButton("Crear", null)
             .setNegativeButton("Cancelar", null)
-            .show()
+            .create()
+
+        dialog.setOnShowListener {
+            val btnCrear = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            btnCrear.isEnabled = categoriasList.isNotEmpty()
+            btnCrear.setOnClickListener {
+                val titulo = etTitulo.text.toString().trim()
+                if (titulo.isBlank()) {
+                    Toast.makeText(requireContext(), "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                val valor = etValor.text.toString().toDoubleOrNull() ?: 0.0
+                val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
+                val categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key
+
+                val newItem = Item(
+                    titulo = titulo,
+                    categoriaId = categoriaId,
+                    collectionId = collectionId,
+                    fechaAdquisicion = Date(),
+                    valor = valor,
+                    imagenPath = null,
+                    estado = "Nuevo",
+                    descripcion = descripcion,
+                    calificacion = 0f
+                )
+                viewModel.insert(newItem)
+                dialog.dismiss()
+            }
+        }
+        dialog.show()
     }
 
     // --- EDITAR ITEM ---
     private fun showEditItemDialog(item: Item) {
+        val categoriasList = categoriasMap.entries.toList()
+        if (categoriasList.isEmpty()) return
+
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_item, null)
         val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
         val etValor = view.findViewById<EditText>(R.id.etValor)
@@ -181,7 +196,6 @@ class ItemListByCollectionFragment : Fragment() {
         etValor.setText(item.valor.toString())
         etDescripcion.setText(item.descripcion)
 
-        val categoriasList = categoriasMap.entries.toList()
         val adapterSpinner = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
@@ -193,26 +207,40 @@ class ItemListByCollectionFragment : Fragment() {
         val selectedIndex = categoriasList.indexOfFirst { it.key == item.categoriaId }
         if (selectedIndex >= 0) spinnerCategoria.setSelection(selectedIndex)
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("Editar Item")
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("Editar item")
             .setView(view)
-            .setPositiveButton("Guardar") { _, _ ->
-                lifecycleScope.launch {
-                    val actualizado = item.copy(
-                        titulo = etTitulo.text.toString(),
-                        valor = etValor.text.toString().toDoubleOrNull() ?: item.valor,
-                        descripcion = etDescripcion.text.toString(),
-                        categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key
-                    )
-                    viewModel.update(actualizado)
-                }
-            }
+            .setPositiveButton("Guardar", null)
             .setNegativeButton("Cancelar", null)
-            .show()
+            .create()
+
+        dialog.setOnShowListener {
+            val btnGuardar = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            btnGuardar.setOnClickListener {
+                val titulo = etTitulo.text.toString().trim()
+                if (titulo.isBlank()) {
+                    Toast.makeText(requireContext(), "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                val valor = etValor.text.toString().toDoubleOrNull() ?: item.valor
+                val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
+                val categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key
+
+                val actualizado = item.copy(
+                    titulo = titulo,
+                    valor = valor,
+                    descripcion = descripcion,
+                    categoriaId = categoriaId
+                )
+                viewModel.update(actualizado)
+                dialog.dismiss()
+            }
+        }
+        dialog.show()
     }
 
-    // --- GESTIÓN DE CATEGORÍAS ---
-    private fun showManageCategoriesDialog() {
+    // --- CREAR CATEGORIA ---
+    private fun showCreateCategoriaDialog() {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_categoria, null)
         val lvCategorias = view.findViewById<ListView>(R.id.lvCategorias)
         val etCategoriaNombre = view.findViewById<EditText>(R.id.etCategoriaNombre)
@@ -226,15 +254,17 @@ class ItemListByCollectionFragment : Fragment() {
         lvCategorias.adapter = adapterList
 
         btnAddCategoria.setOnClickListener {
-            val nombre = etCategoriaNombre.text.toString()
+            val nombre = etCategoriaNombre.text.toString().trim()
             if (nombre.isNotBlank()) {
                 lifecycleScope.launch {
                     val categoria = Categoria(nombre = nombre)
                     val id = categoriaRepo.insert(categoria).toInt()
                     categoriasMap[id] = nombre
-                    adapterList.add(nombre)
+                    adapterList.clear()
+                    adapterList.addAll(categoriasMap.values)
                     adapterList.notifyDataSetChanged()
                     etCategoriaNombre.text.clear()
+                    updateFabState()
                 }
             }
         }
@@ -265,6 +295,7 @@ class ItemListByCollectionFragment : Fragment() {
                         adapterList.clear()
                         adapterList.addAll(categoriasMap.values)
                         adapterList.notifyDataSetChanged()
+                        updateFabState()
                     }
                 }
                 .show()
@@ -275,11 +306,6 @@ class ItemListByCollectionFragment : Fragment() {
             .setView(view)
             .setNegativeButton("Cerrar", null)
             .show()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 
     companion object {
