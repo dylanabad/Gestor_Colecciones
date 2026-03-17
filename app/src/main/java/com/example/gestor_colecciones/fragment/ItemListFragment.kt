@@ -14,6 +14,7 @@ import com.example.gestor_colecciones.databinding.FragmentItemListBinding
 import com.example.gestor_colecciones.adapters.ItemAdapter
 import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.repository.ItemRepository
+import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
@@ -29,6 +30,8 @@ class ItemListFragment : Fragment() {
     private lateinit var viewModel: ItemViewModel
     private lateinit var adapter: ItemAdapter
 
+    private var categoriasMap: Map<Int, String> = emptyMap() // 🔥 clave
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -40,27 +43,49 @@ class ItemListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // RecyclerView
-        adapter = ItemAdapter(emptyList())
-        binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvItems.adapter = adapter
-
-        // ViewModel
         val db = DatabaseProvider.getDatabase(requireContext())
-        val repo = ItemRepository(db.itemDao())
+
+        val itemRepo = ItemRepository(db.itemDao())
+        val categoriaRepo = CategoriaRepository(db.categoriaDao())
+
         viewModel = ViewModelProvider(
             this,
-            ItemViewModelFactory(repo)
+            ItemViewModelFactory(itemRepo)
         )[ItemViewModel::class.java]
 
-        // Observar lista de items
+        // 1. Cargar categorías primero
         lifecycleScope.launch {
-            viewModel.items.collectLatest { items ->
-                adapter.updateList(items)
+            val categorias = categoriaRepo.allCategoriasOnce()
+            categoriasMap = categorias.associate { it.id to it.nombre }
+
+            // 2. Crear adapter DESPUÉS
+            adapter = ItemAdapter(
+                items = emptyList(),
+                categoriasMap = categoriasMap,
+                onItemClick = { item ->
+                    val fragment = ItemDetailFragment.newInstance(item.id)
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, fragment)
+                        .addToBackStack(null)
+                        .commit()
+                },
+                onItemLongClick = { item ->
+                    // aquí puedes meter edición si quieres
+                }
+            )
+
+            binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
+            binding.rvItems.adapter = adapter
+
+            //  3. Observar items (ya con adapter listo)
+            lifecycleScope.launch {
+                viewModel.items.collectLatest { items ->
+                    adapter.updateList(items)
+                }
             }
         }
 
-        // Configurar búsqueda usando SearchView
+        //Búsqueda
         binding.searchItems.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 query?.let { search(it) }
@@ -81,7 +106,7 @@ class ItemListFragment : Fragment() {
             }
         })
 
-        // --- FAB: agregar item y abrir detalle ---
+        // ➕ FAB
         binding.fabAddItem.setOnClickListener {
             val newItem = Item(
                 titulo = "Nuevo item",
@@ -95,11 +120,10 @@ class ItemListFragment : Fragment() {
                 calificacion = 4.5f
             )
 
-            // Insertar usando ViewModel y abrir detalle con callback
             viewModel.insert(newItem) { id ->
                 val fragment = ItemDetailFragment.newInstance(id)
                 parentFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, fragment) // coincide con tu Activity
+                    .replace(R.id.fragment_container, fragment)
                     .addToBackStack(null)
                     .commit()
             }
