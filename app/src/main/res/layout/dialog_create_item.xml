@@ -1,34 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:descendantFocusability="afterDescendants">
 
+    <!-- Título del item -->
     <EditText
         android:id="@+id/etTitulo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Título"/>
+        android:hint="Título"
+        android:inputType="textCapWords"
+        android:focusableInTouchMode="true"
+        android:clickable="true"/>
 
+    <!-- Valor del item -->
     <EditText
         android:id="@+id/etValor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Valor"
-        android:inputType="numberDecimal"/>
+        android:inputType="numberDecimal"
+        android:focusableInTouchMode="true"
+        android:clickable="true"
+        android:layout_marginTop="8dp"/>
 
+    <!-- Descripción del item -->
     <EditText
         android:id="@+id/etDescripcion"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Descripción"
-        android:inputType="textMultiLine"/>
+        android:inputType="textMultiLine"
+        android:focusableInTouchMode="true"
+        android:clickable="true"
+        android:layout_marginTop="8dp"
+        android:minLines="2"/>
 
+    <!-- Spinner de categoría -->
     <Spinner
         android:id="@+id/spinnerCategoria"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:spinnerMode="dropdown"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="12dp"
+        android:focusable="true"
+        android:clickable="true"/>
 </LinearLayout>

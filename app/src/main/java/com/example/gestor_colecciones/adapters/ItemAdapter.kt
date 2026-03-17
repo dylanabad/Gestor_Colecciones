@@ -9,11 +9,23 @@ import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.entities.Item
 
 class ItemAdapter(
-    var items: List<Item>,
-    private val categoriasMap: Map<Int, String>, // mapa categoriaId -> nombre
-    private val onItemClick: ((Item) -> Unit)? = null,
-    private val onItemLongClick: ((Item) -> Unit)? = null
+    items: List<Item> = emptyList(),
+    categoriasMap: Map<Int, String> = emptyMap()
 ) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
+
+    // Lista de items a mostrar
+    private var items: List<Item> = items
+
+    // Mapa de categorías (id -> nombre)
+    var categoriasMap: Map<Int, String> = categoriasMap
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
+
+    // Listeners públicos para clicks
+    var onItemClick: ((Item) -> Unit)? = null
+    var onItemLongClick: ((Item) -> Unit)? = null
 
     inner class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val title: TextView = view.findViewById(R.id.tv_item_title)
@@ -21,9 +33,18 @@ class ItemAdapter(
         val categoria: TextView = view.findViewById(R.id.tv_item_categoria)
 
         init {
-            view.setOnClickListener { onItemClick?.invoke(items[adapterPosition]) }
+            view.setOnClickListener {
+                val position = bindingAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onItemClick?.invoke(items[position])
+                }
+            }
+
             view.setOnLongClickListener {
-                onItemLongClick?.invoke(items[adapterPosition])
+                val position = bindingAdapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onItemLongClick?.invoke(items[position])
+                }
                 true
             }
         }
@@ -42,12 +63,14 @@ class ItemAdapter(
         holder.categoria.text = categoriasMap[item.categoriaId] ?: "Sin categoría"
     }
 
-    override fun getItemCount() = items.size
+    override fun getItemCount(): Int = items.size
 
+    // Actualizar lista de items
     fun updateList(newItems: List<Item>) {
         items = newItems
         notifyDataSetChanged()
     }
 
+    // Obtener item por posición
     fun getItem(position: Int): Item = items[position]
 }

@@ -3,7 +3,10 @@
     android:orientation="horizontal"
     android:padding="12dp"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="false"
+    android:descendantFocusability="blocksDescendants">
 
     <!-- Imagen del ítem -->
     <ImageView
@@ -12,7 +15,9 @@
         android:layout_height="60dp"
         android:scaleType="centerCrop"
         android:contentDescription="Imagen representativa del ítem"
-        android:src="@mipmap/ic_launcher" />
+        android:src="@mipmap/ic_launcher"
+        android:focusable="false"
+        android:clickable="false"/>
 
     <!-- Info del ítem -->
     <LinearLayout
@@ -20,7 +25,9 @@
         android:layout_marginStart="12dp"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:focusable="false"
+        android:clickable="false">
 
         <TextView
             android:id="@+id/tv_item_title"
@@ -28,7 +35,9 @@
             android:layout_height="wrap_content"
             android:text="Título del ítem"
             android:textStyle="bold"
-            android:textSize="16sp"/>
+            android:textSize="16sp"
+            android:focusable="false"
+            android:clickable="false"/>
 
         <TextView
             android:id="@+id/tv_item_categoria"
@@ -37,7 +46,9 @@
             android:text="Categoría"
             android:textSize="14sp"
             android:textColor="@android:color/darker_gray"
-            android:layout_marginTop="2dp"/>
+            android:layout_marginTop="2dp"
+            android:focusable="false"
+            android:clickable="false"/>
 
         <TextView
             android:id="@+id/tv_item_value"
@@ -45,6 +56,8 @@
             android:layout_height="wrap_content"
             android:text="Valor: $0.00"
             android:textSize="14sp"
-            android:layout_marginTop="2dp"/>
+            android:layout_marginTop="2dp"
+            android:focusable="false"
+            android:clickable="false"/>
     </LinearLayout>
 </LinearLayout>

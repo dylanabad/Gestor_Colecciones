@@ -21,8 +21,9 @@ import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.util.Date
+import java.util.*
 
 class ItemListByCollectionFragment : Fragment() {
 
@@ -51,35 +52,40 @@ class ItemListByCollectionFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val itemRepo = ItemRepository(DatabaseProvider.getDatabase(requireContext()).itemDao())
-        val categoriaRepo = CategoriaRepository(DatabaseProvider.getDatabase(requireContext()).categoriaDao())
+        val db = DatabaseProvider.getDatabase(requireContext())
+        val itemRepo = ItemRepository(db.itemDao())
+        val categoriaRepo = CategoriaRepository(db.categoriaDao())
 
         viewModel = ViewModelProvider(this, ItemViewModelFactory(itemRepo))[ItemViewModel::class.java]
 
-        // Cargar categorías y crear el mapa categoriaId -> nombre
+        // Cargar categorías
         lifecycleScope.launch {
-            val categorias = categoriaRepo.allCategoriasOnce()
+            val categorias: List<Categoria> = categoriaRepo.allCategoriasOnce()
             categoriasMap = categorias.associate { it.id to it.nombre }
 
-            adapter = ItemAdapter(fullItemList, categoriasMap,
-                onItemClick = { item ->
-                    val fragment = ItemDetailFragment.newInstance(item.id)
-                    parentFragmentManager.beginTransaction()
-                        .replace(R.id.fragment_container, fragment)
-                        .addToBackStack(null)
-                        .commit()
-                },
-                onItemLongClick = { item -> showEditItemDialog(item) }
-            )
+            // Inicializar adapter
+            adapter = ItemAdapter(fullItemList, categoriasMap)
 
+            // Asignar listeners
+            adapter.onItemClick = { item: Item ->
+                val fragment = ItemDetailFragment.newInstance(item.id)
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack(null)
+                    .commit()
+            }
+            adapter.onItemLongClick = { item: Item ->
+                showEditItemDialog(item)
+            }
+
+            // Configurar RecyclerView
             binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
             binding.rvItems.adapter = adapter
         }
 
         // Mostrar nombre de la colección
         lifecycleScope.launch {
-            val collection = DatabaseProvider.getDatabase(requireContext()).coleccionDao()
-                .getColeccionById(collectionId)
+            val collection = db.coleccionDao().getColeccionById(collectionId)
             collection?.let {
                 binding.tvCollectionName.text = it.nombre
                 binding.tvCollectionName.visibility = View.VISIBLE
@@ -103,15 +109,15 @@ class ItemListByCollectionFragment : Fragment() {
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvItems)
 
-        // Observar items
+        // Observar items de la colección
         lifecycleScope.launch {
-            viewModel.getItemsByCollection(collectionId).collect { items ->
+            viewModel.getItemsByCollection(collectionId).collectLatest { items ->
                 fullItemList = items
                 adapter.updateList(items)
             }
         }
 
-        // Crear item
+        // FAB para crear nuevo item
         binding.fabAddItem.setOnClickListener { showCreateItemDialog() }
 
         // Buscador
@@ -126,9 +132,109 @@ class ItemListByCollectionFragment : Fragment() {
     }
 
     private fun showCreateItemDialog() {
+        val view = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_create_item, null)
+
+        val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
+        val etValor = view.findViewById<EditText>(R.id.etValor)
+        val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
+        val spinnerCategoria = view.findViewById<Spinner>(R.id.spinnerCategoria)
+
+        val categoriasList = categoriasMap.entries.toList()
+        val adapterSpinner = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            categoriasList.map { it.value }
+        )
+        adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerCategoria.adapter = adapterSpinner
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Nuevo item")
+            .setView(view)
+            .setPositiveButton("Crear") { _, _ ->
+                lifecycleScope.launch {
+                    val titulo = etTitulo.text.toString()
+                    val valor = etValor.text.toString().toDoubleOrNull() ?: 0.0
+                    val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
+                    val categoriaId = if (categoriasList.isNotEmpty()) {
+                        categoriasList[spinnerCategoria.selectedItemPosition].key
+                    } else 0
+
+                    if (titulo.isNotBlank()) {
+                        val newItem = Item(
+                            titulo = titulo,
+                            categoriaId = categoriaId,
+                            collectionId = collectionId,
+                            fechaAdquisicion = Date(),
+                            valor = valor,
+                            imagenPath = null,
+                            estado = "Nuevo",
+                            descripcion = descripcion,
+                            calificacion = 0f
+                        )
+                        viewModel.insert(newItem) { id ->
+                            val fragment = ItemDetailFragment.newInstance(id)
+                            parentFragmentManager.beginTransaction()
+                                .replace(R.id.fragment_container, fragment)
+                                .addToBackStack(null)
+                                .commit()
+                        }
+                    }
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun showEditItemDialog(item: Item) {
+        val view = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_create_item, null)
+
+        val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
+        val etValor = view.findViewById<EditText>(R.id.etValor)
+        val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
+        val spinnerCategoria = view.findViewById<Spinner>(R.id.spinnerCategoria)
+
+        val categoriasList = categoriasMap.entries.toList()
+        val adapterSpinner = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            categoriasList.map { it.value }
+        )
+        adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerCategoria.adapter = adapterSpinner
+
+        val selectedIndex = categoriasList.indexOfFirst { it.key == item.categoriaId }
+        if (selectedIndex >= 0) spinnerCategoria.setSelection(selectedIndex)
+
+        etTitulo.setText(item.titulo)
+        etValor.setText(item.valor.toString())
+        etDescripcion.setText(item.descripcion)
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Editar item")
+            .setView(view)
+            .setPositiveButton("Guardar") { _, _ ->
+                lifecycleScope.launch {
+                    val titulo = etTitulo.text.toString()
+                    val valor = etValor.text.toString().toDoubleOrNull() ?: item.valor
+                    val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
+                    val categoriaId = if (categoriasList.isNotEmpty()) {
+                        categoriasList[spinnerCategoria.selectedItemPosition].key
+                    } else item.categoriaId
+
+                    val actualizado = item.copy(
+                        titulo = titulo,
+                        valor = valor,
+                        descripcion = descripcion,
+                        categoriaId = categoriaId
+                    )
+                    viewModel.update(actualizado)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     override fun onDestroyView() {
