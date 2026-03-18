@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialSharedAxis
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ItemAdapter
@@ -175,7 +176,9 @@ class ItemListByCollectionFragment : Fragment() {
 
             override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {
                 val item = adapter.getItem(viewHolder.adapterPosition)
-                lifecycleScope.launch { viewModel.delete(item) }
+                viewModel.delete(item) {
+                    showSnackbar("Item \"${item.titulo}\" eliminado")
+                }
             }
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvItems)
@@ -198,6 +201,12 @@ class ItemListByCollectionFragment : Fragment() {
         binding.fabAddItem.isEnabled = categoriasMap.isNotEmpty()
         binding.fabAddItem.alpha = if (categoriasMap.isNotEmpty()) 1f else 0.5f
         adapter.categoriasMap = categoriasMap
+    }
+
+    private fun showSnackbar(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
+            .setAnchorView(binding.fabAddItem)
+            .show()
     }
 
     // --- CREAR ITEM ---
@@ -258,7 +267,9 @@ class ItemListByCollectionFragment : Fragment() {
                     descripcion = descripcion,
                     calificacion = 0f
                 )
-                viewModel.insert(newItem)
+                viewModel.insert(newItem) {
+                    showSnackbar("Item \"$titulo\" creado")
+                }
                 dialog.dismiss()
             }
         }
@@ -326,7 +337,9 @@ class ItemListByCollectionFragment : Fragment() {
                         copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg")
                     } ?: item.imagenPath
                 )
-                viewModel.update(actualizado)
+                viewModel.update(actualizado) {
+                    showSnackbar("Item \"$titulo\" actualizado")
+                }
                 dialog.dismiss()
             }
         }
@@ -350,7 +363,7 @@ class ItemListByCollectionFragment : Fragment() {
         btnAddCategoria.setOnClickListener {
             val nombre = etCategoriaNombre.text.toString().trim()
             if (nombre.isNotBlank()) {
-                lifecycleScope.launch {
+                viewLifecycleOwner.lifecycleScope.launch {
                     val cat = Categoria(nombre = nombre)
                     val id = categoriaRepo.insert(cat).toInt()
                     categoriasMap[id] = nombre
@@ -359,6 +372,7 @@ class ItemListByCollectionFragment : Fragment() {
                     adapterList.notifyDataSetChanged()
                     etCategoriaNombre.text.clear()
                     updateFabState()
+                    showSnackbar("Categoría \"$nombre\" creada")
                 }
             }
         }
@@ -372,17 +386,19 @@ class ItemListByCollectionFragment : Fragment() {
                 .setTitle("Editar categoría")
                 .setView(editView)
                 .setPositiveButton("Guardar") { _, _ ->
-                    lifecycleScope.launch {
-                        val cat = Categoria(id = categoriaId, nombre = editView.text.toString())
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val nuevoNombre = editView.text.toString()
+                        val cat = Categoria(id = categoriaId, nombre = nuevoNombre)
                         categoriaRepo.update(cat)
-                        categoriasMap[categoriaId] = editView.text.toString()
+                        categoriasMap[categoriaId] = nuevoNombre
                         adapterList.clear()
                         adapterList.addAll(categoriasMap.values)
                         adapterList.notifyDataSetChanged()
+                        showSnackbar("Categoría actualizada")
                     }
                 }
                 .setNegativeButton("Eliminar") { _, _ ->
-                    lifecycleScope.launch {
+                    viewLifecycleOwner.lifecycleScope.launch {
                         val cat = Categoria(id = categoriaId, nombre = nombreActual)
                         categoriaRepo.delete(cat)
                         categoriasMap.remove(categoriaId)
@@ -390,6 +406,7 @@ class ItemListByCollectionFragment : Fragment() {
                         adapterList.addAll(categoriasMap.values)
                         adapterList.notifyDataSetChanged()
                         updateFabState()
+                        showSnackbar("Categoría \"$nombreActual\" eliminada")
                     }
                 }
                 .show()

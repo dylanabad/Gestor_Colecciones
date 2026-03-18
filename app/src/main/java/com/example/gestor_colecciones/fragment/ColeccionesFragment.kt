@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.*
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
 import com.google.android.material.transition.MaterialSharedAxis
 import com.example.gestor_colecciones.R
@@ -126,7 +127,10 @@ class ColeccionesFragment : Fragment() {
                     .alpha(0f)
                     .setDuration(300)
                     .withEndAction {
-                        lifecycleScope.launch { viewModel.delete(coleccion) }
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            viewModel.delete(coleccion)
+                            showSnackbar("Colección \"${coleccion.nombre}\" eliminada")
+                        }
                     }.start()
             }
         }
@@ -155,6 +159,12 @@ class ColeccionesFragment : Fragment() {
     }
 
     // 🔹 Función para copiar imagen al almacenamiento interno
+    private fun showSnackbar(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
+            .setAnchorView(binding.fabAddColeccion)
+            .show()
+    }
+
     private fun copyImageToInternalStorage(uri: Uri, fileName: String): String? {
         return try {
             val inputStream = requireContext().contentResolver.openInputStream(uri)
@@ -211,7 +221,7 @@ class ColeccionesFragment : Fragment() {
             .setTitle("Nueva colección")
             .setView(view)
             .setPositiveButton("Crear") { _, _ ->
-                val nombre = etNombre.text.toString()
+                val nombre = etNombre.text.toString().trim()
                 val descripcion = etDescripcion.text.toString()
                 var imagePath: String? = null
 
@@ -230,7 +240,10 @@ class ColeccionesFragment : Fragment() {
                         Date(),
                         imagenPath = imagePath
                     )
-                    lifecycleScope.launch { viewModel.insert(coleccion) }
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        viewModel.insert(coleccion)
+                        showSnackbar("Colección \"$nombre\" creada")
+                    }
                 }
 
                 selectedImageUri = null
@@ -281,11 +294,14 @@ class ColeccionesFragment : Fragment() {
                 }
 
                 val actualizado = coleccion.copy(
-                    nombre = etNombre.text.toString(),
+                    nombre = etNombre.text.toString().trim(),
                     descripcion = etDescripcion.text.toString(),
                     imagenPath = imagePath
                 )
-                lifecycleScope.launch { viewModel.update(actualizado) }
+                viewLifecycleOwner.lifecycleScope.launch {
+                    viewModel.update(actualizado)
+                    showSnackbar("Colección \"${actualizado.nombre}\" actualizada")
+                }
 
                 selectedImageUri = null
                 currentImageView = null

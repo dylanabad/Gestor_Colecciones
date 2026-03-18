@@ -30,11 +30,25 @@ class ItemViewModel(
     }
 
     fun update(item: Item) {
-        viewModelScope.launch { itemRepository.update(item) }
+        update(item, null)
     }
 
     fun delete(item: Item) {
-        viewModelScope.launch { itemRepository.delete(item) }
+        delete(item, null)
+    }
+
+    fun update(item: Item, onUpdated: (() -> Unit)? = null) {
+        viewModelScope.launch {
+            itemRepository.update(item)
+            onUpdated?.invoke()
+        }
+    }
+
+    fun delete(item: Item, onDeleted: (() -> Unit)? = null) {
+        viewModelScope.launch {
+            itemRepository.delete(item)
+            onDeleted?.invoke()
+        }
     }
 
     fun getItemsByCollection(collectionId: Int) = itemRepository.getItemsByCollection(collectionId)
