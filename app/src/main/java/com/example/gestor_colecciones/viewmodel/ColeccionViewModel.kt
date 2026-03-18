@@ -19,20 +19,20 @@ class ColeccionViewModel(private val repository: ColeccionRepository) : ViewMode
         )
 
     fun insert(coleccion: Coleccion) {
-        viewModelScope.launch {
-            repository.insert(coleccion)
-        }
+        viewModelScope.launch { repository.insert(coleccion) }
     }
 
     fun update(coleccion: Coleccion) {
-        viewModelScope.launch {
-            repository.update(coleccion)
-        }
+        viewModelScope.launch { repository.update(coleccion) }
     }
 
     fun delete(coleccion: Coleccion) {
+        viewModelScope.launch { repository.delete(coleccion) }
+    }
+    fun getColeccionById(id: Int, onResult: (Coleccion?) -> Unit) {
         viewModelScope.launch {
-            repository.delete(coleccion)
+            val coleccion = repository.getById(id)
+            onResult(coleccion)
         }
     }
 }

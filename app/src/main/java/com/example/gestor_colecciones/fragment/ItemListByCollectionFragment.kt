@@ -1,5 +1,6 @@
 package com.example.gestor_colecciones.fragment
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,8 +17,10 @@ import com.example.gestor_colecciones.adapters.ItemAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
 import com.example.gestor_colecciones.entities.Categoria
+import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.repository.CategoriaRepository
+import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
@@ -37,6 +40,7 @@ class ItemListByCollectionFragment : Fragment() {
 
     private lateinit var categoriaRepo: CategoriaRepository
     private lateinit var itemRepo: ItemRepository
+    private lateinit var coleccionRepo: ColeccionRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,8 +61,25 @@ class ItemListByCollectionFragment : Fragment() {
         val db = DatabaseProvider.getDatabase(requireContext())
         itemRepo = ItemRepository(db.itemDao())
         categoriaRepo = CategoriaRepository(db.categoriaDao())
+        coleccionRepo = ColeccionRepository(db.coleccionDao())
+
         viewModel = ViewModelProvider(this, ItemViewModelFactory(itemRepo))[ItemViewModel::class.java]
 
+        // --- Mostrar nombre e imagen de la colección ---
+        lifecycleScope.launch {
+            val coleccion: Coleccion? = coleccionRepo.getById(collectionId)
+            coleccion?.let { c ->
+                binding.tvCollectionName.text = c.nombre
+                binding.tvCollectionName.visibility = View.VISIBLE
+
+                if (!c.imagenPath.isNullOrEmpty()) {
+                    binding.ivCollectionImage.setImageURI(Uri.parse(c.imagenPath))
+                    binding.ivCollectionImage.visibility = View.VISIBLE
+                }
+            }
+        }
+
+        // RecyclerView y adapter
         adapter = ItemAdapter(fullItemList, categoriasMap)
         binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
         binding.rvItems.adapter = adapter
@@ -81,8 +102,7 @@ class ItemListByCollectionFragment : Fragment() {
             categoriasMap.putAll(categorias.associate { it.id to it.nombre })
             updateFabState()
 
-            val itemsFlow = viewModel.getItemsByCollection(collectionId)
-            itemsFlow.collect { list ->
+            viewModel.getItemsByCollection(collectionId).collect { list ->
                 fullItemList = list
                 adapter.updateList(list)
             }
@@ -313,5 +333,10 @@ class ItemListByCollectionFragment : Fragment() {
         fun newInstance(collectionId: Int) = ItemListByCollectionFragment().apply {
             arguments = Bundle().apply { putInt(ARG_COLLECTION_ID, collectionId) }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
