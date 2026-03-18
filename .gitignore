@@ -15,6 +15,7 @@
 local.properties
 .gradle/
 .gradle-codex/
+.gradle-codex-home/
 build/
 local.properties
 .idea/

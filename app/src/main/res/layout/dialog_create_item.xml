@@ -1,51 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp"
-    android:descendantFocusability="afterDescendants">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
-    <!-- Título del item -->
+    <!-- Título -->
     <EditText
         android:id="@+id/etTitulo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Título"
-        android:inputType="text|textCapWords"
-        android:focusableInTouchMode="true"
-        android:clickable="true" />
+        android:hint="Título"/>
 
-    <!-- Valor del item -->
+    <!-- Valor -->
     <EditText
         android:id="@+id/etValor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Valor"
-        android:inputType="numberDecimal"
-        android:focusableInTouchMode="true"
-        android:clickable="true"
-        android:layout_marginTop="8dp" />
+        android:inputType="numberDecimal"/>
 
-    <!-- Descripción del item -->
+    <!-- Descripción -->
     <EditText
         android:id="@+id/etDescripcion"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Descripción"
-        android:inputType="textCapSentences|textMultiLine"
-        android:focusableInTouchMode="true"
-        android:clickable="true"
-        android:layout_marginTop="8dp"
-        android:minLines="2" />
+        android:hint="Descripción"/>
 
-    <!-- Spinner de categoría -->
+    <!-- Spinner Categoría -->
     <Spinner
         android:id="@+id/spinnerCategoria"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <!-- Imagen de previsualización -->
+    <ImageView
+        android:id="@+id/ivItemPreview"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_marginTop="8dp"
+        android:scaleType="centerCrop"
+        android:src="@mipmap/ic_launcher"
+        android:contentDescription="Previsualización de imagen"/>
+
+    <!-- Botón para seleccionar imagen -->
+    <Button
+        android:id="@+id/btnSelectImage"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:spinnerMode="dropdown"
-        android:layout_marginTop="12dp"
-        android:focusable="true"
-        android:clickable="true" />
+        android:text="Seleccionar imagen"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"/>
+
 </LinearLayout>

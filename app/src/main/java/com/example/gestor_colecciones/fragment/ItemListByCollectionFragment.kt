@@ -6,25 +6,29 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ItemAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
-import com.example.gestor_colecciones.databinding.FragmentItemListBinding
+import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.entities.Categoria
-import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.repository.CategoriaRepository
-import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
+import com.example.gestor_colecciones.databinding.FragmentItemListBinding
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 import java.util.*
 
 class ItemListByCollectionFragment : Fragment() {
@@ -41,6 +45,17 @@ class ItemListByCollectionFragment : Fragment() {
     private lateinit var categoriaRepo: CategoriaRepository
     private lateinit var itemRepo: ItemRepository
     private lateinit var coleccionRepo: ColeccionRepository
+
+    private var selectedItemImageUri: Uri? = null
+    private var currentItemImageView: ImageView? = null
+    private val pickItemImageLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            selectedItemImageUri = it
+            currentItemImageView?.setImageURI(it)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,34 +77,41 @@ class ItemListByCollectionFragment : Fragment() {
         itemRepo = ItemRepository(db.itemDao())
         categoriaRepo = CategoriaRepository(db.categoriaDao())
         coleccionRepo = ColeccionRepository(db.coleccionDao())
+        viewModel = ViewModelProvider(
+            this,
+            ItemViewModelFactory(itemRepo, categoriaRepo)
+        )[ItemViewModel::class.java]
 
-        viewModel = ViewModelProvider(this, ItemViewModelFactory(itemRepo))[ItemViewModel::class.java]
-
-        // --- Mostrar nombre e imagen de la colección ---
+        // Header: nombre + imagen de la colección
         lifecycleScope.launch {
-            val coleccion: Coleccion? = coleccionRepo.getById(collectionId)
-            coleccion?.let { c ->
-                binding.tvCollectionName.text = c.nombre
+            val coleccion = coleccionRepo.getById(collectionId)
+            if (coleccion != null) {
+                binding.tvCollectionName.text = coleccion.nombre
                 binding.tvCollectionName.visibility = View.VISIBLE
 
-                if (!c.imagenPath.isNullOrEmpty()) {
-                    binding.ivCollectionImage.setImageURI(Uri.parse(c.imagenPath))
+                val imagePath = coleccion.imagenPath
+                val file = imagePath?.let { File(it) }
+                if (file != null && file.exists()) {
                     binding.ivCollectionImage.visibility = View.VISIBLE
+                    Glide.with(this@ItemListByCollectionFragment)
+                        .load(file)
+                        .into(binding.ivCollectionImage)
+                } else {
+                    binding.ivCollectionImage.visibility = View.GONE
                 }
+            } else {
+                binding.tvCollectionName.visibility = View.GONE
+                binding.ivCollectionImage.visibility = View.GONE
             }
         }
 
-        // RecyclerView y adapter
         adapter = ItemAdapter(fullItemList, categoriasMap)
         binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
         binding.rvItems.adapter = adapter
 
         adapter.onItemClick = { item ->
-            val fragment = ItemDetailFragment.newInstance(item.id)
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .addToBackStack(null)
-                .commit()
+            // Aquí puedes abrir un detalle si tienes ItemDetailFragment
+            Toast.makeText(requireContext(), "Click en ${item.titulo}", Toast.LENGTH_SHORT).show()
         }
 
         adapter.onItemLongClick = { item ->
@@ -136,6 +158,19 @@ class ItemListByCollectionFragment : Fragment() {
             }
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvItems)
+
+        // SearchView
+        binding.searchItems.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
+            override fun onQueryTextChange(newText: String?): Boolean {
+                val texto = newText.orEmpty().lowercase(Locale.getDefault())
+                val filtradas = fullItemList.filter {
+                    it.titulo.lowercase(Locale.getDefault()).contains(texto)
+                }
+                adapter.updateList(filtradas)
+                return true
+            }
+        })
     }
 
     private fun updateFabState() {
@@ -146,6 +181,7 @@ class ItemListByCollectionFragment : Fragment() {
 
     // --- CREAR ITEM ---
     private fun showCreateItemDialog() {
+        selectedItemImageUri = null
         val categoriasList = categoriasMap.entries.toList()
         if (categoriasList.isEmpty()) return
 
@@ -154,6 +190,11 @@ class ItemListByCollectionFragment : Fragment() {
         val etValor = view.findViewById<EditText>(R.id.etValor)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
         val spinnerCategoria = view.findViewById<Spinner>(R.id.spinnerCategoria)
+        val ivPreview = view.findViewById<ImageView>(R.id.ivItemPreview)
+        val btnSelectImage = view.findViewById<Button>(R.id.btnSelectImage)
+
+        currentItemImageView = ivPreview
+        btnSelectImage.setOnClickListener { pickItemImageLauncher.launch("image/*") }
 
         val adapterSpinner = ArrayAdapter(
             requireContext(),
@@ -189,7 +230,9 @@ class ItemListByCollectionFragment : Fragment() {
                     collectionId = collectionId,
                     fechaAdquisicion = Date(),
                     valor = valor,
-                    imagenPath = null,
+                    imagenPath = selectedItemImageUri?.let { uri ->
+                        copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg")
+                    },
                     estado = "Nuevo",
                     descripcion = descripcion,
                     calificacion = 0f
@@ -203,6 +246,7 @@ class ItemListByCollectionFragment : Fragment() {
 
     // --- EDITAR ITEM ---
     private fun showEditItemDialog(item: Item) {
+        selectedItemImageUri = null
         val categoriasList = categoriasMap.entries.toList()
         if (categoriasList.isEmpty()) return
 
@@ -211,6 +255,12 @@ class ItemListByCollectionFragment : Fragment() {
         val etValor = view.findViewById<EditText>(R.id.etValor)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
         val spinnerCategoria = view.findViewById<Spinner>(R.id.spinnerCategoria)
+        val ivPreview = view.findViewById<ImageView>(R.id.ivItemPreview)
+        val btnSelectImage = view.findViewById<Button>(R.id.btnSelectImage)
+
+        currentItemImageView = ivPreview
+        item.imagenPath?.let { Glide.with(requireContext()).load(File(it)).into(ivPreview) }
+        btnSelectImage.setOnClickListener { pickItemImageLauncher.launch("image/*") }
 
         etTitulo.setText(item.titulo)
         etValor.setText(item.valor.toString())
@@ -250,7 +300,10 @@ class ItemListByCollectionFragment : Fragment() {
                     titulo = titulo,
                     valor = valor,
                     descripcion = descripcion,
-                    categoriaId = categoriaId
+                    categoriaId = categoriaId,
+                    imagenPath = selectedItemImageUri?.let { uri ->
+                        copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg")
+                    } ?: item.imagenPath
                 )
                 viewModel.update(actualizado)
                 dialog.dismiss()
@@ -259,14 +312,14 @@ class ItemListByCollectionFragment : Fragment() {
         dialog.show()
     }
 
-    // --- CREAR CATEGORIA ---
+    // --- CREAR / EDITAR CATEGORÍAS ---
     private fun showCreateCategoriaDialog() {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_categoria, null)
         val lvCategorias = view.findViewById<ListView>(R.id.lvCategorias)
         val etCategoriaNombre = view.findViewById<EditText>(R.id.etCategoriaNombre)
         val btnAddCategoria = view.findViewById<Button>(R.id.btnAddCategoria)
 
-        val adapterList = ArrayAdapter<String>(
+        val adapterList = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_list_item_1,
             categoriasMap.values.toMutableList()
@@ -277,8 +330,8 @@ class ItemListByCollectionFragment : Fragment() {
             val nombre = etCategoriaNombre.text.toString().trim()
             if (nombre.isNotBlank()) {
                 lifecycleScope.launch {
-                    val categoria = Categoria(nombre = nombre)
-                    val id = categoriaRepo.insert(categoria).toInt()
+                    val cat = Categoria(nombre = nombre)
+                    val id = categoriaRepo.insert(cat).toInt()
                     categoriasMap[id] = nombre
                     adapterList.clear()
                     adapterList.addAll(categoriasMap.values)
@@ -327,6 +380,18 @@ class ItemListByCollectionFragment : Fragment() {
             .setNegativeButton("Cerrar", null)
             .show()
     }
+
+    private fun copyImageToInternalStorage(uri: Uri, filename: String): String {
+        val inputStream = requireContext().contentResolver.openInputStream(uri)
+        val file = File(requireContext().filesDir, filename)
+        inputStream.use { input ->
+            FileOutputStream(file).use { output ->
+                input?.copyTo(output)
+            }
+        }
+        return file.absolutePath
+    }
+
 
     companion object {
         private const val ARG_COLLECTION_ID = "collection_id"

@@ -1,8 +1,10 @@
 package com.example.gestor_colecciones.adapters
 
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestor_colecciones.R
@@ -13,17 +15,14 @@ class ItemAdapter(
     categoriasMap: Map<Int, String> = emptyMap()
 ) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
-    // Lista de items a mostrar
     private var items: List<Item> = items
 
-    // Mapa de categorías (id -> nombre)
     var categoriasMap: Map<Int, String> = categoriasMap
         set(value) {
             field = value
             notifyDataSetChanged()
         }
 
-    // Listeners públicos para clicks
     var onItemClick: ((Item) -> Unit)? = null
     var onItemLongClick: ((Item) -> Unit)? = null
 
@@ -31,6 +30,8 @@ class ItemAdapter(
         val title: TextView = view.findViewById(R.id.tv_item_title)
         val value: TextView = view.findViewById(R.id.tv_item_value)
         val categoria: TextView = view.findViewById(R.id.tv_item_categoria)
+        val image: ImageView = view.findViewById(R.id.ivItemImage)
+        val preview: ImageView = view.findViewById(R.id.ivItemPreview)
 
         init {
             view.setOnClickListener {
@@ -61,16 +62,25 @@ class ItemAdapter(
         holder.title.text = item.titulo
         holder.value.text = "Valor: ${item.valor} €"
         holder.categoria.text = categoriasMap[item.categoriaId] ?: "Sin categoría"
+
+        // Cargar imagen del item
+        if (!item.imagenPath.isNullOrEmpty()) {
+            val uri = Uri.parse(item.imagenPath)
+            holder.image.setImageURI(uri)
+            holder.preview.visibility = View.VISIBLE
+            holder.preview.setImageURI(uri)
+        } else {
+            holder.image.setImageResource(R.mipmap.ic_launcher)
+            holder.preview.visibility = View.GONE
+        }
     }
 
     override fun getItemCount(): Int = items.size
 
-    // Actualizar lista de items
     fun updateList(newItems: List<Item>) {
         items = newItems
         notifyDataSetChanged()
     }
 
-    // Obtener item por posición
     fun getItem(position: Int): Item = items[position]
 }
