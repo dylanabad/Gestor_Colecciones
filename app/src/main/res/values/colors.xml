@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Legacy palette (keep to avoid breaking references) -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -7,4 +8,25 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Brand / semantic colors (light) -->
+    <color name="brand_primary">#FF2F6BFF</color>
+    <color name="on_brand_primary">#FFFFFFFF</color>
+    <color name="brand_primary_container">#FFDDE7FF</color>
+    <color name="on_brand_primary_container">#FF001A43</color>
+
+    <color name="brand_secondary">#FF00A896</color>
+    <color name="on_brand_secondary">#FFFFFFFF</color>
+    <color name="brand_secondary_container">#FFB8FFF5</color>
+    <color name="on_brand_secondary_container">#FF00332D</color>
+
+    <color name="app_background">#FFF8FAFF</color>
+    <color name="on_app_background">#FF1A1B1F</color>
+
+    <color name="app_surface">#FFFFFFFF</color>
+    <color name="on_app_surface">#FF1A1B1F</color>
+    <color name="app_surface_variant">#FFE1E2EC</color>
+    <color name="on_app_surface_variant">#FF44464F</color>
+
+    <color name="app_outline">#FF757780</color>
 </resources>

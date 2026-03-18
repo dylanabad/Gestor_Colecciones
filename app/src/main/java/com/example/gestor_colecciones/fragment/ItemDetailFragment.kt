@@ -9,12 +9,14 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
+import com.google.android.material.transition.MaterialSharedAxis
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -28,6 +30,8 @@ class ItemDetailFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         itemId = arguments?.getInt(ARG_ITEM_ID) ?: 0
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true).apply { duration = 240 }
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, false).apply { duration = 220 }
     }
 
     override fun onCreateView(
@@ -49,7 +53,7 @@ class ItemDetailFragment : Fragment() {
         val tvCalificacion = view.findViewById<TextView>(R.id.tvCalificacion)
         val ivImagen = view.findViewById<ImageView>(R.id.ivImagen)
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             val item: Item? = viewModel.getItemById(itemId)
             item?.let {
                 tvTitulo.text = it.titulo
@@ -68,6 +72,7 @@ class ItemDetailFragment : Fragment() {
                     Glide.with(this@ItemDetailFragment)
                         .load(file)
                         .centerCrop()
+                        .transition(DrawableTransitionOptions.withCrossFade(180))
                         .placeholder(R.drawable.ic_no_image)
                         .error(R.drawable.ic_no_image)
                         .into(ivImagen)

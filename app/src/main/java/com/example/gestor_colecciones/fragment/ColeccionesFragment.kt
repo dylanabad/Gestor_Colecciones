@@ -1,6 +1,5 @@
 package com.example.gestor_colecciones.fragment
 
-import android.app.AlertDialog
 import android.graphics.BitmapFactory
 import android.graphics.Rect
 import android.net.Uri
@@ -10,10 +9,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.*
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.transition.MaterialFadeThrough
+import com.google.android.material.transition.MaterialSharedAxis
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ColeccionAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
@@ -25,6 +28,8 @@ import com.example.gestor_colecciones.viewmodel.ColeccionViewModel
 import com.example.gestor_colecciones.viewmodel.ColeccionViewModelFactory
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.File
@@ -40,6 +45,7 @@ class ColeccionesFragment : Fragment() {
     private lateinit var adapter: ColeccionAdapter
     private var listaCompleta: List<Coleccion> = emptyList()
     private var statsMap: MutableMap<Int, String> = mutableMapOf()
+    private var statsJob: Job? = null
 
     // 🔥 NUEVO: imagen
     private var selectedImageUri: Uri? = null
@@ -52,6 +58,14 @@ class ColeccionesFragment : Fragment() {
             selectedImageUri = it
             currentImageView?.setImageURI(it)
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enterTransition = MaterialFadeThrough().apply { duration = 220 }
+        returnTransition = MaterialFadeThrough().apply { duration = 200 }
+        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, true).apply { duration = 240 }
+        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false).apply { duration = 240 }
     }
 
     override fun onCreateView(
@@ -77,6 +91,7 @@ class ColeccionesFragment : Fragment() {
             onClick = { coleccion ->
                 val fragment = ItemListByCollectionFragment.newInstance(coleccion.id)
                 parentFragmentManager.beginTransaction()
+                    .setReorderingAllowed(true)
                     .replace((view.parent as ViewGroup).id, fragment)
                     .addToBackStack(null)
                     .commit()
@@ -89,7 +104,14 @@ class ColeccionesFragment : Fragment() {
 
         binding.rvColecciones.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.rvColecciones.adapter = adapter
-        binding.rvColecciones.addItemDecoration(GridSpacingItemDecoration(2, 32, true))
+        binding.rvColecciones.itemAnimator = DefaultItemAnimator().apply {
+            supportsChangeAnimations = false
+            addDuration = 180
+            removeDuration = 160
+            moveDuration = 180
+            changeDuration = 160
+        }
+        binding.rvColecciones.addItemDecoration(GridSpacingItemDecoration(2, 16, true))
 
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             override fun onMove(
@@ -110,7 +132,7 @@ class ColeccionesFragment : Fragment() {
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvColecciones)
 
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             viewModel.colecciones.collectLatest { lista ->
                 listaCompleta = lista
                 updateStatsAndAdapter()
@@ -151,13 +173,19 @@ class ColeccionesFragment : Fragment() {
 
     private fun updateStatsAndAdapter(filteredList: List<Coleccion>? = null) {
         val lista = filteredList ?: listaCompleta
+        adapter.updateList(lista)
+        statsJob?.cancel()
         statsMap.clear()
-        lifecycleScope.launch {
-            lista.forEach { coleccion ->
-                itemViewModel.getItemsByCollection(coleccion.id).collect { items ->
-                    statsMap[coleccion.id] =
-                        "${items.size} items | Valor: ${items.sumOf { it.valor }}€"
-                    adapter.updateList(lista)
+        statsJob = viewLifecycleOwner.lifecycleScope.launch {
+            coroutineScope {
+                lista.forEach { coleccion ->
+                    launch {
+                        itemViewModel.getItemsByCollection(coleccion.id).collectLatest { items ->
+                            statsMap[coleccion.id] =
+                                "${items.size} items · Valor: ${items.sumOf { it.valor }}€"
+                            adapter.notifyStatsChangedFor(coleccion.id)
+                        }
+                    }
                 }
             }
         }
@@ -179,7 +207,7 @@ class ColeccionesFragment : Fragment() {
             pickImageLauncher.launch("image/*")
         }
 
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Nueva colección")
             .setView(view)
             .setPositiveButton("Crear") { _, _ ->
@@ -240,7 +268,7 @@ class ColeccionesFragment : Fragment() {
             pickImageLauncher.launch("image/*")
         }
 
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Editar colección")
             .setView(view)
             .setPositiveButton("Guardar") { _, _ ->

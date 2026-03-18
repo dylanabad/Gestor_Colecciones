@@ -11,6 +11,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.DefaultItemAnimator
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ItemAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
@@ -21,6 +23,7 @@ import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
+import com.google.android.material.transition.MaterialSharedAxis
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -36,6 +39,14 @@ class ItemListFragment : Fragment() {
 
     private lateinit var itemRepo: ItemRepository
     private lateinit var categoriaRepo: CategoriaRepository
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true).apply { duration = 240 }
+        returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, false).apply { duration = 220 }
+        exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, true).apply { duration = 240 }
+        reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false).apply { duration = 220 }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -60,10 +71,18 @@ class ItemListFragment : Fragment() {
         adapter = ItemAdapter(emptyList(), categoriasMap)
         binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
         binding.rvItems.adapter = adapter
+        binding.rvItems.itemAnimator = DefaultItemAnimator().apply {
+            supportsChangeAnimations = false
+            addDuration = 180
+            removeDuration = 160
+            moveDuration = 180
+            changeDuration = 160
+        }
 
         adapter.onItemClick = { item ->
             val fragment = ItemDetailFragment.newInstance(item.id)
             parentFragmentManager.beginTransaction()
+                .setReorderingAllowed(true)
                 .replace(R.id.fragment_container, fragment)
                 .addToBackStack(null)
                 .commit()
@@ -74,7 +93,7 @@ class ItemListFragment : Fragment() {
         }
 
         // --- Cargar categorías y items ---
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             val categorias = categoriaRepo.allCategoriasOnce()
             categoriasMap.putAll(categorias.associate { it.id to it.nombre })
             updateFabState()
@@ -105,7 +124,7 @@ class ItemListFragment : Fragment() {
             override fun onQueryTextChange(newText: String?) = true.also { newText?.let { search(it) } }
 
             private fun search(query: String) {
-                lifecycleScope.launch {
+                viewLifecycleOwner.lifecycleScope.launch {
                     viewModel.searchItems(query).collect { filtered ->
                         adapter.updateList(filtered)
                     }
@@ -140,7 +159,7 @@ class ItemListFragment : Fragment() {
         adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerCategoria.adapter = adapterSpinner
 
-        val dialog = AlertDialog.Builder(requireContext())
+        val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle("Nuevo item")
             .setView(view)
             .setPositiveButton("Crear", null)
@@ -176,6 +195,7 @@ class ItemListFragment : Fragment() {
                 viewModel.insert(newItem) { id ->
                     val fragment = ItemDetailFragment.newInstance(id)
                     parentFragmentManager.beginTransaction()
+                        .setReorderingAllowed(true)
                         .replace(R.id.fragment_container, fragment)
                         .addToBackStack(null)
                         .commit()
@@ -213,7 +233,7 @@ class ItemListFragment : Fragment() {
         val selectedIndex = categoriasList.indexOfFirst { it.key == item.categoriaId }
         if (selectedIndex >= 0) spinnerCategoria.setSelection(selectedIndex)
 
-        val dialog = AlertDialog.Builder(requireContext())
+        val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle("Editar item")
             .setView(view)
             .setPositiveButton("Guardar", null)
@@ -283,7 +303,7 @@ class ItemListFragment : Fragment() {
             val nombreActual = categoriasMap[categoriaId]!!
             val editView = EditText(requireContext())
             editView.setText(nombreActual)
-            AlertDialog.Builder(requireContext())
+            MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Editar categoría")
                 .setView(editView)
                 .setPositiveButton("Guardar") { _, _ ->
@@ -310,7 +330,7 @@ class ItemListFragment : Fragment() {
                 .show()
         }
 
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext())
             .setTitle("Gestionar categorías")
             .setView(view)
             .setNegativeButton("Cerrar", null)

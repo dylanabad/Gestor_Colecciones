@@ -5,8 +5,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.entities.Item
 import java.io.File
@@ -17,6 +19,10 @@ class ItemAdapter(
 ) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
     private var items: List<Item> = items
+
+    init {
+        setHasStableIds(true)
+    }
 
     var categoriasMap: Map<Int, String> = categoriasMap
         set(value) {
@@ -70,19 +76,32 @@ class ItemAdapter(
             Glide.with(holder.itemView)
                 .load(file)
                 .centerCrop()
-                .placeholder(R.drawable.ic_collection_default)
-                .error(R.drawable.ic_collection_default)
+                .transition(DrawableTransitionOptions.withCrossFade(180))
+                .placeholder(R.drawable.ic_no_image)
+                .error(R.drawable.ic_no_image)
                 .into(holder.image)
         } else {
-            holder.image.setImageResource(R.drawable.ic_collection_default)
+            holder.image.setImageResource(R.drawable.ic_no_image)
         }
     }
 
     override fun getItemCount(): Int = items.size
 
+    override fun getItemId(position: Int): Long = items[position].id.toLong()
+
     fun updateList(newItems: List<Item>) {
+        val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize(): Int = items.size
+            override fun getNewListSize(): Int = newItems.size
+
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+                items[oldItemPosition].id == newItems[newItemPosition].id
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+                items[oldItemPosition] == newItems[newItemPosition]
+        })
         items = newItems
-        notifyDataSetChanged()
+        diff.dispatchUpdatesTo(this)
     }
 
     fun getItem(position: Int): Item = items[position]

@@ -1,12 +1,14 @@
 package com.example.gestor_colecciones.adapters
 
-import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.entities.Coleccion
 import java.io.File
@@ -17,6 +19,10 @@ class ColeccionAdapter(
     private val onLongClick: (Coleccion) -> Unit,
     private val coleccionStats: Map<Int, String> = emptyMap()
 ) : RecyclerView.Adapter<ColeccionAdapter.ColeccionViewHolder>() {
+
+    init {
+        setHasStableIds(true)
+    }
 
     inner class ColeccionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvNombre: TextView = itemView.findViewById(R.id.tvNombreColeccion)
@@ -53,8 +59,13 @@ class ColeccionAdapter(
         coleccion.imagenPath?.let { path ->
             val file = File(path)
             if (file.exists()) {
-                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-                holder.ivColeccion.setImageBitmap(bitmap)
+                Glide.with(holder.itemView)
+                    .load(file)
+                    .centerCrop()
+                    .transition(DrawableTransitionOptions.withCrossFade(180))
+                    .placeholder(R.drawable.ic_collection_default)
+                    .error(R.drawable.ic_collection_default)
+                    .into(holder.ivColeccion)
             } else {
                 holder.ivColeccion.setImageResource(R.drawable.ic_collection_default)
             }
@@ -66,10 +77,27 @@ class ColeccionAdapter(
 
     override fun getItemCount(): Int = colecciones.size
 
+    override fun getItemId(position: Int): Long = colecciones[position].id.toLong()
+
     fun updateList(newList: List<Coleccion>) {
+        val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize(): Int = colecciones.size
+            override fun getNewListSize(): Int = newList.size
+
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+                colecciones[oldItemPosition].id == newList[newItemPosition].id
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+                colecciones[oldItemPosition] == newList[newItemPosition]
+        })
         colecciones = newList
-        notifyDataSetChanged()
+        diff.dispatchUpdatesTo(this)
     }
 
     fun getItem(position: Int): Coleccion = colecciones[position]
+
+    fun notifyStatsChangedFor(coleccionId: Int) {
+        val index = colecciones.indexOfFirst { it.id == coleccionId }
+        if (index != -1) notifyItemChanged(index)
+    }
 }
