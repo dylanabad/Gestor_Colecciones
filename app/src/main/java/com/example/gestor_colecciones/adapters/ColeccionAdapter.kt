@@ -1,5 +1,6 @@
 package com.example.gestor_colecciones.adapters
 
+import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,12 +9,13 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.entities.Coleccion
+import java.io.File
 
 class ColeccionAdapter(
     private var colecciones: List<Coleccion>,
     private val onClick: (Coleccion) -> Unit,
     private val onLongClick: (Coleccion) -> Unit,
-    private val coleccionStats: Map<Int, String> = emptyMap() // stats por colección
+    private val coleccionStats: Map<Int, String> = emptyMap()
 ) : RecyclerView.Adapter<ColeccionAdapter.ColeccionViewHolder>() {
 
     inner class ColeccionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -25,15 +27,11 @@ class ColeccionAdapter(
         init {
             itemView.setOnClickListener {
                 val position = adapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    onClick(colecciones[position])
-                }
+                if (position != RecyclerView.NO_POSITION) onClick(colecciones[position])
             }
             itemView.setOnLongClickListener {
                 val position = adapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    onLongClick(colecciones[position])
-                }
+                if (position != RecyclerView.NO_POSITION) onLongClick(colecciones[position])
                 true
             }
         }
@@ -49,12 +47,21 @@ class ColeccionAdapter(
         val coleccion = colecciones[position]
         holder.tvNombre.text = coleccion.nombre
         holder.tvDescripcion.text = coleccion.descripcion ?: "Sin descripción"
-
-        // Mostrar stats si existen
         holder.tvStats.text = coleccionStats[coleccion.id] ?: ""
 
-        // Imagen por defecto, puedes personalizar
-        holder.ivColeccion.setImageResource(R.drawable.ic_collection_default)
+        // Cargar imagen desde ruta interna si existe
+        coleccion.imagenPath?.let { path ->
+            val file = File(path)
+            if (file.exists()) {
+                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                holder.ivColeccion.setImageBitmap(bitmap)
+            } else {
+                holder.ivColeccion.setImageResource(R.drawable.ic_collection_default)
+            }
+        } ?: run {
+            // Imagen por defecto si no hay ruta
+            holder.ivColeccion.setImageResource(R.drawable.ic_collection_default)
+        }
     }
 
     override fun getItemCount(): Int = colecciones.size

@@ -5,6 +5,25 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
+    <!-- Preview de imagen -->
+    <ImageView
+        android:id="@+id/ivPreview"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_no_image"
+        android:background="#EEEEEE"
+        android:layout_marginBottom="10dp" />
+
+    <!-- Botón seleccionar imagen -->
+    <Button
+        android:id="@+id/btnSelectImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Seleccionar imagen"
+        android:layout_marginBottom="15dp" />
+
+    <!-- Nombre de la colección -->
     <EditText
         android:id="@+id/etNombre"
         android:hint="Nombre de la colección"
@@ -12,10 +31,13 @@
         android:layout_height="wrap_content"
         android:inputType="text|textCapWords" />
 
+    <!-- Descripción de la colección -->
     <EditText
         android:id="@+id/etDescripcion"
         android:hint="Descripción"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textCapSentences|textMultiLine" />
+        android:inputType="textCapSentences|textMultiLine"
+        android:layout_marginTop="8dp" />
+
 </LinearLayout>
