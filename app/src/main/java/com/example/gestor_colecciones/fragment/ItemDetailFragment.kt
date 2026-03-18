@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.entities.Item
@@ -15,6 +16,7 @@ import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
 import kotlinx.coroutines.launch
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -60,8 +62,15 @@ class ItemDetailFragment : Fragment() {
                 view.findViewById<TextView>(R.id.tvFecha).text = "Fecha: ${sdf.format(it.fechaAdquisicion)}"
 
                 // Cargar imagen si existe
-                if (!it.imagenPath.isNullOrEmpty()) {
-                    ivImagen.setImageURI(android.net.Uri.parse(it.imagenPath))
+                val imagePath = it.imagenPath
+                val file = imagePath?.let { path -> File(path) }
+                if (file != null && file.exists()) {
+                    Glide.with(this@ItemDetailFragment)
+                        .load(file)
+                        .centerCrop()
+                        .placeholder(R.drawable.ic_no_image)
+                        .error(R.drawable.ic_no_image)
+                        .into(ivImagen)
                 } else {
                     ivImagen.setImageResource(R.drawable.ic_no_image) // icono por defecto
                 }

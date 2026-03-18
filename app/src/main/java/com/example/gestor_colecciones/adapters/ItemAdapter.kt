@@ -1,14 +1,15 @@
 package com.example.gestor_colecciones.adapters
 
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.entities.Item
+import java.io.File
 
 class ItemAdapter(
     items: List<Item> = emptyList(),
@@ -31,7 +32,6 @@ class ItemAdapter(
         val value: TextView = view.findViewById(R.id.tv_item_value)
         val categoria: TextView = view.findViewById(R.id.tv_item_categoria)
         val image: ImageView = view.findViewById(R.id.ivItemImage)
-        val preview: ImageView = view.findViewById(R.id.ivItemPreview)
 
         init {
             view.setOnClickListener {
@@ -63,15 +63,18 @@ class ItemAdapter(
         holder.value.text = "Valor: ${item.valor} €"
         holder.categoria.text = categoriasMap[item.categoriaId] ?: "Sin categoría"
 
-        // Cargar imagen del item
-        if (!item.imagenPath.isNullOrEmpty()) {
-            val uri = Uri.parse(item.imagenPath)
-            holder.image.setImageURI(uri)
-            holder.preview.visibility = View.VISIBLE
-            holder.preview.setImageURI(uri)
+        // Cargar imagen del item (ruta en almacenamiento interno)
+        val imagePath = item.imagenPath
+        val file = imagePath?.let { File(it) }
+        if (file != null && file.exists()) {
+            Glide.with(holder.itemView)
+                .load(file)
+                .centerCrop()
+                .placeholder(R.drawable.ic_collection_default)
+                .error(R.drawable.ic_collection_default)
+                .into(holder.image)
         } else {
-            holder.image.setImageResource(R.mipmap.ic_launcher)
-            holder.preview.visibility = View.GONE
+            holder.image.setImageResource(R.drawable.ic_collection_default)
         }
     }
 

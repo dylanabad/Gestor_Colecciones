@@ -111,7 +111,11 @@ class ItemListByCollectionFragment : Fragment() {
 
         adapter.onItemClick = { item ->
             // Aquí puedes abrir un detalle si tienes ItemDetailFragment
-            Toast.makeText(requireContext(), "Click en ${item.titulo}", Toast.LENGTH_SHORT).show()
+            val fragment = ItemDetailFragment.newInstance(item.id)
+            parentFragmentManager.beginTransaction()
+                .replace((view.parent as ViewGroup).id, fragment)
+                .addToBackStack(null)
+                .commit()
         }
 
         adapter.onItemLongClick = { item ->
