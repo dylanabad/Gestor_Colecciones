@@ -32,7 +32,7 @@ import com.example.gestor_colecciones.dao.ItemHistoryDao
         ItemTag::class,
         ItemHistory::class
     ],
-    version = 4
+    version = 5
 )
 @TypeConverters(DateConverter::class)
 abstract class AppDataBase : RoomDatabase() {

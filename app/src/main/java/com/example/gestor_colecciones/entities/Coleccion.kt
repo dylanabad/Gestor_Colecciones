@@ -17,6 +17,8 @@ data class Coleccion(
 
     val imagenPath: String? = null,
 
+    val color: Int = 0,
+
     var itemsCount: Int = 0,
     var totalValue: Double = 0.0
 

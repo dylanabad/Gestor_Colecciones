@@ -1,5 +1,6 @@
 package com.example.gestor_colecciones.fragment
 
+import android.content.res.ColorStateList
 import android.graphics.BitmapFactory
 import android.graphics.Rect
 import android.net.Uri
@@ -14,6 +15,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.*
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
@@ -23,6 +26,7 @@ import com.example.gestor_colecciones.adapters.ColeccionAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentColeccionesBinding
 import com.example.gestor_colecciones.entities.Coleccion
+import com.example.gestor_colecciones.model.ColeccionColors
 import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ColeccionViewModel
@@ -211,11 +215,15 @@ class ColeccionesFragment : Fragment() {
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
         val ivPreview = view.findViewById<ImageView>(R.id.ivPreview)
         val btnSelectImage = view.findViewById<Button>(R.id.btnSelectImage)
+        val chipGroupColors = view.findViewById<ChipGroup>(R.id.chipGroupCollectionColors)
 
         currentImageView = ivPreview
         btnSelectImage.setOnClickListener {
             pickImageLauncher.launch("image/*")
         }
+
+        var selectedColor: Int = 0
+        setupCollectionColorChips(chipGroupColors, selectedColor) { selectedColor = it }
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Nueva colección")
@@ -234,11 +242,12 @@ class ColeccionesFragment : Fragment() {
 
                 if (nombre.isNotEmpty()) {
                     val coleccion = Coleccion(
-                        0,
-                        nombre,
-                        descripcion,
-                        Date(),
-                        imagenPath = imagePath
+                        id = 0,
+                        nombre = nombre,
+                        descripcion = descripcion,
+                        fechaCreacion = Date(),
+                        imagenPath = imagePath,
+                        color = selectedColor
                     )
                     viewLifecycleOwner.lifecycleScope.launch {
                         viewModel.insert(coleccion)
@@ -266,6 +275,7 @@ class ColeccionesFragment : Fragment() {
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
         val ivPreview = view.findViewById<ImageView>(R.id.ivPreview)
         val btnSelectImage = view.findViewById<Button>(R.id.btnSelectImage)
+        val chipGroupColors = view.findViewById<ChipGroup>(R.id.chipGroupCollectionColors)
 
         etNombre.setText(coleccion.nombre)
         etDescripcion.setText(coleccion.descripcion)
@@ -280,6 +290,9 @@ class ColeccionesFragment : Fragment() {
         btnSelectImage.setOnClickListener {
             pickImageLauncher.launch("image/*")
         }
+
+        var selectedColor: Int = coleccion.color
+        setupCollectionColorChips(chipGroupColors, selectedColor) { selectedColor = it }
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Editar colección")
@@ -296,7 +309,8 @@ class ColeccionesFragment : Fragment() {
                 val actualizado = coleccion.copy(
                     nombre = etNombre.text.toString().trim(),
                     descripcion = etDescripcion.text.toString(),
-                    imagenPath = imagePath
+                    imagenPath = imagePath,
+                    color = selectedColor
                 )
                 viewLifecycleOwner.lifecycleScope.launch {
                     viewModel.update(actualizado)
@@ -311,6 +325,43 @@ class ColeccionesFragment : Fragment() {
                 currentImageView = null
             }
             .show()
+    }
+
+    private fun setupCollectionColorChips(
+        chipGroup: ChipGroup,
+        initialColor: Int,
+        onSelected: (Int) -> Unit
+    ) {
+        chipGroup.removeAllViews()
+        chipGroup.isSingleSelection = true
+
+        fun addChip(label: String, color: Int, isDefault: Boolean = false) {
+            val chip = Chip(requireContext()).apply {
+                text = label
+                isCheckable = true
+                if (isDefault) {
+                    chipBackgroundColor = ColorStateList.valueOf(0xFFECEFF1.toInt())
+                    chipStrokeWidth = 1f
+                    chipStrokeColor = ColorStateList.valueOf(0xFFB0BEC5.toInt())
+                    setTextColor(0xFF263238.toInt())
+                } else {
+                    chipBackgroundColor = ColorStateList.valueOf(color)
+                    setTextColor(0xFFFFFFFF.toInt())
+                }
+                id = View.generateViewId()
+                setOnCheckedChangeListener { _, checked ->
+                    if (checked) onSelected(color)
+                }
+            }
+            chipGroup.addView(chip)
+            if (color == initialColor) chip.isChecked = true
+            if (initialColor == 0 && isDefault) chip.isChecked = true
+        }
+
+        addChip("Default", 0, isDefault = true)
+        ColeccionColors.PALETTE.forEach { option ->
+            addChip(option.name, option.color)
+        }
     }
 
     override fun onDestroyView() {

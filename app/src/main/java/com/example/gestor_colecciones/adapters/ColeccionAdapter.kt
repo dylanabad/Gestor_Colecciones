@@ -5,13 +5,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.entities.Coleccion
+import com.google.android.material.card.MaterialCardView
+import com.google.android.material.color.MaterialColors
 import java.io.File
+import android.content.res.ColorStateList
+import android.util.TypedValue
 
 class ColeccionAdapter(
     private var colecciones: List<Coleccion>,
@@ -25,10 +30,12 @@ class ColeccionAdapter(
     }
 
     inner class ColeccionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val card: MaterialCardView = itemView.findViewById(R.id.cardColeccion)
         val tvNombre: TextView = itemView.findViewById(R.id.tvNombreColeccion)
         val tvDescripcion: TextView = itemView.findViewById(R.id.tvDescripcionColeccion)
         val tvStats: TextView = itemView.findViewById(R.id.tvStatsColeccion)
         val ivColeccion: ImageView = itemView.findViewById(R.id.ivColeccion)
+        val colorDot: View = itemView.findViewById(R.id.viewColeccionColor)
 
         init {
             itemView.setOnClickListener {
@@ -54,6 +61,26 @@ class ColeccionAdapter(
         holder.tvNombre.text = coleccion.nombre
         holder.tvDescripcion.text = coleccion.descripcion ?: "Sin descripción"
         holder.tvStats.text = coleccionStats[coleccion.id] ?: ""
+
+        val color = coleccion.color
+        if (color != 0) {
+            holder.colorDot.visibility = View.VISIBLE
+            ViewCompat.setBackgroundTintList(holder.colorDot, ColorStateList.valueOf(color))
+            holder.card.strokeColor = color
+            holder.card.strokeWidth = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                2f,
+                holder.itemView.resources.displayMetrics
+            ).toInt()
+        } else {
+            holder.colorDot.visibility = View.GONE
+            holder.card.strokeColor = MaterialColors.getColor(holder.card, com.google.android.material.R.attr.colorOutline)
+            holder.card.strokeWidth = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                1f,
+                holder.itemView.resources.displayMetrics
+            ).toInt()
+        }
 
         // Cargar imagen desde ruta interna si existe
         coleccion.imagenPath?.let { path ->

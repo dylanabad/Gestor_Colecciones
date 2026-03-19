@@ -30,6 +30,12 @@ object DatabaseProvider {
         }
     }
 
+    private val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `Coleccion` ADD COLUMN `color` INTEGER NOT NULL DEFAULT 0")
+        }
+    }
+
     fun getDatabase(context: Context): AppDataBase {
         return instance ?: synchronized(this) {
 
@@ -38,7 +44,7 @@ object DatabaseProvider {
                 AppDataBase::class.java,
                 "gestor_colecciones_db"
             )
-                .addMigrations(MIGRATION_3_4)
+                .addMigrations(MIGRATION_3_4, MIGRATION_4_5)
                 .fallbackToDestructiveMigration() // recrea la BD si cambia el esquema (si falta migraciÃ³n)
                 .build()
 
