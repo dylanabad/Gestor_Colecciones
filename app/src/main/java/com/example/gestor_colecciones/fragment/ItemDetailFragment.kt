@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.RatingBar
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -16,6 +17,7 @@ import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialSharedAxis
 import kotlinx.coroutines.launch
 import java.io.File
@@ -52,15 +54,32 @@ class ItemDetailFragment : Fragment() {
         val tvCategoria = view.findViewById<TextView>(R.id.tvCategoria)
         val tvCalificacion = view.findViewById<TextView>(R.id.tvCalificacion)
         val ivImagen = view.findViewById<ImageView>(R.id.ivImagen)
+        val rbRating = view.findViewById<RatingBar>(R.id.rbItemRating)
+
+        var currentItem: Item? = null
+        rbRating.setOnRatingBarChangeListener { _, rating, fromUser ->
+            if (!fromUser) return@setOnRatingBarChangeListener
+            val item = currentItem ?: return@setOnRatingBarChangeListener
+            val clamped = rating.coerceIn(0f, 5f)
+            tvCalificacion.text = String.format(Locale.getDefault(), "%.1f", clamped)
+            val updated = item.copy(calificacion = clamped)
+            currentItem = updated
+            viewModel.update(updated) {
+                Snackbar.make(view, "Calificación actualizada", Snackbar.LENGTH_SHORT).show()
+            }
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             val item: Item? = viewModel.getItemById(itemId)
             item?.let {
+                currentItem = it
                 tvTitulo.text = it.titulo
                 tvValor.text = "Valor: ${it.valor}"
                 tvEstado.text = "Estado: ${it.estado}"
                 tvDescripcion.text = "Descripción: ${it.descripcion ?: "N/A"}"
-                tvCalificacion.text = "Calificación: ${it.calificacion}"
+                val rating = it.calificacion.coerceIn(0f, 5f)
+                rbRating.rating = rating
+                tvCalificacion.text = String.format(Locale.getDefault(), "%.1f", rating)
 
                 val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 view.findViewById<TextView>(R.id.tvFecha).text = "Fecha: ${sdf.format(it.fechaAdquisicion)}"

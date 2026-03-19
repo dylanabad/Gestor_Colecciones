@@ -28,6 +28,7 @@ import com.example.gestor_colecciones.entities.Categoria
 import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.model.ItemFilterSortState
 import com.example.gestor_colecciones.model.ItemSortField
+import com.example.gestor_colecciones.model.ItemEstados
 import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
@@ -230,7 +231,7 @@ class ItemListByCollectionFragment : Fragment() {
         val categoryIds = intArrayOf(-1) + sortedCategorias.map { it.key }.toIntArray()
         val categoryNames = arrayOf("Todas") + sortedCategorias.map { it.value }.toTypedArray()
 
-        val estados = fullItemList.mapNotNull { it.estado.takeIf { s -> s.isNotBlank() } }
+        val estados = (ItemEstados.DEFAULT + fullItemList.mapNotNull { it.estado.takeIf { s -> s.isNotBlank() } })
             .distinct()
             .sortedBy { it.lowercase(Locale.getDefault()) }
         val statusList = arrayOf("Cualquiera") + estados.toTypedArray()
@@ -294,12 +295,29 @@ class ItemListByCollectionFragment : Fragment() {
         val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
         val etValor = view.findViewById<EditText>(R.id.etValor)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
+        val actvEstado = view.findViewById<AutoCompleteTextView>(R.id.actvItemEstado)
         val spinnerCategoria = view.findViewById<Spinner>(R.id.spinnerCategoria)
         val ivPreview = view.findViewById<ImageView>(R.id.ivItemPreview)
         val btnSelectImage = view.findViewById<Button>(R.id.btnSelectImage)
+        val rbCalificacion = view.findViewById<RatingBar>(R.id.rbCalificacion)
+        val tvCalificacionValue = view.findViewById<TextView>(R.id.tvCalificacionValue)
 
         currentItemImageView = ivPreview
         btnSelectImage.setOnClickListener { pickItemImageLauncher.launch("image/*") }
+
+        fun updateRatingLabel(rating: Float) {
+            tvCalificacionValue.text = String.format(Locale.getDefault(), "%.1f", rating)
+        }
+        updateRatingLabel(rbCalificacion.rating)
+        rbCalificacion.setOnRatingBarChangeListener { _, rating, _ -> updateRatingLabel(rating) }
+
+        val estadosAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, ItemEstados.DEFAULT)
+        actvEstado.setAdapter(estadosAdapter)
+        actvEstado.setText(ItemEstados.DEFAULT.firstOrNull().orEmpty(), false)
+        actvEstado.keyListener = null
+        actvEstado.isCursorVisible = false
+        actvEstado.setOnClickListener { actvEstado.showDropDown() }
+        actvEstado.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) actvEstado.showDropDown() }
 
         val adapterSpinner = ArrayAdapter(
             requireContext(),
@@ -328,6 +346,7 @@ class ItemListByCollectionFragment : Fragment() {
                 val valor = etValor.text.toString().toDoubleOrNull() ?: 0.0
                 val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
                 val categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key
+                val estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { "Nuevo" }
 
                 val newItem = Item(
                     titulo = titulo,
@@ -338,9 +357,9 @@ class ItemListByCollectionFragment : Fragment() {
                     imagenPath = selectedItemImageUri?.let { uri ->
                         copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg")
                     },
-                    estado = "Nuevo",
+                    estado = estado,
                     descripcion = descripcion,
-                    calificacion = 0f
+                    calificacion = rbCalificacion.rating
                 )
                 viewModel.insert(newItem) {
                     showSnackbar("Item \"$titulo\" creado")
@@ -361,9 +380,12 @@ class ItemListByCollectionFragment : Fragment() {
         val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
         val etValor = view.findViewById<EditText>(R.id.etValor)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
+        val actvEstado = view.findViewById<AutoCompleteTextView>(R.id.actvItemEstado)
         val spinnerCategoria = view.findViewById<Spinner>(R.id.spinnerCategoria)
         val ivPreview = view.findViewById<ImageView>(R.id.ivItemPreview)
         val btnSelectImage = view.findViewById<Button>(R.id.btnSelectImage)
+        val rbCalificacion = view.findViewById<RatingBar>(R.id.rbCalificacion)
+        val tvCalificacionValue = view.findViewById<TextView>(R.id.tvCalificacionValue)
 
         currentItemImageView = ivPreview
         item.imagenPath?.let { Glide.with(requireContext()).load(File(it)).into(ivPreview) }
@@ -372,6 +394,20 @@ class ItemListByCollectionFragment : Fragment() {
         etTitulo.setText(item.titulo)
         etValor.setText(item.valor.toString())
         etDescripcion.setText(item.descripcion)
+        rbCalificacion.rating = item.calificacion.coerceIn(0f, 5f)
+        tvCalificacionValue.text = String.format(Locale.getDefault(), "%.1f", rbCalificacion.rating)
+        rbCalificacion.setOnRatingBarChangeListener { _, rating, _ ->
+            tvCalificacionValue.text = String.format(Locale.getDefault(), "%.1f", rating)
+        }
+
+        val estadosLista = (ItemEstados.DEFAULT + item.estado).distinct()
+        val estadosAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, estadosLista)
+        actvEstado.setAdapter(estadosAdapter)
+        actvEstado.setText(item.estado, false)
+        actvEstado.keyListener = null
+        actvEstado.isCursorVisible = false
+        actvEstado.setOnClickListener { actvEstado.showDropDown() }
+        actvEstado.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) actvEstado.showDropDown() }
 
         val adapterSpinner = ArrayAdapter(
             requireContext(),
@@ -402,6 +438,7 @@ class ItemListByCollectionFragment : Fragment() {
                 val valor = etValor.text.toString().toDoubleOrNull() ?: item.valor
                 val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
                 val categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key
+                val estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { item.estado }
 
                 val actualizado = item.copy(
                     titulo = titulo,
@@ -410,7 +447,9 @@ class ItemListByCollectionFragment : Fragment() {
                     categoriaId = categoriaId,
                     imagenPath = selectedItemImageUri?.let { uri ->
                         copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg")
-                    } ?: item.imagenPath
+                    } ?: item.imagenPath,
+                    estado = estado,
+                    calificacion = rbCalificacion.rating
                 )
                 viewModel.update(actualizado) {
                     showSnackbar("Item \"$titulo\" actualizado")

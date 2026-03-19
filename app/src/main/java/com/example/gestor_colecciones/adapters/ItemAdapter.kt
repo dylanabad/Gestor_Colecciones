@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.RatingBar
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -37,7 +38,10 @@ class ItemAdapter(
         val title: TextView = view.findViewById(R.id.tv_item_title)
         val value: TextView = view.findViewById(R.id.tv_item_value)
         val categoria: TextView = view.findViewById(R.id.tv_item_categoria)
+        val estado: TextView = view.findViewById(R.id.tv_item_estado)
         val image: ImageView = view.findViewById(R.id.ivItemImage)
+        val ratingBar: RatingBar = view.findViewById(R.id.rb_item_rating)
+        val ratingValue: TextView = view.findViewById(R.id.tv_item_rating_value)
 
         init {
             view.setOnClickListener {
@@ -68,6 +72,10 @@ class ItemAdapter(
         holder.title.text = item.titulo
         holder.value.text = "Valor: ${item.valor} €"
         holder.categoria.text = categoriasMap[item.categoriaId] ?: "Sin categoría"
+        holder.estado.text = "Estado: ${item.estado}"
+        val rating = item.calificacion.coerceIn(0f, 5f)
+        holder.ratingBar.rating = rating
+        holder.ratingValue.text = String.format(java.util.Locale.getDefault(), "%.1f", rating)
 
         // Cargar imagen del item (ruta en almacenamiento interno)
         val imagePath = item.imagenPath
