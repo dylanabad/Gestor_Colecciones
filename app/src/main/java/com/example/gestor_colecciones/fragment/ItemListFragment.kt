@@ -20,6 +20,8 @@ import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
 import com.example.gestor_colecciones.entities.Categoria
 import com.example.gestor_colecciones.entities.Item
+import com.example.gestor_colecciones.model.ItemFilterSortState
+import com.example.gestor_colecciones.model.ItemSortField
 import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
@@ -37,6 +39,8 @@ class ItemListFragment : Fragment() {
     private lateinit var adapter: ItemAdapter
     private var categoriasMap: MutableMap<Int, String> = mutableMapOf()
     private var fullItemList: List<Item> = emptyList()
+    private var searchQuery: String = ""
+    private var filterSortState: ItemFilterSortState = ItemFilterSortState()
 
     private lateinit var itemRepo: ItemRepository
     private lateinit var categoriaRepo: CategoriaRepository
@@ -99,6 +103,29 @@ class ItemListFragment : Fragment() {
             showEditItemDialog(item)
         }
 
+        parentFragmentManager.setFragmentResultListener(
+            ItemFilterSortBottomSheet.RESULT_KEY,
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val categoriaId = bundle.getInt(ItemFilterSortBottomSheet.BUNDLE_CATEGORY_ID, -1)
+            val estado = bundle.getString(ItemFilterSortBottomSheet.BUNDLE_ESTADO, null)
+            val minRating = bundle.getFloat(ItemFilterSortBottomSheet.BUNDLE_MIN_RATING, 0f)
+            val sortFieldName = bundle.getString(ItemFilterSortBottomSheet.BUNDLE_SORT_FIELD, ItemSortField.DATE.name)
+            val ascending = bundle.getBoolean(ItemFilterSortBottomSheet.BUNDLE_ASCENDING, false)
+
+            val sortField = runCatching { ItemSortField.valueOf(sortFieldName ?: ItemSortField.DATE.name) }
+                .getOrDefault(ItemSortField.DATE)
+
+            filterSortState = ItemFilterSortState(
+                categoriaId = categoriaId.takeIf { it != -1 },
+                estado = estado,
+                minCalificacion = minRating,
+                sortField = sortField,
+                ascending = ascending
+            )
+            applyFiltersAndSort()
+        }
+
         // --- Cargar categorías y items ---
         viewLifecycleOwner.lifecycleScope.launch {
             val categorias = categoriaRepo.allCategoriasOnce()
@@ -107,7 +134,7 @@ class ItemListFragment : Fragment() {
 
             viewModel.items.collect { items ->
                 fullItemList = items
-                adapter.updateList(items)
+                applyFiltersAndSort()
             }
         }
 
@@ -127,17 +154,64 @@ class ItemListFragment : Fragment() {
 
         // --- Buscador ---
         binding.searchItems.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?) = true.also { query?.let { search(it) } }
-            override fun onQueryTextChange(newText: String?) = true.also { newText?.let { search(it) } }
-
-            private fun search(query: String) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    viewModel.searchItems(query).collect { filtered ->
-                        adapter.updateList(filtered)
-                    }
-                }
+            override fun onQueryTextSubmit(query: String?): Boolean = false
+            override fun onQueryTextChange(newText: String?): Boolean {
+                searchQuery = newText.orEmpty()
+                applyFiltersAndSort()
+                return true
             }
         })
+
+        binding.btnFilterSort.setOnClickListener { openFilterSort() }
+    }
+
+    private fun openFilterSort() {
+        val sortedCategorias = categoriasMap.entries
+            .sortedBy { it.value.lowercase(Locale.getDefault()) }
+
+        val categoryIds = intArrayOf(-1) + sortedCategorias.map { it.key }.toIntArray()
+        val categoryNames = arrayOf("Todas") + sortedCategorias.map { it.value }.toTypedArray()
+
+        val estados = fullItemList.mapNotNull { it.estado.takeIf { s -> s.isNotBlank() } }
+            .distinct()
+            .sortedBy { it.lowercase(Locale.getDefault()) }
+        val statusList = arrayOf("Cualquiera") + estados.toTypedArray()
+
+        ItemFilterSortBottomSheet
+            .newInstance(categoryIds, categoryNames, statusList, filterSortState)
+            .show(parentFragmentManager, "ItemFilterSortBottomSheet")
+    }
+
+    private fun applyFiltersAndSort() {
+        val query = searchQuery.trim().lowercase(Locale.getDefault())
+        var list = fullItemList
+
+        if (query.isNotBlank()) {
+            list = list.filter { it.titulo.lowercase(Locale.getDefault()).contains(query) }
+        }
+
+        filterSortState.categoriaId?.let { categoriaId ->
+            list = list.filter { it.categoriaId == categoriaId }
+        }
+
+        filterSortState.estado?.let { estado ->
+            list = list.filter { it.estado.equals(estado, ignoreCase = true) }
+        }
+
+        if (filterSortState.minCalificacion > 0f) {
+            val min = filterSortState.minCalificacion
+            list = list.filter { it.calificacion >= min }
+        }
+
+        val baseComparator = when (filterSortState.sortField) {
+            ItemSortField.NAME -> compareBy<Item> { it.titulo.lowercase(Locale.getDefault()) }
+            ItemSortField.VALUE -> compareBy<Item> { it.valor }
+            ItemSortField.DATE -> compareBy<Item> { it.fechaAdquisicion.time }
+        }
+        val comparator = (if (filterSortState.ascending) baseComparator else baseComparator.reversed())
+            .thenBy { it.id }
+
+        adapter.updateList(list.sortedWith(comparator))
     }
 
     // --- Actualiza estado del FAB de items ---
