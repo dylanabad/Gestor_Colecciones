@@ -196,6 +196,38 @@ class ColeccionesFragment : Fragment() {
     // ── Exportación ──────────────────────────────────────────────────────────
 
     private fun showExportDialog() {
+        if (listaCompleta.isEmpty()) {
+            showSnackbar("No hay colecciones para exportar")
+            return
+        }
+
+        // Paso 1 — selección de colecciones con checkboxes
+        val nombres = listaCompleta.map { it.nombre }.toTypedArray()
+        val seleccionadas = BooleanArray(listaCompleta.size) { true } // todas marcadas por defecto
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Seleccionar colecciones")
+            .setMultiChoiceItems(nombres, seleccionadas) { _, which, isChecked ->
+                seleccionadas[which] = isChecked
+            }
+            .setPositiveButton("Siguiente") { _, _ ->
+                val idsSeleccionados = listaCompleta
+                    .filterIndexed { index, _ -> seleccionadas[index] }
+                    .map { it.id }
+
+                if (idsSeleccionados.isEmpty()) {
+                    showSnackbar("Selecciona al menos una colección")
+                    return@setPositiveButton
+                }
+
+                // Paso 2 — formato y acción
+                showExportFormatDialog(idsSeleccionados)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun showExportFormatDialog(ids: List<Int>) {
         val opciones = arrayOf(
             "Guardar CSV en Descargas",
             "Guardar PDF en Descargas",
@@ -203,19 +235,18 @@ class ColeccionesFragment : Fragment() {
             "Compartir PDF"
         )
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Exportar colecciones")
+            .setTitle("Exportar como")
             .setItems(opciones) { _, which ->
                 when (which) {
-                    0 -> exportViewModel.exportCsv(requireContext(), share = false)
-                    1 -> exportViewModel.exportPdf(requireContext(), share = false)
-                    2 -> exportViewModel.exportCsv(requireContext(), share = true)
-                    3 -> exportViewModel.exportPdf(requireContext(), share = true)
+                    0 -> exportViewModel.exportCsv(requireContext(), share = false, ids = ids)
+                    1 -> exportViewModel.exportPdf(requireContext(), share = false, ids = ids)
+                    2 -> exportViewModel.exportCsv(requireContext(), share = true, ids = ids)
+                    3 -> exportViewModel.exportPdf(requireContext(), share = true, ids = ids)
                 }
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
-
     private fun shareFile(file: File) {
         val mimeType = if (file.extension == "pdf") "application/pdf" else "text/csv"
         val uri = FileProvider.getUriForFile(

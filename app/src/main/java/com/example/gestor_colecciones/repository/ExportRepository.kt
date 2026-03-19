@@ -12,8 +12,10 @@ class ExportRepository(
     private val coleccionRepository: ColeccionRepository,
     private val itemRepository: ItemRepository
 ) {
-    suspend fun getDataForExport(): List<ColeccionExportData> {
-        return coleccionRepository.getAllOnce().map { coleccion ->
+    suspend fun getDataForExport(ids: List<Int>? = null): List<ColeccionExportData> {
+        val colecciones = coleccionRepository.getAllOnce()
+        val filtradas = if (ids != null) colecciones.filter { it.id in ids } else colecciones
+        return filtradas.map { coleccion ->
             ColeccionExportData(
                 coleccion = coleccion,
                 items = itemRepository.getItemsByCollectionOnce(coleccion.id)

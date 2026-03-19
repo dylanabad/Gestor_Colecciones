@@ -25,29 +25,31 @@ class ExportViewModel(
     private val _exportState = MutableStateFlow<ExportState>(ExportState.Idle)
     val exportState: StateFlow<ExportState> = _exportState
 
-    fun exportCsv(context: Context, share: Boolean = false) = viewModelScope.launch {
-        _exportState.value = ExportState.Loading
-        runCatching {
-            val data = exportRepository.getDataForExport()
-            CsvExporter(context).export(data)
-        }.onSuccess {
-            _exportState.value = ExportState.Success(it, share)
-        }.onFailure {
-            _exportState.value = ExportState.Error(it.message ?: "Error al exportar CSV")
+    fun exportCsv(context: Context, share: Boolean = false, ids: List<Int>? = null) =
+        viewModelScope.launch {
+            _exportState.value = ExportState.Loading
+            runCatching {
+                val data = exportRepository.getDataForExport(ids)
+                CsvExporter(context).export(data)
+            }.onSuccess {
+                _exportState.value = ExportState.Success(it, share)
+            }.onFailure {
+                _exportState.value = ExportState.Error(it.message ?: "Error al exportar CSV")
+            }
         }
-    }
 
-    fun exportPdf(context: Context, share: Boolean = false) = viewModelScope.launch {
-        _exportState.value = ExportState.Loading
-        runCatching {
-            val data = exportRepository.getDataForExport()
-            PdfExporter(context).export(data)
-        }.onSuccess {
-            _exportState.value = ExportState.Success(it, share)
-        }.onFailure {
-            _exportState.value = ExportState.Error(it.message ?: "Error al exportar PDF")
+    fun exportPdf(context: Context, share: Boolean = false, ids: List<Int>? = null) =
+        viewModelScope.launch {
+            _exportState.value = ExportState.Loading
+            runCatching {
+                val data = exportRepository.getDataForExport(ids)
+                PdfExporter(context).export(data)
+            }.onSuccess {
+                _exportState.value = ExportState.Success(it, share)
+            }.onFailure {
+                _exportState.value = ExportState.Error(it.message ?: "Error al exportar PDF")
+            }
         }
-    }
 
     fun resetState() { _exportState.value = ExportState.Idle }
 }
