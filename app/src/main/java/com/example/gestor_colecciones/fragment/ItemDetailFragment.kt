@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
@@ -14,11 +15,18 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.entities.Item
+import com.example.gestor_colecciones.entities.Tag
+import com.example.gestor_colecciones.repository.ItemTagRepository
 import com.example.gestor_colecciones.repository.ItemRepository
+import com.example.gestor_colecciones.repository.TagRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialSharedAxis
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -44,7 +52,10 @@ class ItemDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val repo = ItemRepository(DatabaseProvider.getDatabase(requireContext()).itemDao())
+        val db = DatabaseProvider.getDatabase(requireContext())
+        val repo = ItemRepository(db.itemDao())
+        val tagRepository = TagRepository(db.tagDao())
+        val itemTagRepository = ItemTagRepository(db.itemTagDao())
         viewModel = ItemViewModelFactory(repo).create(ItemViewModel::class.java)
 
         val tvTitulo = view.findViewById<TextView>(R.id.tvTitulo)
@@ -55,6 +66,8 @@ class ItemDetailFragment : Fragment() {
         val tvCalificacion = view.findViewById<TextView>(R.id.tvCalificacion)
         val ivImagen = view.findViewById<ImageView>(R.id.ivImagen)
         val rbRating = view.findViewById<RatingBar>(R.id.rbItemRating)
+        val chipGroupTags = view.findViewById<ChipGroup>(R.id.chipGroupTags)
+        val btnEditTags = view.findViewById<View>(R.id.btnEditTags)
 
         var currentItem: Item? = null
         rbRating.setOnRatingBarChangeListener { _, rating, fromUser ->
@@ -66,6 +79,90 @@ class ItemDetailFragment : Fragment() {
             currentItem = updated
             viewModel.update(updated) {
                 Snackbar.make(view, "Calificación actualizada", Snackbar.LENGTH_SHORT).show()
+            }
+        }
+
+        fun renderTags(tags: List<Tag>) {
+            chipGroupTags.removeAllViews()
+            if (tags.isEmpty()) {
+                chipGroupTags.addView(
+                    Chip(requireContext()).apply {
+                        text = "Sin etiquetas"
+                        isClickable = false
+                        isCheckable = false
+                        isEnabled = false
+                    }
+                )
+                return
+            }
+            tags.forEach { tag ->
+                chipGroupTags.addView(
+                    Chip(requireContext()).apply {
+                        text = tag.nombre
+                        isClickable = false
+                        isCheckable = false
+                    }
+                )
+            }
+        }
+
+        fun showCreateTagDialog(onCreated: () -> Unit) {
+            val input = EditText(requireContext()).apply {
+                hint = "Nombre de etiqueta"
+            }
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Nueva etiqueta")
+                .setView(input)
+                .setPositiveButton("Crear") { _, _ ->
+                    val nombre = input.text?.toString()?.trim().orEmpty()
+                    if (nombre.isBlank()) return@setPositiveButton
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        tagRepository.insert(Tag(nombre = nombre))
+                        Snackbar.make(view, "Etiqueta \"$nombre\" creada", Snackbar.LENGTH_SHORT).show()
+                        onCreated()
+                    }
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+        }
+
+        fun showTagPickerDialog() {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val allTags = tagRepository.getAllTagsOnce()
+                if (allTags.isEmpty()) {
+                    showCreateTagDialog { showTagPickerDialog() }
+                    return@launch
+                }
+
+                val selectedIds = tagRepository.getTagsForItemOnce(itemId).map { it.id }.toSet()
+                val names = allTags.map { it.nombre }.toTypedArray()
+                val checked = BooleanArray(allTags.size) { idx -> allTags[idx].id in selectedIds }
+
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Etiquetas")
+                    .setMultiChoiceItems(names, checked) { _, which, isChecked ->
+                        checked[which] = isChecked
+                    }
+                    .setNeutralButton("Nueva") { _, _ ->
+                        showCreateTagDialog { showTagPickerDialog() }
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .setPositiveButton("Guardar") { _, _ ->
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            val tagIds = allTags.mapIndexedNotNull { index, tag -> tag.id.takeIf { checked[index] } }
+                            itemTagRepository.replaceTagsForItem(itemId, tagIds)
+                            Snackbar.make(view, "Etiquetas actualizadas", Snackbar.LENGTH_SHORT).show()
+                        }
+                    }
+                    .show()
+            }
+        }
+
+        btnEditTags.setOnClickListener { showTagPickerDialog() }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            tagRepository.getTagsForItem(itemId).collect { tags ->
+                renderTags(tags)
             }
         }
 
@@ -100,7 +197,7 @@ class ItemDetailFragment : Fragment() {
                 }
 
                 // Cargar categoría (si quieres mostrar nombre de categoría)
-                val categoriaDao = DatabaseProvider.getDatabase(requireContext()).categoriaDao()
+                val categoriaDao = db.categoriaDao()
                 val categoria = categoriaDao.getAllCategoriasOnce().find { cat -> cat.id == it.categoriaId }
                 tvCategoria.text = "Categoría: ${categoria?.nombre ?: "Sin categoría"}"
             }

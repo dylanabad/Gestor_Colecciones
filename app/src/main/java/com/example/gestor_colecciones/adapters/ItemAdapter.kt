@@ -31,6 +31,12 @@ class ItemAdapter(
             notifyDataSetChanged()
         }
 
+    var tagsByItemId: Map<Int, List<String>> = emptyMap()
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
+
     var onItemClick: ((Item) -> Unit)? = null
     var onItemLongClick: ((Item) -> Unit)? = null
 
@@ -39,6 +45,7 @@ class ItemAdapter(
         val value: TextView = view.findViewById(R.id.tv_item_value)
         val categoria: TextView = view.findViewById(R.id.tv_item_categoria)
         val estado: TextView = view.findViewById(R.id.tv_item_estado)
+        val tags: TextView = view.findViewById(R.id.tv_item_tags)
         val image: ImageView = view.findViewById(R.id.ivItemImage)
         val ratingBar: RatingBar = view.findViewById(R.id.rb_item_rating)
         val ratingValue: TextView = view.findViewById(R.id.tv_item_rating_value)
@@ -73,6 +80,14 @@ class ItemAdapter(
         holder.value.text = "Valor: ${item.valor} €"
         holder.categoria.text = categoriasMap[item.categoriaId] ?: "Sin categoría"
         holder.estado.text = "Estado: ${item.estado}"
+        val tags = tagsByItemId[item.id].orEmpty()
+        if (tags.isEmpty()) {
+            holder.tags.visibility = View.GONE
+        } else {
+            holder.tags.visibility = View.VISIBLE
+            holder.tags.text = "Etiquetas: " + tags.take(3).joinToString(" · ") +
+                (if (tags.size > 3) " (+${tags.size - 3})" else "")
+        }
         val rating = item.calificacion.coerceIn(0f, 5f)
         holder.ratingBar.rating = rating
         holder.ratingValue.text = String.format(java.util.Locale.getDefault(), "%.1f", rating)

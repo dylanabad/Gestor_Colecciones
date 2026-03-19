@@ -31,6 +31,7 @@ import com.example.gestor_colecciones.model.ItemSortField
 import com.example.gestor_colecciones.model.ItemEstados
 import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemRepository
+import com.example.gestor_colecciones.repository.TagRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
@@ -51,10 +52,12 @@ class ItemListByCollectionFragment : Fragment() {
     private var fullItemList: List<Item> = emptyList()
     private var searchQuery: String = ""
     private var filterSortState: ItemFilterSortState = ItemFilterSortState()
+    private var tagIdsByItemId: Map<Int, Set<Int>> = emptyMap()
 
     private lateinit var categoriaRepo: CategoriaRepository
     private lateinit var itemRepo: ItemRepository
     private lateinit var coleccionRepo: ColeccionRepository
+    private lateinit var tagRepo: TagRepository
 
     private var selectedItemImageUri: Uri? = null
     private var currentItemImageView: ImageView? = null
@@ -91,6 +94,7 @@ class ItemListByCollectionFragment : Fragment() {
         itemRepo = ItemRepository(db.itemDao())
         categoriaRepo = CategoriaRepository(db.categoriaDao())
         coleccionRepo = ColeccionRepository(db.coleccionDao())
+        tagRepo = TagRepository(db.tagDao())
         viewModel = ViewModelProvider(
             this,
             ItemViewModelFactory(itemRepo, categoriaRepo)
@@ -151,6 +155,7 @@ class ItemListByCollectionFragment : Fragment() {
         ) { _, bundle ->
             val categoriaId = bundle.getInt(ItemFilterSortBottomSheet.BUNDLE_CATEGORY_ID, -1)
             val estado = bundle.getString(ItemFilterSortBottomSheet.BUNDLE_ESTADO, null)
+            val tagId = bundle.getInt(ItemFilterSortBottomSheet.BUNDLE_TAG_ID, -1)
             val minRating = bundle.getFloat(ItemFilterSortBottomSheet.BUNDLE_MIN_RATING, 0f)
             val sortFieldName = bundle.getString(ItemFilterSortBottomSheet.BUNDLE_SORT_FIELD, ItemSortField.DATE.name)
             val ascending = bundle.getBoolean(ItemFilterSortBottomSheet.BUNDLE_ASCENDING, false)
@@ -160,6 +165,7 @@ class ItemListByCollectionFragment : Fragment() {
 
             filterSortState = ItemFilterSortState(
                 categoriaId = categoriaId.takeIf { it != -1 },
+                tagId = tagId.takeIf { it != -1 },
                 estado = estado,
                 minCalificacion = minRating,
                 sortField = sortField,
@@ -176,6 +182,7 @@ class ItemListByCollectionFragment : Fragment() {
 
             viewModel.getItemsByCollection(collectionId).collect { list ->
                 fullItemList = list
+                refreshTagsMaps()
                 applyFiltersAndSort()
             }
         }
@@ -224,21 +231,44 @@ class ItemListByCollectionFragment : Fragment() {
         binding.btnFilterSort.setOnClickListener { openFilterSort() }
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewLifecycleOwner.lifecycleScope.launch {
+            refreshTagsMaps()
+            applyFiltersAndSort()
+        }
+    }
+
+    private suspend fun refreshTagsMaps() {
+        val ids = fullItemList.map { it.id }
+        val infos = tagRepo.getTagInfoForItemsOnce(ids)
+        val namesMap = infos.groupBy { it.itemId }.mapValues { (_, v) -> v.map { it.nombre } }
+        tagIdsByItemId = infos.groupBy { it.itemId }.mapValues { (_, v) -> v.map { it.tagId }.toSet() }
+        adapter.tagsByItemId = namesMap
+    }
+
     private fun openFilterSort() {
-        val sortedCategorias = categoriasMap.entries
-            .sortedBy { it.value.lowercase(Locale.getDefault()) }
+        viewLifecycleOwner.lifecycleScope.launch {
+            val sortedCategorias = categoriasMap.entries
+                .sortedBy { it.value.lowercase(Locale.getDefault()) }
 
-        val categoryIds = intArrayOf(-1) + sortedCategorias.map { it.key }.toIntArray()
-        val categoryNames = arrayOf("Todas") + sortedCategorias.map { it.value }.toTypedArray()
+            val categoryIds = intArrayOf(-1) + sortedCategorias.map { it.key }.toIntArray()
+            val categoryNames = arrayOf("Todas") + sortedCategorias.map { it.value }.toTypedArray()
 
-        val estados = (ItemEstados.DEFAULT + fullItemList.mapNotNull { it.estado.takeIf { s -> s.isNotBlank() } })
-            .distinct()
-            .sortedBy { it.lowercase(Locale.getDefault()) }
-        val statusList = arrayOf("Cualquiera") + estados.toTypedArray()
+            val estados = (ItemEstados.DEFAULT + fullItemList.mapNotNull { it.estado.takeIf { s -> s.isNotBlank() } })
+                .distinct()
+                .sortedBy { it.lowercase(Locale.getDefault()) }
+            val statusList = arrayOf("Cualquiera") + estados.toTypedArray()
 
-        ItemFilterSortBottomSheet
-            .newInstance(categoryIds, categoryNames, statusList, filterSortState)
-            .show(parentFragmentManager, "ItemFilterSortBottomSheet")
+            val tags = tagRepo.getAllTagsOnce()
+                .sortedBy { it.nombre.lowercase(Locale.getDefault()) }
+            val tagIds = intArrayOf(-1) + tags.map { it.id }.toIntArray()
+            val tagNames = arrayOf("Cualquiera") + tags.map { it.nombre }.toTypedArray()
+
+            ItemFilterSortBottomSheet
+                .newInstance(categoryIds, categoryNames, statusList, tagIds, tagNames, filterSortState)
+                .show(parentFragmentManager, "ItemFilterSortBottomSheet")
+        }
     }
 
     private fun applyFiltersAndSort() {
@@ -251,6 +281,10 @@ class ItemListByCollectionFragment : Fragment() {
 
         filterSortState.categoriaId?.let { categoriaId ->
             list = list.filter { it.categoriaId == categoriaId }
+        }
+
+        filterSortState.tagId?.let { tagId ->
+            list = list.filter { tagIdsByItemId[it.id]?.contains(tagId) == true }
         }
 
         filterSortState.estado?.let { estado ->
