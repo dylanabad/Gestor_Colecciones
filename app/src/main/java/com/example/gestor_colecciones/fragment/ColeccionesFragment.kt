@@ -1,16 +1,22 @@
 package com.example.gestor_colecciones.fragment
 
+import android.content.ContentValues
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.BitmapFactory
 import android.graphics.Rect
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -28,11 +34,9 @@ import com.example.gestor_colecciones.databinding.FragmentColeccionesBinding
 import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.model.ColeccionColors
 import com.example.gestor_colecciones.repository.ColeccionRepository
+import com.example.gestor_colecciones.repository.ExportRepository
 import com.example.gestor_colecciones.repository.ItemRepository
-import com.example.gestor_colecciones.viewmodel.ColeccionViewModel
-import com.example.gestor_colecciones.viewmodel.ColeccionViewModelFactory
-import com.example.gestor_colecciones.viewmodel.ItemViewModel
-import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
+import com.example.gestor_colecciones.viewmodel.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collectLatest
@@ -47,12 +51,12 @@ class ColeccionesFragment : Fragment() {
 
     private lateinit var viewModel: ColeccionViewModel
     private lateinit var itemViewModel: ItemViewModel
+    private lateinit var exportViewModel: ExportViewModel
     private lateinit var adapter: ColeccionAdapter
     private var listaCompleta: List<Coleccion> = emptyList()
     private var statsMap: MutableMap<Int, String> = mutableMapOf()
     private var statsJob: Job? = null
 
-    // 🔥 NUEVO: imagen
     private var selectedImageUri: Uri? = null
     private var currentImageView: ImageView? = null
 
@@ -84,12 +88,16 @@ class ColeccionesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // ViewModels
         val repo = ColeccionRepository(DatabaseProvider.getColeccionDao(requireContext()))
         viewModel = ViewModelProvider(this, ColeccionViewModelFactory(repo))[ColeccionViewModel::class.java]
 
         val itemRepo = ItemRepository(DatabaseProvider.getItemDao(requireContext()))
         itemViewModel = ViewModelProvider(this, ItemViewModelFactory(itemRepo))[ItemViewModel::class.java]
+
+        val exportRepo = ExportRepository(repo, itemRepo)
+        exportViewModel = ViewModelProvider(
+            this, ExportViewModelFactory(exportRepo)
+        )[ExportViewModel::class.java]
 
         adapter = ColeccionAdapter(
             emptyList(),
@@ -101,9 +109,7 @@ class ColeccionesFragment : Fragment() {
                     .addToBackStack(null)
                     .commit()
             },
-            onLongClick = { coleccion ->
-                showEditCollectionDialog(coleccion)
-            },
+            onLongClick = { coleccion -> showEditCollectionDialog(coleccion) },
             coleccionStats = statsMap
         )
 
@@ -148,6 +154,31 @@ class ColeccionesFragment : Fragment() {
         }
 
         binding.fabAddColeccion.setOnClickListener { showCreateCollectionDialog() }
+        binding.fabExport.setOnClickListener { showExportDialog() }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            exportViewModel.exportState.collectLatest { state ->
+                when (state) {
+                    is ExportState.Loading -> {
+                        binding.fabExport.isEnabled = false
+                    }
+                    is ExportState.Success -> {
+                        binding.fabExport.isEnabled = true
+                        if (state.share) shareFile(state.file)
+                        else saveFileToDownloads(state.file)
+                        exportViewModel.resetState()
+                    }
+                    is ExportState.Error -> {
+                        binding.fabExport.isEnabled = true
+                        showSnackbar("Error al exportar: ${state.message}")
+                        exportViewModel.resetState()
+                    }
+                    else -> {
+                        binding.fabExport.isEnabled = true
+                    }
+                }
+            }
+        }
 
         binding.searchColecciones.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = false
@@ -162,7 +193,80 @@ class ColeccionesFragment : Fragment() {
         })
     }
 
-    // 🔹 Función para copiar imagen al almacenamiento interno
+    // ── Exportación ──────────────────────────────────────────────────────────
+
+    private fun showExportDialog() {
+        val opciones = arrayOf(
+            "Guardar CSV en Descargas",
+            "Guardar PDF en Descargas",
+            "Compartir CSV",
+            "Compartir PDF"
+        )
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Exportar colecciones")
+            .setItems(opciones) { _, which ->
+                when (which) {
+                    0 -> exportViewModel.exportCsv(requireContext(), share = false)
+                    1 -> exportViewModel.exportPdf(requireContext(), share = false)
+                    2 -> exportViewModel.exportCsv(requireContext(), share = true)
+                    3 -> exportViewModel.exportPdf(requireContext(), share = true)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun shareFile(file: File) {
+        val mimeType = if (file.extension == "pdf") "application/pdf" else "text/csv"
+        val uri = FileProvider.getUriForFile(
+            requireContext(),
+            "${requireContext().packageName}.fileprovider",
+            file
+        )
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = mimeType
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(intent, "Compartir exportación"))
+    }
+
+    private fun saveFileToDownloads(file: File) {
+        val mimeType = if (file.extension == "pdf") "application/pdf" else "text/csv"
+        val fileName = "colecciones_export_${System.currentTimeMillis()}.${file.extension}"
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val resolver = requireContext().contentResolver
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                    put(MediaStore.Downloads.MIME_TYPE, mimeType)
+                    put(MediaStore.Downloads.IS_PENDING, 1)
+                }
+                val uri = resolver.insert(
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    contentValues
+                )
+                uri?.let {
+                    resolver.openOutputStream(it)?.use { output ->
+                        file.inputStream().copyTo(output)
+                    }
+                    contentValues.clear()
+                    contentValues.put(MediaStore.Downloads.IS_PENDING, 0)
+                    resolver.update(it, contentValues, null, null)
+                }
+            } else {
+                val downloadsDir = Environment
+                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                file.copyTo(File(downloadsDir, fileName), overwrite = true)
+            }
+            showSnackbar("Guardado en Descargas: $fileName")
+        } catch (e: Exception) {
+            showSnackbar("Error al guardar: ${e.message}")
+        }
+    }
+
+    // ── Resto del fragment ────────────────────────────────────────────────────
+
     private fun showSnackbar(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
             .setAnchorView(binding.fabAddColeccion)
@@ -207,7 +311,6 @@ class ColeccionesFragment : Fragment() {
 
     private fun showCreateCollectionDialog() {
         selectedImageUri = null
-
         val view = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_create_collection, null)
 
@@ -218,11 +321,9 @@ class ColeccionesFragment : Fragment() {
         val chipGroupColors = view.findViewById<ChipGroup>(R.id.chipGroupCollectionColors)
 
         currentImageView = ivPreview
-        btnSelectImage.setOnClickListener {
-            pickImageLauncher.launch("image/*")
-        }
+        btnSelectImage.setOnClickListener { pickImageLauncher.launch("image/*") }
 
-        var selectedColor: Int = 0
+        var selectedColor = 0
         setupCollectionColorChips(chipGroupColors, selectedColor) { selectedColor = it }
 
         MaterialAlertDialogBuilder(requireContext())
@@ -232,29 +333,25 @@ class ColeccionesFragment : Fragment() {
                 val nombre = etNombre.text.toString().trim()
                 val descripcion = etDescripcion.text.toString()
                 var imagePath: String? = null
-
                 selectedImageUri?.let { uri ->
                     imagePath = copyImageToInternalStorage(
-                        uri,
-                        "coleccion_${System.currentTimeMillis()}.jpg"
+                        uri, "coleccion_${System.currentTimeMillis()}.jpg"
                     )
                 }
-
                 if (nombre.isNotEmpty()) {
-                    val coleccion = Coleccion(
-                        id = 0,
-                        nombre = nombre,
-                        descripcion = descripcion,
-                        fechaCreacion = Date(),
-                        imagenPath = imagePath,
-                        color = selectedColor
-                    )
                     viewLifecycleOwner.lifecycleScope.launch {
-                        viewModel.insert(coleccion)
+                        viewModel.insert(
+                            Coleccion(
+                                nombre = nombre,
+                                descripcion = descripcion,
+                                fechaCreacion = Date(),
+                                imagenPath = imagePath,
+                                color = selectedColor
+                            )
+                        )
                         showSnackbar("Colección \"$nombre\" creada")
                     }
                 }
-
                 selectedImageUri = null
                 currentImageView = null
             }
@@ -267,7 +364,6 @@ class ColeccionesFragment : Fragment() {
 
     private fun showEditCollectionDialog(coleccion: Coleccion) {
         selectedImageUri = null
-
         val view = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_create_collection, null)
 
@@ -279,19 +375,12 @@ class ColeccionesFragment : Fragment() {
 
         etNombre.setText(coleccion.nombre)
         etDescripcion.setText(coleccion.descripcion)
-
-        // Cargar imagen existente si la hay
-        coleccion.imagenPath?.let { path ->
-            val bitmap = BitmapFactory.decodeFile(path)
-            ivPreview.setImageBitmap(bitmap)
-        }
+        coleccion.imagenPath?.let { ivPreview.setImageBitmap(BitmapFactory.decodeFile(it)) }
 
         currentImageView = ivPreview
-        btnSelectImage.setOnClickListener {
-            pickImageLauncher.launch("image/*")
-        }
+        btnSelectImage.setOnClickListener { pickImageLauncher.launch("image/*") }
 
-        var selectedColor: Int = coleccion.color
+        var selectedColor = coleccion.color
         setupCollectionColorChips(chipGroupColors, selectedColor) { selectedColor = it }
 
         MaterialAlertDialogBuilder(requireContext())
@@ -301,22 +390,20 @@ class ColeccionesFragment : Fragment() {
                 var imagePath = coleccion.imagenPath
                 selectedImageUri?.let { uri ->
                     imagePath = copyImageToInternalStorage(
-                        uri,
-                        "coleccion_${System.currentTimeMillis()}.jpg"
+                        uri, "coleccion_${System.currentTimeMillis()}.jpg"
                     )
                 }
-
-                val actualizado = coleccion.copy(
-                    nombre = etNombre.text.toString().trim(),
-                    descripcion = etDescripcion.text.toString(),
-                    imagenPath = imagePath,
-                    color = selectedColor
-                )
                 viewLifecycleOwner.lifecycleScope.launch {
-                    viewModel.update(actualizado)
-                    showSnackbar("Colección \"${actualizado.nombre}\" actualizada")
+                    viewModel.update(
+                        coleccion.copy(
+                            nombre = etNombre.text.toString().trim(),
+                            descripcion = etDescripcion.text.toString(),
+                            imagenPath = imagePath,
+                            color = selectedColor
+                        )
+                    )
+                    showSnackbar("Colección \"${coleccion.nombre}\" actualizada")
                 }
-
                 selectedImageUri = null
                 currentImageView = null
             }
@@ -349,9 +436,7 @@ class ColeccionesFragment : Fragment() {
                     setTextColor(0xFFFFFFFF.toInt())
                 }
                 id = View.generateViewId()
-                setOnCheckedChangeListener { _, checked ->
-                    if (checked) onSelected(color)
-                }
+                setOnCheckedChangeListener { _, checked -> if (checked) onSelected(color) }
             }
             chipGroup.addView(chip)
             if (color == initialColor) chip.isChecked = true
@@ -359,9 +444,7 @@ class ColeccionesFragment : Fragment() {
         }
 
         addChip("Default", 0, isDefault = true)
-        ColeccionColors.PALETTE.forEach { option ->
-            addChip(option.name, option.color)
-        }
+        ColeccionColors.PALETTE.forEach { option -> addChip(option.name, option.color) }
     }
 
     override fun onDestroyView() {
@@ -370,7 +453,6 @@ class ColeccionesFragment : Fragment() {
     }
 }
 
-// Espaciado entre elementos del Grid
 class GridSpacingItemDecoration(
     private val spanCount: Int,
     private val spacing: Int,

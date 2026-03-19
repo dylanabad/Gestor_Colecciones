@@ -21,4 +21,7 @@ interface ColeccionDao {
 
     @Query("SELECT * FROM Coleccion WHERE id = :id")
     suspend fun getColeccionById(id: Int): Coleccion?
+
+    @Query("SELECT * FROM Coleccion ORDER BY fechaCreacion DESC")
+    suspend fun getAllColeccionesOnce(): List<Coleccion>
 }

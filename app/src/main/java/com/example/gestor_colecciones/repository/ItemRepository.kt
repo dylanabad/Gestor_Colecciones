@@ -21,14 +21,16 @@ class ItemRepository(private val itemDao: ItemDao) {
     fun searchItemsByTitle(search: String): Flow<List<Item>> =
         itemDao.searchItemsByTitle(search)
 
-
-
     suspend fun getTotalItems(): Int = itemDao.getTotalItems()
     suspend fun getTotalValor(): Double = itemDao.getTotalValor()
 
     fun getItemsByCollectionFlow(collectionId: Int): Flow<List<Item>> {
         return itemDao.getItemsByCollection(collectionId)
     }
+
     suspend fun getItemById(id: Int): Item? = itemDao.getItemById(id)
 
+    // Exportación — consulta one-shot sin Flow
+    suspend fun getItemsByCollectionOnce(collectionId: Int): List<Item> =
+        itemDao.getItemsByCollectionOnce(collectionId)
 }

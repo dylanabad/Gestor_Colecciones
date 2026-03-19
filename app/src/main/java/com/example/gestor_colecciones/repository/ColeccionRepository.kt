@@ -12,4 +12,5 @@ class ColeccionRepository(private val coleccionDao: ColeccionDao) {
     suspend fun update(coleccion: Coleccion) = coleccionDao.update(coleccion)
     suspend fun delete(coleccion: Coleccion) = coleccionDao.delete(coleccion)
     suspend fun getById(id: Int): Coleccion? = coleccionDao.getColeccionById(id)
+    suspend fun getAllOnce(): List<Coleccion> = coleccionDao.getAllColeccionesOnce()
 }
