@@ -8,14 +8,19 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
+import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.textview.MaterialTextView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.entities.Item
+import com.example.gestor_colecciones.entities.ItemHistory
 import com.example.gestor_colecciones.entities.Tag
+import com.example.gestor_colecciones.repository.ItemHistoryRepository
 import com.example.gestor_colecciones.repository.ItemTagRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.repository.TagRepository
@@ -56,7 +61,8 @@ class ItemDetailFragment : Fragment() {
         val repo = ItemRepository(db.itemDao())
         val tagRepository = TagRepository(db.tagDao())
         val itemTagRepository = ItemTagRepository(db.itemTagDao())
-        viewModel = ItemViewModelFactory(repo).create(ItemViewModel::class.java)
+        val historyRepository = ItemHistoryRepository(db.itemHistoryDao())
+        viewModel = ViewModelProvider(this, ItemViewModelFactory(repo, null, historyRepository))[ItemViewModel::class.java]
 
         val tvTitulo = view.findViewById<TextView>(R.id.tvTitulo)
         val tvValor = view.findViewById<TextView>(R.id.tvValor)
@@ -68,6 +74,8 @@ class ItemDetailFragment : Fragment() {
         val rbRating = view.findViewById<RatingBar>(R.id.rbItemRating)
         val chipGroupTags = view.findViewById<ChipGroup>(R.id.chipGroupTags)
         val btnEditTags = view.findViewById<View>(R.id.btnEditTags)
+        val tvHistoryEmpty = view.findViewById<TextView>(R.id.tvHistoryEmpty)
+        val llItemHistory = view.findViewById<LinearLayout>(R.id.llItemHistory)
 
         var currentItem: Item? = null
         rbRating.setOnRatingBarChangeListener { _, rating, fromUser ->
@@ -163,6 +171,41 @@ class ItemDetailFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             tagRepository.getTagsForItem(itemId).collect { tags ->
                 renderTags(tags)
+            }
+        }
+
+        fun dpToPx(dp: Int): Int =
+            (dp * resources.displayMetrics.density).toInt()
+
+        fun renderHistory(list: List<ItemHistory>) {
+            llItemHistory.removeAllViews()
+            tvHistoryEmpty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+            if (list.isEmpty()) return
+
+            val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+            list.take(30).forEach { entry ->
+                val tipo = when (entry.tipo) {
+                    "CREATED" -> "Creado"
+                    "EDITED" -> "Editado"
+                    "STATUS_CHANGED" -> "Estado cambiado"
+                    else -> entry.tipo
+                }
+                val base = "${sdf.format(entry.fecha)} · $tipo"
+                val text = entry.descripcion?.takeIf { it.isNotBlank() }?.let { "$base — $it" } ?: base
+
+                llItemHistory.addView(
+                    MaterialTextView(requireContext()).apply {
+                        setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
+                        this.text = text
+                        setPadding(0, 0, 0, dpToPx(8))
+                    }
+                )
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            historyRepository.getHistoryForItem(itemId).collect { history ->
+                renderHistory(history)
             }
         }
 

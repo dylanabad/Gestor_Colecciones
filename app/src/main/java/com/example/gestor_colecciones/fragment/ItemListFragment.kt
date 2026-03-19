@@ -24,6 +24,7 @@ import com.example.gestor_colecciones.model.ItemFilterSortState
 import com.example.gestor_colecciones.model.ItemSortField
 import com.example.gestor_colecciones.model.ItemEstados
 import com.example.gestor_colecciones.repository.CategoriaRepository
+import com.example.gestor_colecciones.repository.ItemHistoryRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.repository.TagRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
@@ -48,6 +49,7 @@ class ItemListFragment : Fragment() {
     private lateinit var itemRepo: ItemRepository
     private lateinit var categoriaRepo: CategoriaRepository
     private lateinit var tagRepo: TagRepository
+    private lateinit var historyRepo: ItemHistoryRepository
 
     private fun showSnackbar(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
@@ -79,9 +81,10 @@ class ItemListFragment : Fragment() {
         itemRepo = ItemRepository(db.itemDao())
         categoriaRepo = CategoriaRepository(db.categoriaDao())
         tagRepo = TagRepository(db.tagDao())
+        historyRepo = ItemHistoryRepository(db.itemHistoryDao())
 
         // --- ViewModel ---
-        viewModel = ViewModelProvider(this, ItemViewModelFactory(itemRepo))[ItemViewModel::class.java]
+        viewModel = ViewModelProvider(this, ItemViewModelFactory(itemRepo, null, historyRepo))[ItemViewModel::class.java]
 
         // --- RecyclerView ---
         adapter = ItemAdapter(emptyList(), categoriasMap)

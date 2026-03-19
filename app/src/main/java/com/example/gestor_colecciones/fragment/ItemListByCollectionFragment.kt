@@ -30,6 +30,7 @@ import com.example.gestor_colecciones.model.ItemFilterSortState
 import com.example.gestor_colecciones.model.ItemSortField
 import com.example.gestor_colecciones.model.ItemEstados
 import com.example.gestor_colecciones.repository.CategoriaRepository
+import com.example.gestor_colecciones.repository.ItemHistoryRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.repository.TagRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
@@ -58,6 +59,7 @@ class ItemListByCollectionFragment : Fragment() {
     private lateinit var itemRepo: ItemRepository
     private lateinit var coleccionRepo: ColeccionRepository
     private lateinit var tagRepo: TagRepository
+    private lateinit var historyRepo: ItemHistoryRepository
 
     private var selectedItemImageUri: Uri? = null
     private var currentItemImageView: ImageView? = null
@@ -95,9 +97,10 @@ class ItemListByCollectionFragment : Fragment() {
         categoriaRepo = CategoriaRepository(db.categoriaDao())
         coleccionRepo = ColeccionRepository(db.coleccionDao())
         tagRepo = TagRepository(db.tagDao())
+        historyRepo = ItemHistoryRepository(db.itemHistoryDao())
         viewModel = ViewModelProvider(
             this,
-            ItemViewModelFactory(itemRepo, categoriaRepo)
+            ItemViewModelFactory(itemRepo, categoriaRepo, historyRepo)
         )[ItemViewModel::class.java]
 
         // Header: nombre + imagen de la colección
