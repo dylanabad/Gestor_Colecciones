@@ -22,6 +22,8 @@ import com.example.gestor_colecciones.dao.ItemTagDao
 import com.example.gestor_colecciones.dao.ItemHistoryDao
 import com.example.gestor_colecciones.entities.Logro
 import com.example.gestor_colecciones.dao.LogroDao
+import com.example.gestor_colecciones.entities.ItemDeseo
+import com.example.gestor_colecciones.dao.ItemDeseoDao
 @Database(
     entities = [
         Coleccion::class,
@@ -32,9 +34,10 @@ import com.example.gestor_colecciones.dao.LogroDao
         Tag::class,
         ItemTag::class,
         ItemHistory::class,
-        Logro::class          // ← añadido
+        Logro::class,
+        ItemDeseo::class      // ← añadido
     ],
-    version = 6              // ← subir versión
+    version = 7               // ← subir versión
 )
 @TypeConverters(DateConverter::class)
 abstract class AppDataBase : RoomDatabase() {
@@ -46,5 +49,6 @@ abstract class AppDataBase : RoomDatabase() {
     abstract fun tagDao(): TagDao
     abstract fun itemTagDao(): ItemTagDao
     abstract fun itemHistoryDao(): ItemHistoryDao
-    abstract fun logroDao(): LogroDao   // ← añadido
+    abstract fun logroDao(): LogroDao
+    abstract fun itemDeseoDao(): ItemDeseoDao  // ← añadido
 }

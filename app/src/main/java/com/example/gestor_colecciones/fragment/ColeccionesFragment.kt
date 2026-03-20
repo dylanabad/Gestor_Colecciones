@@ -178,6 +178,15 @@ class ColeccionesFragment : Fragment() {
         binding.fabAddColeccion.setOnClickListener { showCreateCollectionDialog() }
         binding.fabExport.setOnClickListener { showExportDialog() }
 
+        // ── Navegación a lista de deseos ──────────────────────────────────
+        binding.btnDeseos.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .setReorderingAllowed(true)
+                .replace((view.parent as ViewGroup).id, DeseosFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
         // ── Navegación a estadísticas ─────────────────────────────────────
         binding.btnStats.setOnClickListener {
             parentFragmentManager.beginTransaction()

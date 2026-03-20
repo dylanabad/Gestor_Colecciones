@@ -36,16 +36,49 @@ object DatabaseProvider {
         }
     }
 
+    private val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `Logro` (
+                    `key` TEXT NOT NULL PRIMARY KEY,
+                    `desbloqueado` INTEGER NOT NULL DEFAULT 0,
+                    `fechaDesbloqueo` INTEGER
+                )
+                """.trimIndent()
+            )
+        }
+    }
+
+    private val MIGRATION_6_7 = object : Migration(6, 7) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `ItemDeseo` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `titulo` TEXT NOT NULL,
+                    `descripcion` TEXT,
+                    `precioObjetivo` REAL NOT NULL DEFAULT 0.0,
+                    `prioridad` INTEGER NOT NULL DEFAULT 2,
+                    `enlace` TEXT,
+                    `conseguido` INTEGER NOT NULL DEFAULT 0,
+                    `fechaCreacion` INTEGER NOT NULL,
+                    `fechaConseguido` INTEGER
+                )
+                """.trimIndent()
+            )
+        }
+    }
+
     fun getDatabase(context: Context): AppDataBase {
         return instance ?: synchronized(this) {
-
             val db = Room.databaseBuilder(
                 context.applicationContext,
                 AppDataBase::class.java,
                 "gestor_colecciones_db"
             )
-                .addMigrations(MIGRATION_3_4, MIGRATION_4_5)
-                .fallbackToDestructiveMigration() // recrea la BD si cambia el esquema (si falta migraciÃ³n)
+                .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                .fallbackToDestructiveMigration()
                 .build()
 
             instance = db
@@ -53,13 +86,7 @@ object DatabaseProvider {
         }
     }
 
-    // Acceso rápido a DAOs
-    fun getColeccionDao(context: Context): ColeccionDao =
-        getDatabase(context).coleccionDao()
-
-    fun getItemDao(context: Context): ItemDao =
-        getDatabase(context).itemDao()
-
-    fun getCategoriaDao(context: Context): CategoriaDao =
-        getDatabase(context).categoriaDao()
+    fun getColeccionDao(context: Context): ColeccionDao = getDatabase(context).coleccionDao()
+    fun getItemDao(context: Context): ItemDao = getDatabase(context).itemDao()
+    fun getCategoriaDao(context: Context): CategoriaDao = getDatabase(context).categoriaDao()
 }

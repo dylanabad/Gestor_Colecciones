@@ -15,6 +15,18 @@
         android:textAppearance="?attr/textAppearanceHeadlineSmall"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnDeseos" />
+
+    <!-- Botón lista de deseos -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDeseos"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="Lista de deseos"
+        app:icon="@android:drawable/ic_menu_agenda"
+        app:layout_constraintTop_toTopOf="@id/tvColeccionesTitle"
+        app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
         app:layout_constraintEnd_toStartOf="@id/btnStats" />
 
     <!-- Botón estadísticas -->

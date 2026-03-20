@@ -1,0 +1,221 @@
+package com.example.gestor_colecciones.fragment
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.RadioGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.transition.MaterialFadeThrough
+import com.example.gestor_colecciones.R
+import com.example.gestor_colecciones.adapters.DeseoAdapter
+import com.example.gestor_colecciones.database.DatabaseProvider
+import com.example.gestor_colecciones.databinding.FragmentDeseosBinding
+import com.example.gestor_colecciones.entities.ItemDeseo
+import com.example.gestor_colecciones.repository.ItemDeseoRepository
+import com.example.gestor_colecciones.viewmodel.DeseoViewModel
+import com.example.gestor_colecciones.viewmodel.DeseoViewModelFactory
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+
+class DeseosFragment : Fragment() {
+
+    private var _binding: FragmentDeseosBinding? = null
+    private val binding get() = _binding!!
+
+    private lateinit var viewModel: DeseoViewModel
+    private lateinit var adapter: DeseoAdapter
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enterTransition = MaterialFadeThrough().apply { duration = 220 }
+        returnTransition = MaterialFadeThrough().apply { duration = 200 }
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentDeseosBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val repo = ItemDeseoRepository(DatabaseProvider.getDatabase(requireContext()).itemDeseoDao())
+        viewModel = ViewModelProvider(this, DeseoViewModelFactory(repo))[DeseoViewModel::class.java]
+
+        adapter = DeseoAdapter(
+            emptyList(),
+            onConseguido = { item ->
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("¡Conseguido!")
+                    .setMessage("¿Marcar \"${item.titulo}\" como conseguido?")
+                    .setPositiveButton("Sí") { _, _ ->
+                        viewModel.marcarConseguido(item)
+                        showSnackbar("🎉 \"${item.titulo}\" conseguido!")
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            },
+            onLongClick = { item -> showEditDialog(item) }
+        )
+
+        binding.rvDeseos.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvDeseos.adapter = adapter
+
+        // Swipe para eliminar
+        val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val item = adapter.getItem(viewHolder.adapterPosition)
+                viewModel.delete(item)
+                showSnackbar("\"${item.titulo}\" eliminado")
+            }
+        }
+        ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvDeseos)
+
+        binding.btnBack.setOnClickListener { parentFragmentManager.popBackStack() }
+        binding.fabAddDeseo.setOnClickListener { showAddDialog() }
+
+        // Observar lista
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.all.collectLatest { lista ->
+                adapter.updateList(lista)
+
+                // Contador de pendientes
+                val pendientes = lista.count { !it.conseguido }
+                binding.tvContador.text = "$pendientes pendientes"
+
+                // Alerta — items sin precio definido
+                val sinPrecio = lista.count { !it.conseguido && it.precioObjetivo == 0.0 }
+                if (sinPrecio > 0) {
+                    binding.cardAlerta.visibility = View.VISIBLE
+                    binding.tvAlerta.text =
+                        "⚠️ Tienes $sinPrecio item${if (sinPrecio > 1) "s" else ""} sin precio objetivo definido"
+                } else {
+                    binding.cardAlerta.visibility = View.GONE
+                }
+            }
+        }
+    }
+
+    private fun showAddDialog() {
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_add_deseo, null)
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Nuevo deseo")
+            .setView(dialogView)
+            .setPositiveButton("Añadir") { _, _ ->
+                val titulo = dialogView.findViewById<EditText>(R.id.etTituloDeseo)
+                    .text.toString().trim()
+                val descripcion = dialogView.findViewById<EditText>(R.id.etDescripcionDeseo)
+                    .text.toString()
+                val precioStr = dialogView.findViewById<EditText>(R.id.etPrecioDeseo)
+                    .text.toString()
+                val enlace = dialogView.findViewById<EditText>(R.id.etEnlaceDeseo)
+                    .text.toString()
+                val rgPrioridad = dialogView.findViewById<RadioGroup>(R.id.rgPrioridad)
+
+                val prioridad = when (rgPrioridad.checkedRadioButtonId) {
+                    R.id.rbAlta -> 1
+                    R.id.rbMedia -> 2
+                    else -> 3
+                }
+
+                if (titulo.isNotEmpty()) {
+                    viewModel.insert(
+                        ItemDeseo(
+                            titulo = titulo,
+                            descripcion = descripcion.ifBlank { null },
+                            precioObjetivo = precioStr.toDoubleOrNull() ?: 0.0,
+                            enlace = enlace.ifBlank { null },
+                            prioridad = prioridad
+                        )
+                    )
+                    showSnackbar("\"$titulo\" añadido a la lista")
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun showEditDialog(item: ItemDeseo) {
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_add_deseo, null)
+
+        // Rellenar con datos existentes
+        dialogView.findViewById<EditText>(R.id.etTituloDeseo).setText(item.titulo)
+        dialogView.findViewById<EditText>(R.id.etDescripcionDeseo).setText(item.descripcion ?: "")
+        dialogView.findViewById<EditText>(R.id.etPrecioDeseo)
+            .setText(if (item.precioObjetivo > 0) item.precioObjetivo.toString() else "")
+        dialogView.findViewById<EditText>(R.id.etEnlaceDeseo).setText(item.enlace ?: "")
+
+        val rgPrioridad = dialogView.findViewById<RadioGroup>(R.id.rgPrioridad)
+        when (item.prioridad) {
+            1 -> rgPrioridad.check(R.id.rbAlta)
+            2 -> rgPrioridad.check(R.id.rbMedia)
+            else -> rgPrioridad.check(R.id.rbBaja)
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Editar deseo")
+            .setView(dialogView)
+            .setPositiveButton("Guardar") { _, _ ->
+                val titulo = dialogView.findViewById<EditText>(R.id.etTituloDeseo)
+                    .text.toString().trim()
+                val descripcion = dialogView.findViewById<EditText>(R.id.etDescripcionDeseo)
+                    .text.toString()
+                val precioStr = dialogView.findViewById<EditText>(R.id.etPrecioDeseo)
+                    .text.toString()
+                val enlace = dialogView.findViewById<EditText>(R.id.etEnlaceDeseo)
+                    .text.toString()
+                val prioridad = when (rgPrioridad.checkedRadioButtonId) {
+                    R.id.rbAlta -> 1
+                    R.id.rbMedia -> 2
+                    else -> 3
+                }
+
+                if (titulo.isNotEmpty()) {
+                    viewModel.update(
+                        item.copy(
+                            titulo = titulo,
+                            descripcion = descripcion.ifBlank { null },
+                            precioObjetivo = precioStr.toDoubleOrNull() ?: 0.0,
+                            enlace = enlace.ifBlank { null },
+                            prioridad = prioridad
+                        )
+                    )
+                    showSnackbar("\"$titulo\" actualizado")
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun showSnackbar(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
+            .setAnchorView(binding.fabAddDeseo)
+            .show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}
