@@ -17,6 +17,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/btnStats" />
 
+    <!-- Botón estadísticas -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnStats"
         style="@style/Widget.Material3.Button.IconButton"
@@ -24,6 +25,18 @@
         android:layout_height="wrap_content"
         android:contentDescription="Estadísticas"
         app:icon="@android:drawable/ic_menu_info_details"
+        app:layout_constraintTop_toTopOf="@id/tvColeccionesTitle"
+        app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
+        app:layout_constraintEnd_toStartOf="@id/btnLogros" />
+
+    <!-- Botón logros -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnLogros"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="Logros"
+        app:icon="@android:drawable/btn_star"
         app:layout_constraintTop_toTopOf="@id/tvColeccionesTitle"
         app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -64,7 +77,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- FAB exportar — anclado encima del FAB principal -->
+    <!-- FAB exportar -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabExport"
         android:layout_width="wrap_content"

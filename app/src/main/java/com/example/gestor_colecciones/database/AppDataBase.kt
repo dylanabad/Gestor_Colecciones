@@ -20,7 +20,8 @@ import com.example.gestor_colecciones.dao.MovimientoDao
 import com.example.gestor_colecciones.dao.TagDao
 import com.example.gestor_colecciones.dao.ItemTagDao
 import com.example.gestor_colecciones.dao.ItemHistoryDao
-
+import com.example.gestor_colecciones.entities.Logro
+import com.example.gestor_colecciones.dao.LogroDao
 @Database(
     entities = [
         Coleccion::class,
@@ -30,13 +31,13 @@ import com.example.gestor_colecciones.dao.ItemHistoryDao
         Movimiento::class,
         Tag::class,
         ItemTag::class,
-        ItemHistory::class
+        ItemHistory::class,
+        Logro::class          // ← añadido
     ],
-    version = 5
+    version = 6              // ← subir versión
 )
 @TypeConverters(DateConverter::class)
 abstract class AppDataBase : RoomDatabase() {
-
     abstract fun coleccionDao(): ColeccionDao
     abstract fun categoriaDao(): CategoriaDao
     abstract fun personaDao(): PersonaDao
@@ -45,4 +46,5 @@ abstract class AppDataBase : RoomDatabase() {
     abstract fun tagDao(): TagDao
     abstract fun itemTagDao(): ItemTagDao
     abstract fun itemHistoryDao(): ItemHistoryDao
+    abstract fun logroDao(): LogroDao   // ← añadido
 }

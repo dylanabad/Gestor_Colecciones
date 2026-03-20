@@ -33,9 +33,12 @@ import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentColeccionesBinding
 import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.model.ColeccionColors
+import com.example.gestor_colecciones.model.LogroDefinicion
+import com.example.gestor_colecciones.model.LogroManager
 import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.repository.ExportRepository
 import com.example.gestor_colecciones.repository.ItemRepository
+import com.example.gestor_colecciones.repository.LogroRepository
 import com.example.gestor_colecciones.viewmodel.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -52,6 +55,7 @@ class ColeccionesFragment : Fragment() {
     private lateinit var viewModel: ColeccionViewModel
     private lateinit var itemViewModel: ItemViewModel
     private lateinit var exportViewModel: ExportViewModel
+    private lateinit var logroViewModel: LogroViewModel
     private lateinit var adapter: ColeccionAdapter
     private var listaCompleta: List<Coleccion> = emptyList()
     private var statsMap: MutableMap<Int, String> = mutableMapOf()
@@ -98,6 +102,13 @@ class ColeccionesFragment : Fragment() {
         exportViewModel = ViewModelProvider(
             this, ExportViewModelFactory(exportRepo)
         )[ExportViewModel::class.java]
+
+        // ── Logros ────────────────────────────────────────────────────────────
+        val logroRepo = LogroRepository(DatabaseProvider.getDatabase(requireContext()).logroDao())
+        val logroManager = LogroManager(logroRepo, repo, itemRepo)
+        logroViewModel = ViewModelProvider(
+            this, LogroViewModelFactory(logroRepo, logroManager)
+        )[LogroViewModel::class.java]
 
         adapter = ColeccionAdapter(
             emptyList(),
@@ -146,10 +157,21 @@ class ColeccionesFragment : Fragment() {
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvColecciones)
 
+        // Observar colecciones y comprobar logros tras cada cambio
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.colecciones.collectLatest { lista ->
                 listaCompleta = lista
                 updateStatsAndAdapter()
+                logroViewModel.checkLogros()
+            }
+        }
+
+        // Mostrar Snackbar cuando se desbloquea un logro
+        viewLifecycleOwner.lifecycleScope.launch {
+            logroViewModel.nuevoLogro.collect { key ->
+                LogroDefinicion.getInfo(key)?.let { info ->
+                    showSnackbar("🏅 Logro desbloqueado: ${info.titulo}")
+                }
             }
         }
 
@@ -161,6 +183,15 @@ class ColeccionesFragment : Fragment() {
             parentFragmentManager.beginTransaction()
                 .setReorderingAllowed(true)
                 .replace((view.parent as ViewGroup).id, StatsFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
+        // ── Navegación a logros ───────────────────────────────────────────
+        binding.btnLogros.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .setReorderingAllowed(true)
+                .replace((view.parent as ViewGroup).id, LogrosFragment())
                 .addToBackStack(null)
                 .commit()
         }

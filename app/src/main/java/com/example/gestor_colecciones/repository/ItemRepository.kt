@@ -22,7 +22,7 @@ class ItemRepository(private val itemDao: ItemDao) {
         itemDao.searchItemsByTitle(search)
 
     suspend fun getTotalItems(): Int = itemDao.getTotalItems()
-    suspend fun getTotalValor(): Double = itemDao.getTotalValor()
+    suspend fun getTotalValor(): Double = itemDao.getTotalValor() ?: 0.0  // ← cambiado
 
     fun getItemsByCollectionFlow(collectionId: Int): Flow<List<Item>> {
         return itemDao.getItemsByCollection(collectionId)
