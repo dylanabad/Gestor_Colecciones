@@ -157,7 +157,6 @@ class ColeccionesFragment : Fragment() {
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvColecciones)
 
-        // Observar colecciones y comprobar logros tras cada cambio
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.colecciones.collectLatest { lista ->
                 listaCompleta = lista
@@ -166,7 +165,6 @@ class ColeccionesFragment : Fragment() {
             }
         }
 
-        // Mostrar Snackbar cuando se desbloquea un logro
         viewLifecycleOwner.lifecycleScope.launch {
             logroViewModel.nuevoLogro.collect { key ->
                 LogroDefinicion.getInfo(key)?.let { info ->
@@ -178,7 +176,6 @@ class ColeccionesFragment : Fragment() {
         binding.fabAddColeccion.setOnClickListener { showCreateCollectionDialog() }
         binding.fabExport.setOnClickListener { showExportDialog() }
 
-        // ── Navegación a lista de deseos ──────────────────────────────────
         binding.btnDeseos.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .setReorderingAllowed(true)
@@ -187,7 +184,6 @@ class ColeccionesFragment : Fragment() {
                 .commit()
         }
 
-        // ── Navegación a estadísticas ─────────────────────────────────────
         binding.btnStats.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .setReorderingAllowed(true)
@@ -196,7 +192,6 @@ class ColeccionesFragment : Fragment() {
                 .commit()
         }
 
-        // ── Navegación a logros ───────────────────────────────────────────
         binding.btnLogros.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .setReorderingAllowed(true)
@@ -275,23 +270,19 @@ class ColeccionesFragment : Fragment() {
 
     private fun showExportFormatDialog(ids: List<Int>) {
         val opciones = arrayOf(
-            "Guardar CSV en Descargas",
-            "Guardar PDF en Descargas",
-            "Compartir CSV",
-            "Compartir PDF",
             "Guardar Catálogo PDF en Descargas",
-            "Compartir Catálogo PDF"
+            "Compartir Catálogo PDF",
+            "Guardar CSV en Descargas",
+            "Compartir CSV"
         )
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Exportar como")
             .setItems(opciones) { _, which ->
                 when (which) {
-                    0 -> exportViewModel.exportCsv(requireContext(), share = false, ids = ids)
-                    1 -> exportViewModel.exportPdf(requireContext(), share = false, ids = ids)
-                    2 -> exportViewModel.exportCsv(requireContext(), share = true, ids = ids)
-                    3 -> exportViewModel.exportPdf(requireContext(), share = true, ids = ids)
-                    4 -> exportViewModel.exportCatalogoPdf(requireContext(), share = false, ids = ids)
-                    5 -> exportViewModel.exportCatalogoPdf(requireContext(), share = true, ids = ids)
+                    0 -> exportViewModel.exportCatalogoPdf(requireContext(), share = false, ids = ids)
+                    1 -> exportViewModel.exportCatalogoPdf(requireContext(), share = true, ids = ids)
+                    2 -> exportViewModel.exportCsv(requireContext(), share = false, ids = ids)
+                    3 -> exportViewModel.exportCsv(requireContext(), share = true, ids = ids)
                 }
             }
             .setNegativeButton("Cancelar", null)
@@ -310,12 +301,12 @@ class ColeccionesFragment : Fragment() {
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        startActivity(Intent.createChooser(intent, "Compartir exportación"))
+        startActivity(Intent.createChooser(intent, "Compartir catálogo"))
     }
 
     private fun saveFileToDownloads(file: File) {
         val mimeType = if (file.extension == "pdf") "application/pdf" else "text/csv"
-        val fileName = "colecciones_export_${System.currentTimeMillis()}.${file.extension}"
+        val fileName = "catalogo_export_${System.currentTimeMillis()}.${file.extension}"
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val resolver = requireContext().contentResolver
