@@ -48,23 +48,16 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-
-    // ROOM DATABASE 2.7.0-beta
     implementation("androidx.room:room-runtime:2.7.0-beta01")
     implementation("androidx.room:room-ktx:2.7.0-beta01")
     kapt("androidx.room:room-compiler:2.7.0-beta01")
-
-    // LIFECYCLE
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-
-    // COROUTINES
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-
     implementation("com.github.bumptech.glide:glide:4.16.0")
-
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("nl.dionsegijn:konfetti-xml:2.0.4")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

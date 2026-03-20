@@ -46,6 +46,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Date
+import com.example.gestor_colecciones.activities.MainActivity
 
 class ColeccionesFragment : Fragment() {
 
@@ -169,6 +170,8 @@ class ColeccionesFragment : Fragment() {
             logroViewModel.nuevoLogro.collect { key ->
                 LogroDefinicion.getInfo(key)?.let { info ->
                     showSnackbar("🏅 Logro desbloqueado: ${info.titulo}")
+                    // Lanzar confeti desde la Activity
+                    (requireActivity() as? MainActivity)?.lanzarConfeti()
                 }
             }
         }
