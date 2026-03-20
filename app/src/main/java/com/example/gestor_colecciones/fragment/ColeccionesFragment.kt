@@ -156,6 +156,15 @@ class ColeccionesFragment : Fragment() {
         binding.fabAddColeccion.setOnClickListener { showCreateCollectionDialog() }
         binding.fabExport.setOnClickListener { showExportDialog() }
 
+        // ── Navegación a estadísticas ─────────────────────────────────────
+        binding.btnStats.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .setReorderingAllowed(true)
+                .replace((view.parent as ViewGroup).id, StatsFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             exportViewModel.exportState.collectLatest { state ->
                 when (state) {
@@ -201,9 +210,8 @@ class ColeccionesFragment : Fragment() {
             return
         }
 
-        // Paso 1 — selección de colecciones con checkboxes
         val nombres = listaCompleta.map { it.nombre }.toTypedArray()
-        val seleccionadas = BooleanArray(listaCompleta.size) { true } // todas marcadas por defecto
+        val seleccionadas = BooleanArray(listaCompleta.size) { true }
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Seleccionar colecciones")
@@ -219,8 +227,6 @@ class ColeccionesFragment : Fragment() {
                     showSnackbar("Selecciona al menos una colección")
                     return@setPositiveButton
                 }
-
-                // Paso 2 — formato y acción
                 showExportFormatDialog(idsSeleccionados)
             }
             .setNegativeButton("Cancelar", null)
@@ -247,6 +253,7 @@ class ColeccionesFragment : Fragment() {
             .setNegativeButton("Cancelar", null)
             .show()
     }
+
     private fun shareFile(file: File) {
         val mimeType = if (file.extension == "pdf") "application/pdf" else "text/csv"
         val uri = FileProvider.getUriForFile(
