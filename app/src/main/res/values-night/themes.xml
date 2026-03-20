@@ -1,5 +1,4 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Theme.Gestor_Colecciones" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Brand colors -->
         <item name="colorPrimary">@color/brand_primary</item>
@@ -21,6 +20,8 @@
         <item name="colorOutline">@color/app_outline</item>
 
         <!-- System bars -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>

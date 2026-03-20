@@ -4,137 +4,275 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_welcome"
-    android:padding="24dp">
+    android:background="@drawable/bg_welcome">
 
+    <!-- Número decorativo de fondo -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tvDecorative"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="∞"
+        android:textSize="320sp"
+        android:textColor="#0DFFFFFF"
+        android:fontFamily="sans-serif-thin"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tvTagline"
+        android:layout_marginEnd="-60dp" />
+
+    <!-- Bloque superior — texto principal -->
     <LinearLayout
-        android:id="@+id/hero"
+        android:id="@+id/layoutTop"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintTop_toTopOf="parent"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:alpha="0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            app:cardCornerRadius="36dp"
-            app:cardElevation="0dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="?attr/colorOutline"
-            app:cardBackgroundColor="@color/app_surface">
-
-            <ImageView
-                android:id="@+id/ivLogo"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="12dp"
-                android:contentDescription="Logo"
-                android:src="@mipmap/ic_launcher" />
-        </com.google.android.material.card.MaterialCardView>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tvTagline"
+        android:layout_marginBottom="12dp">
 
         <com.google.android.material.textview.MaterialTextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="Gestor de"
-            android:textAppearance="?attr/textAppearanceHeadlineMedium"
-            android:textStyle="bold" />
+            android:text="TU"
+            android:textSize="52sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.15"
+            android:textColor="?attr/colorOnBackground" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Colecciones"
-            android:textAppearance="?attr/textAppearanceHeadlineLarge"
-            android:textStyle="bold" />
+            android:text="COLECCIÓN"
+            android:textSize="52sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.15"
+            android:textColor="?attr/colorPrimary" />
+
+        <!-- Separador fino -->
+        <View
+            android:layout_width="40dp"
+            android:layout_height="3dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp"
+            android:background="?attr/colorPrimary"
+            android:alpha="0.4" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Todo en un solo lugar: imágenes, categorías, valoración y detalles."
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textColor="?attr/colorOnSurfaceVariant" />
+            android:text="TU MUNDO."
+            android:textSize="52sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.15"
+            android:textColor="?attr/colorOnBackground" />
 
     </LinearLayout>
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/bottomSheet"
+    <!-- Tagline -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tvTagline"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        app:cardCornerRadius="24dp"
-        app:cardElevation="0dp"
-        app:strokeWidth="1dp"
-        app:strokeColor="?attr/colorOutline"
-        app:cardBackgroundColor="@color/app_surface"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:text="Organiza, valora y explora todo lo que coleccionas."
+        android:textAppearance="?attr/textAppearanceBodyLarge"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:alpha="0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/layoutFeatures"
+        android:layout_marginBottom="32dp" />
 
+    <!-- Features -->
+    <LinearLayout
+        android:id="@+id/layoutFeatures"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:alpha="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/layoutBottom"
+        android:layout_marginBottom="32dp">
+
+        <!-- Feature 1 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
 
-            <com.google.android.material.chip.ChipGroup
-                android:layout_width="match_parent"
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="?attr/colorPrimaryContainer">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="10dp"
+                    android:src="@android:drawable/ic_menu_gallery"
+                    app:tint="?attr/colorOnPrimaryContainer"
+                    android:contentDescription="Imágenes" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                app:singleLine="false"
-                app:chipSpacingHorizontal="8dp"
-                app:chipSpacingVertical="8dp">
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="14dp">
 
-                <com.google.android.material.chip.Chip
+                <com.google.android.material.textview.MaterialTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Imágenes"
-                    android:textColor="@color/on_brand_primary_container"
-                    app:chipIcon="@android:drawable/ic_menu_camera"
-                    app:chipIconVisible="true"
-                    app:chipIconTint="@color/on_brand_primary_container"
-                    app:chipBackgroundColor="@color/brand_primary_container" />
+                    android:text="Galería visual"
+                    android:textAppearance="?attr/textAppearanceTitleSmall" />
 
-                <com.google.android.material.chip.Chip
+                <com.google.android.material.textview.MaterialTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Categorías"
-                    android:textColor="@color/on_brand_secondary_container"
-                    app:chipIcon="@android:drawable/ic_menu_agenda"
-                    app:chipIconVisible="true"
-                    app:chipIconTint="@color/on_brand_secondary_container"
-                    app:chipBackgroundColor="@color/brand_secondary_container" />
-
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Estadísticas"
-                    android:textColor="@color/on_brand_primary_container"
-                    app:chipIcon="@android:drawable/ic_menu_sort_by_size"
-                    app:chipIconVisible="true"
-                    app:chipIconTint="@color/on_brand_primary_container"
-                    app:chipBackgroundColor="@color/brand_primary_container" />
-            </com.google.android.material.chip.ChipGroup>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnEnter"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="Empezar"
-                app:icon="@android:drawable/ic_media_play"
-                app:iconGravity="textStart"
-                app:iconPadding="8dp" />
-
-            <com.google.android.material.textview.MaterialTextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="Tip: mantén pulsado un item para editarlo."
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant" />
-
+                    android:text="Imágenes para cada colección e item"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+
+        <!-- Feature 2 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="?attr/colorSecondaryContainer">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="10dp"
+                    android:src="@android:drawable/ic_menu_sort_by_size"
+                    app:tint="?attr/colorOnSecondaryContainer"
+                    android:contentDescription="Estadísticas" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="14dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Estadísticas y valor"
+                    android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Gráficas y valor total de tu colección"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Feature 3 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="?attr/colorPrimaryContainer">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="10dp"
+                    android:src="@android:drawable/btn_star"
+                    app:tint="?attr/colorOnPrimaryContainer"
+                    android:contentDescription="Logros" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="14dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Logros y deseos"
+                    android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Desbloquea logros y gestiona tu lista de deseos"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Bloque inferior — botón -->
+    <LinearLayout
+        android:id="@+id/layoutBottom"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:paddingBottom="48dp"
+        android:alpha="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEnter"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Comenzar"
+            android:textSize="16sp"
+            android:letterSpacing="0.05"
+            app:cornerRadius="16dp" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Mantén pulsado un item para editarlo o eliminarlo."
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:gravity="center" />
+
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
