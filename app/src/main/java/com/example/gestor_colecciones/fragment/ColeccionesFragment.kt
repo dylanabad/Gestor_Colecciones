@@ -278,7 +278,9 @@ class ColeccionesFragment : Fragment() {
             "Guardar CSV en Descargas",
             "Guardar PDF en Descargas",
             "Compartir CSV",
-            "Compartir PDF"
+            "Compartir PDF",
+            "Guardar Catálogo PDF en Descargas",
+            "Compartir Catálogo PDF"
         )
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Exportar como")
@@ -288,6 +290,8 @@ class ColeccionesFragment : Fragment() {
                     1 -> exportViewModel.exportPdf(requireContext(), share = false, ids = ids)
                     2 -> exportViewModel.exportCsv(requireContext(), share = true, ids = ids)
                     3 -> exportViewModel.exportPdf(requireContext(), share = true, ids = ids)
+                    4 -> exportViewModel.exportCatalogoPdf(requireContext(), share = false, ids = ids)
+                    5 -> exportViewModel.exportCatalogoPdf(requireContext(), share = true, ids = ids)
                 }
             }
             .setNegativeButton("Cancelar", null)

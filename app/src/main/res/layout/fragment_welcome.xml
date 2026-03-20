@@ -35,21 +35,29 @@
         android:layout_marginBottom="12dp">
 
         <com.google.android.material.textview.MaterialTextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TU"
             android:textSize="52sp"
             android:textStyle="bold"
             android:letterSpacing="0.15"
+            android:maxLines="1"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="28sp"
+            android:autoSizeMaxTextSize="52sp"
             android:textColor="?attr/colorOnBackground" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="COLECCIÓN"
             android:textSize="52sp"
             android:textStyle="bold"
             android:letterSpacing="0.15"
+            android:maxLines="1"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="28sp"
+            android:autoSizeMaxTextSize="52sp"
             android:textColor="?attr/colorPrimary" />
 
         <!-- Separador fino -->
@@ -62,12 +70,16 @@
             android:alpha="0.4" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TU MUNDO."
             android:textSize="52sp"
             android:textStyle="bold"
             android:letterSpacing="0.15"
+            android:maxLines="1"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="28sp"
+            android:autoSizeMaxTextSize="52sp"
             android:textColor="?attr/colorOnBackground" />
 
     </LinearLayout>

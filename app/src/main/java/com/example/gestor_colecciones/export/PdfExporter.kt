@@ -1,7 +1,6 @@
 package com.example.gestor_colecciones.export
 
 import android.content.Context
-import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
@@ -15,25 +14,19 @@ class PdfExporter(private val context: Context) {
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
     private val paintTitle = Paint().apply {
-        textSize = 18f
-        isFakeBoldText = true
-        color = Color.BLACK
+        textSize = 18f; isFakeBoldText = true; color = Color.BLACK
     }
     private val paintSection = Paint().apply {
-        textSize = 14f
-        isFakeBoldText = true
-        color = Color.DKGRAY
+        textSize = 14f; isFakeBoldText = true; color = Color.DKGRAY
     }
     private val paintBody = Paint().apply {
-        textSize = 11f
-        color = Color.DKGRAY
+        textSize = 11f; color = Color.DKGRAY
     }
     private val paintLine = Paint().apply {
-        color = Color.LTGRAY
-        strokeWidth = 1f
+        color = Color.LTGRAY; strokeWidth = 1f
     }
 
-    private val pageWidth = 595   // A4 puntos
+    private val pageWidth = 595
     private val pageHeight = 842
     private val margin = 40f
     private val lineHeight = 18f
@@ -59,7 +52,6 @@ class PdfExporter(private val context: Context) {
             if (y + needed > pageHeight - margin) newPage()
         }
 
-        // Título principal
         canvas.drawText("Gestor de Colecciones — Exportación", margin, y, paintTitle)
         y += 10f
         canvas.drawLine(margin, y, pageWidth - margin, y, paintLine)
@@ -67,10 +59,8 @@ class PdfExporter(private val context: Context) {
 
         data.forEach { entry ->
             val c = entry.coleccion
-
             checkSpace(60f)
 
-            // Nombre colección
             canvas.drawText("■  ${c.nombre}", margin, y, paintSection)
             y += lineHeight
 
@@ -92,10 +82,8 @@ class PdfExporter(private val context: Context) {
             } else {
                 entry.items.forEach { item ->
                     checkSpace(lineHeight * 2 + 8f)
-
                     canvas.drawText("   • ${item.titulo}", margin, y, paintBody)
                     y += lineHeight
-
                     canvas.drawText(
                         "     Estado: ${item.estado}  |  " +
                                 "Valor: ${"%.2f".format(item.valor)} €  |  " +
@@ -104,7 +92,6 @@ class PdfExporter(private val context: Context) {
                         margin, y, paintBody
                     )
                     y += lineHeight
-
                     item.descripcion?.takeIf { it.isNotBlank() }?.let {
                         canvas.drawText("     $it", margin, y, paintBody)
                         y += lineHeight
@@ -119,7 +106,6 @@ class PdfExporter(private val context: Context) {
         }
 
         document.finishPage(page)
-
         val file = File(context.cacheDir, "colecciones_export.pdf")
         file.outputStream().use { document.writeTo(it) }
         document.close()
