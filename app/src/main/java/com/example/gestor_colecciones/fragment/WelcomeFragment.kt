@@ -1,5 +1,6 @@
 package com.example.gestor_colecciones.fragment
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -25,9 +26,16 @@ class WelcomeFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_welcome, container, false)
 
         view.findViewById<MaterialButton>(R.id.btnEnter).setOnClickListener {
+            val onboardingCompleted = requireContext()
+                .getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                .getBoolean("onboarding_completed", false)
+
+            val destino = if (onboardingCompleted) ColeccionesFragment()
+            else OnboardingFragment()
+
             parentFragmentManager.beginTransaction()
                 .setReorderingAllowed(true)
-                .replace(R.id.fragment_container, ColeccionesFragment())
+                .replace(R.id.fragment_container, destino)
                 .addToBackStack(null)
                 .commit()
         }
