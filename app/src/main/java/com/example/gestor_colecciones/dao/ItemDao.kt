@@ -53,4 +53,7 @@ interface ItemDao {
 
     @Query("DELETE FROM Item WHERE eliminado = 1 AND fechaEliminacion < :fecha")
     suspend fun limpiarItemsAntiguos(fecha: Long)
+
+    @Query("SELECT * FROM Item WHERE eliminado = 0 AND (titulo LIKE '%' || :search || '%' OR descripcion LIKE '%' || :search || '%' OR estado LIKE '%' || :search || '%') ORDER BY fechaAdquisicion DESC")
+    suspend fun searchItems(search: String): List<Item>
 }

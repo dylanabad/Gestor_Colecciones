@@ -182,6 +182,15 @@ class ColeccionesFragment : Fragment() {
         binding.fabAddColeccion.setOnClickListener { showCreateCollectionDialog() }
         binding.fabExport.setOnClickListener { showExportDialog() }
 
+        // ── Navegación a búsqueda global ──────────────────────────────────────
+        binding.btnBusqueda.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .setReorderingAllowed(true)
+                .replace((view.parent as ViewGroup).id, BusquedaFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
         binding.btnDeseos.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .setReorderingAllowed(true)
@@ -206,7 +215,7 @@ class ColeccionesFragment : Fragment() {
                 .commit()
         }
 
-        // ── Navegación a papelera ─────────────────────────────────────────
+        // ── Navegación a papelera ─────────────────────────────────────────────
         binding.btnPapelera.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .setReorderingAllowed(true)
@@ -272,7 +281,6 @@ class ColeccionesFragment : Fragment() {
                 val idsSeleccionados = listaCompleta
                     .filterIndexed { index, _ -> seleccionadas[index] }
                     .map { it.id }
-
                 if (idsSeleccionados.isEmpty()) {
                     showSnackbar("Selecciona al menos una colección")
                     return@setPositiveButton

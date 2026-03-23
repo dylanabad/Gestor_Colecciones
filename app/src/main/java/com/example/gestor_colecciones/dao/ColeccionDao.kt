@@ -32,4 +32,8 @@ interface ColeccionDao {
 
     @Query("DELETE FROM Coleccion WHERE eliminado = 1 AND fechaEliminacion < :fecha")
     suspend fun limpiarColeccionesAntiguas(fecha: Long)
+
+    @Query("SELECT * FROM Coleccion WHERE eliminado = 0 AND (nombre LIKE '%' || :search || '%' OR descripcion LIKE '%' || :search || '%') ORDER BY fechaCreacion DESC")
+    suspend fun searchColecciones(search: String): List<Coleccion>
+
 }

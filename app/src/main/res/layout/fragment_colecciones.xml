@@ -15,6 +15,18 @@
         android:textAppearance="?attr/textAppearanceHeadlineSmall"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnBusqueda" />
+
+    <!-- Botón búsqueda global -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnBusqueda"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="Buscar"
+        app:icon="@android:drawable/ic_menu_search"
+        app:layout_constraintTop_toTopOf="@id/tvColeccionesTitle"
+        app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
         app:layout_constraintEnd_toStartOf="@id/btnDeseos" />
 
     <com.google.android.material.button.MaterialButton
@@ -50,7 +62,6 @@
         app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
         app:layout_constraintEnd_toStartOf="@id/btnPapelera" />
 
-    <!-- Botón papelera -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnPapelera"
         style="@style/Widget.Material3.Button.IconButton"
