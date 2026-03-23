@@ -39,6 +39,7 @@ import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.repository.ExportRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.repository.LogroRepository
+import com.example.gestor_colecciones.repository.PapeleraRepository
 import com.example.gestor_colecciones.viewmodel.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -137,23 +138,26 @@ class ColeccionesFragment : Fragment() {
         binding.rvColecciones.addItemDecoration(GridSpacingItemDecoration(2, 16, true))
 
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean = false
-
+            override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val coleccion = adapter.getItem(viewHolder.adapterPosition)
-                viewHolder.itemView.animate()
-                    .alpha(0f)
-                    .setDuration(300)
-                    .withEndAction {
-                        viewLifecycleOwner.lifecycleScope.launch {
-                            viewModel.delete(coleccion)
-                            showSnackbar("Colección \"${coleccion.nombre}\" eliminada")
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val papeleraRepo = PapeleraRepository(
+                        DatabaseProvider.getDatabase(requireContext()).coleccionDao(),
+                        DatabaseProvider.getDatabase(requireContext()).itemDao()
+                    )
+                    papeleraRepo.moverColeccionAPapelera(coleccion)
+                    Snackbar.make(binding.root, "\"${coleccion.nombre}\" movida a la papelera", Snackbar.LENGTH_LONG)
+                        .setAction("Ver papelera") {
+                            parentFragmentManager.beginTransaction()
+                                .setReorderingAllowed(true)
+                                .replace((view.parent as ViewGroup).id, PapeleraFragment())
+                                .addToBackStack(null)
+                                .commit()
                         }
-                    }.start()
+                        .setAnchorView(binding.fabAddColeccion)
+                        .show()
+                }
             }
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvColecciones)
@@ -170,7 +174,6 @@ class ColeccionesFragment : Fragment() {
             logroViewModel.nuevoLogro.collect { key ->
                 LogroDefinicion.getInfo(key)?.let { info ->
                     showSnackbar("🏅 Logro desbloqueado: ${info.titulo}")
-                    // Lanzar confeti desde la Activity
                     (requireActivity() as? MainActivity)?.lanzarConfeti()
                 }
             }
@@ -199,6 +202,15 @@ class ColeccionesFragment : Fragment() {
             parentFragmentManager.beginTransaction()
                 .setReorderingAllowed(true)
                 .replace((view.parent as ViewGroup).id, LogrosFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
+        // ── Navegación a papelera ─────────────────────────────────────────
+        binding.btnPapelera.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .setReorderingAllowed(true)
+                .replace((view.parent as ViewGroup).id, PapeleraFragment())
                 .addToBackStack(null)
                 .commit()
         }
@@ -428,7 +440,6 @@ class ColeccionesFragment : Fragment() {
                             )
                         }
 
-                        // ── Detección de duplicados ───────────────────────────────
                         val posibleDuplicado = listaCompleta.firstOrNull { coleccion ->
                             coleccion.nombre.trim().equals(nombre, ignoreCase = true)
                         }
@@ -461,9 +472,7 @@ class ColeccionesFragment : Fragment() {
                                             "• Items: ${listaCompleta.indexOf(posibleDuplicado) + 1}\n\n" +
                                             "¿Quieres crearla igualmente?"
                                 )
-                                .setPositiveButton("Crear igualmente") { _, _ ->
-                                    insertarColeccion()
-                                }
+                                .setPositiveButton("Crear igualmente") { _, _ -> insertarColeccion() }
                                 .setNegativeButton("Cancelar", null)
                                 .show()
                         } else {
@@ -474,6 +483,7 @@ class ColeccionesFragment : Fragment() {
                 dialog.show()
             }
     }
+
     private fun showEditCollectionDialog(coleccion: Coleccion) {
         selectedImageUri = null
         val view = LayoutInflater.from(requireContext())

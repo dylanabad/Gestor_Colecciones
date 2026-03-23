@@ -70,6 +70,15 @@ object DatabaseProvider {
         }
     }
 
+    private val MIGRATION_7_8 = object : Migration(7, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `Coleccion` ADD COLUMN `eliminado` INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE `Coleccion` ADD COLUMN `fechaEliminacion` INTEGER")
+            db.execSQL("ALTER TABLE `Item` ADD COLUMN `eliminado` INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE `Item` ADD COLUMN `fechaEliminacion` INTEGER")
+        }
+    }
+
     fun getDatabase(context: Context): AppDataBase {
         return instance ?: synchronized(this) {
             val db = Room.databaseBuilder(
@@ -77,7 +86,7 @@ object DatabaseProvider {
                 AppDataBase::class.java,
                 "gestor_colecciones_db"
             )
-                .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                 .fallbackToDestructiveMigration()
                 .build()
 

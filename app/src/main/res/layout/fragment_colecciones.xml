@@ -17,7 +17,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/btnDeseos" />
 
-    <!-- Botón lista de deseos -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnDeseos"
         style="@style/Widget.Material3.Button.IconButton"
@@ -29,7 +28,6 @@
         app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
         app:layout_constraintEnd_toStartOf="@id/btnStats" />
 
-    <!-- Botón estadísticas -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnStats"
         style="@style/Widget.Material3.Button.IconButton"
@@ -41,7 +39,6 @@
         app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
         app:layout_constraintEnd_toStartOf="@id/btnLogros" />
 
-    <!-- Botón logros -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnLogros"
         style="@style/Widget.Material3.Button.IconButton"
@@ -49,6 +46,18 @@
         android:layout_height="wrap_content"
         android:contentDescription="Logros"
         app:icon="@android:drawable/btn_star"
+        app:layout_constraintTop_toTopOf="@id/tvColeccionesTitle"
+        app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
+        app:layout_constraintEnd_toStartOf="@id/btnPapelera" />
+
+    <!-- Botón papelera -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnPapelera"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="Papelera"
+        app:icon="@android:drawable/ic_menu_delete"
         app:layout_constraintTop_toTopOf="@id/tvColeccionesTitle"
         app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -89,7 +98,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- FAB exportar -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabExport"
         android:layout_width="wrap_content"

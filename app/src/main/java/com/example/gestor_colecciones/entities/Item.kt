@@ -25,25 +25,17 @@ import java.util.Date
     indices = [Index("categoriaId"), Index("collectionId")]
 )
 data class Item(
-
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-
     val titulo: String,
-
     val categoriaId: Int,
-
     val collectionId: Int,
-
     val fechaAdquisicion: Date,
-
     val valor: Double,
-
     val imagenPath: String?,
-
     val estado: String,
-
     val descripcion: String?,
-
-    val calificacion: Float
+    val calificacion: Float,
+    val eliminado: Boolean = false,          // ← añadido
+    val fechaEliminacion: Date? = null       // ← añadido
 )

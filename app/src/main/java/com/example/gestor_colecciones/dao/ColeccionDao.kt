@@ -16,12 +16,20 @@ interface ColeccionDao {
     @Delete
     suspend fun delete(coleccion: Coleccion)
 
-    @Query("SELECT * FROM Coleccion ORDER BY fechaCreacion DESC")
+    // Solo colecciones activas
+    @Query("SELECT * FROM Coleccion WHERE eliminado = 0 ORDER BY fechaCreacion DESC")
     fun getAllColecciones(): Flow<List<Coleccion>>
 
     @Query("SELECT * FROM Coleccion WHERE id = :id")
     suspend fun getColeccionById(id: Int): Coleccion?
 
-    @Query("SELECT * FROM Coleccion ORDER BY fechaCreacion DESC")
+    @Query("SELECT * FROM Coleccion WHERE eliminado = 0 ORDER BY fechaCreacion DESC")
     suspend fun getAllColeccionesOnce(): List<Coleccion>
+
+    // ── Papelera ──────────────────────────────────────────────────────────────
+    @Query("SELECT * FROM Coleccion WHERE eliminado = 1 ORDER BY fechaEliminacion DESC")
+    fun getColeccionesEliminadas(): Flow<List<Coleccion>>
+
+    @Query("DELETE FROM Coleccion WHERE eliminado = 1 AND fechaEliminacion < :fecha")
+    suspend fun limpiarColeccionesAntiguas(fecha: Long)
 }

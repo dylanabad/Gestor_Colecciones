@@ -40,6 +40,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
+import com.example.gestor_colecciones.repository.PapeleraRepository
 
 class ItemListByCollectionFragment : Fragment() {
 
@@ -206,16 +207,25 @@ class ItemListByCollectionFragment : Fragment() {
 
         // Swipe para eliminar items
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-            override fun onMove(
-                recyclerView: androidx.recyclerview.widget.RecyclerView,
-                viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder,
-                target: androidx.recyclerview.widget.RecyclerView.ViewHolder
-            ): Boolean = false
-
+            override fun onMove(rv: androidx.recyclerview.widget.RecyclerView, vh: androidx.recyclerview.widget.RecyclerView.ViewHolder, t: androidx.recyclerview.widget.RecyclerView.ViewHolder) = false
             override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {
                 val item = adapter.getItem(viewHolder.adapterPosition)
-                viewModel.delete(item) {
-                    showSnackbar("Item \"${item.titulo}\" eliminado")
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val papeleraRepo = PapeleraRepository(
+                        DatabaseProvider.getDatabase(requireContext()).coleccionDao(),
+                        DatabaseProvider.getDatabase(requireContext()).itemDao()
+                    )
+                    papeleraRepo.moverItemAPapelera(item)
+                    Snackbar.make(binding.root, "\"${item.titulo}\" movido a la papelera", Snackbar.LENGTH_LONG)
+                        .setAction("Ver papelera") {
+                            parentFragmentManager.beginTransaction()
+                                .setReorderingAllowed(true)
+                                .replace((view.parent as ViewGroup).id, PapeleraFragment())
+                                .addToBackStack(null)
+                                .commit()
+                        }
+                        .setAnchorView(binding.fabAddItem)
+                        .show()
                 }
             }
         }
