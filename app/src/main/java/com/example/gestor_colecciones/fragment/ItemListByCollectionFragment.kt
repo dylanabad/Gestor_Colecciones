@@ -380,28 +380,56 @@ class ItemListByCollectionFragment : Fragment() {
                     Toast.makeText(requireContext(), "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
+
                 val valor = etValor.text.toString().toDoubleOrNull() ?: 0.0
                 val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
                 val categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key
                 val estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { "Nuevo" }
 
-                val newItem = Item(
-                    titulo = titulo,
-                    categoriaId = categoriaId,
-                    collectionId = collectionId,
-                    fechaAdquisicion = Date(),
-                    valor = valor,
-                    imagenPath = selectedItemImageUri?.let { uri ->
-                        copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg")
-                    },
-                    estado = estado,
-                    descripcion = descripcion,
-                    calificacion = rbCalificacion.rating
-                )
-                viewModel.insert(newItem) {
-                    showSnackbar("Item \"$titulo\" creado")
+                // ── Detección de duplicados ───────────────────────────────────────
+                val posibleDuplicado = fullItemList.firstOrNull { item ->
+                    item.titulo.trim().equals(titulo, ignoreCase = true)
                 }
-                dialog.dismiss()
+
+                val insertarItem = {
+                    val newItem = Item(
+                        titulo = titulo,
+                        categoriaId = categoriaId,
+                        collectionId = collectionId,
+                        fechaAdquisicion = Date(),
+                        valor = valor,
+                        imagenPath = selectedItemImageUri?.let { uri ->
+                            copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg")
+                        },
+                        estado = estado,
+                        descripcion = descripcion,
+                        calificacion = rbCalificacion.rating
+                    )
+                    viewModel.insert(newItem) {
+                        showSnackbar("Item \"$titulo\" creado")
+                    }
+                    dialog.dismiss()
+                }
+
+                if (posibleDuplicado != null) {
+                    // Mostrar alerta de duplicado con detalles del item existente
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("⚠️ Posible duplicado")
+                        .setMessage(
+                            "Ya existe un item con un nombre similar:\n\n" +
+                                    "• Título: ${posibleDuplicado.titulo}\n" +
+                                    "• Estado: ${posibleDuplicado.estado}\n" +
+                                    "• Valor: ${"%.2f".format(posibleDuplicado.valor)} €\n\n" +
+                                    "¿Quieres añadirlo igualmente?"
+                        )
+                        .setPositiveButton("Añadir igualmente") { _, _ ->
+                            insertarItem()
+                        }
+                        .setNegativeButton("Cancelar", null)
+                        .show()
+                } else {
+                    insertarItem()
+                }
             }
         }
         dialog.show()
