@@ -1,7 +1,12 @@
 package com.example.gestor_colecciones.fragment
 
+import android.content.ContentValues
+import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +14,7 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -23,6 +29,7 @@ import com.google.android.material.transition.MaterialSharedAxis
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ItemAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
+import com.example.gestor_colecciones.export.TarjetaColeccionGenerator
 import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.entities.Categoria
 import com.example.gestor_colecciones.entities.Item
@@ -32,6 +39,7 @@ import com.example.gestor_colecciones.model.ItemEstados
 import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemHistoryRepository
 import com.example.gestor_colecciones.repository.ItemRepository
+import com.example.gestor_colecciones.repository.PapeleraRepository
 import com.example.gestor_colecciones.repository.TagRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
@@ -40,7 +48,6 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
-import com.example.gestor_colecciones.repository.PapeleraRepository
 
 class ItemListByCollectionFragment : Fragment() {
 
@@ -110,7 +117,6 @@ class ItemListByCollectionFragment : Fragment() {
             if (coleccion != null) {
                 binding.tvCollectionName.text = coleccion.nombre
                 binding.tvCollectionName.visibility = View.VISIBLE
-
                 val imagePath = coleccion.imagenPath
                 val file = imagePath?.let { File(it) }
                 if (file != null && file.exists()) {
@@ -140,7 +146,6 @@ class ItemListByCollectionFragment : Fragment() {
         }
 
         adapter.onItemClick = { item ->
-            // Aquí puedes abrir un detalle si tienes ItemDetailFragment
             val fragment = ItemDetailFragment.newInstance(item.id)
             parentFragmentManager.beginTransaction()
                 .setReorderingAllowed(true)
@@ -149,9 +154,7 @@ class ItemListByCollectionFragment : Fragment() {
                 .commit()
         }
 
-        adapter.onItemLongClick = { item ->
-            showEditItemDialog(item)
-        }
+        adapter.onItemLongClick = { item -> showEditItemDialog(item) }
 
         parentFragmentManager.setFragmentResultListener(
             ItemFilterSortBottomSheet.RESULT_KEY,
@@ -163,10 +166,8 @@ class ItemListByCollectionFragment : Fragment() {
             val minRating = bundle.getFloat(ItemFilterSortBottomSheet.BUNDLE_MIN_RATING, 0f)
             val sortFieldName = bundle.getString(ItemFilterSortBottomSheet.BUNDLE_SORT_FIELD, ItemSortField.DATE.name)
             val ascending = bundle.getBoolean(ItemFilterSortBottomSheet.BUNDLE_ASCENDING, false)
-
             val sortField = runCatching { ItemSortField.valueOf(sortFieldName ?: ItemSortField.DATE.name) }
                 .getOrDefault(ItemSortField.DATE)
-
             filterSortState = ItemFilterSortState(
                 categoriaId = categoriaId.takeIf { it != -1 },
                 tagId = tagId.takeIf { it != -1 },
@@ -178,12 +179,10 @@ class ItemListByCollectionFragment : Fragment() {
             applyFiltersAndSort()
         }
 
-        // Cargar categorías y items
         viewLifecycleOwner.lifecycleScope.launch {
             val categorias = categoriaRepo.allCategoriasOnce()
             categoriasMap.putAll(categorias.associate { it.id to it.nombre })
             updateFabState()
-
             viewModel.getItemsByCollection(collectionId).collect { list ->
                 fullItemList = list
                 refreshTagsMaps()
@@ -191,7 +190,6 @@ class ItemListByCollectionFragment : Fragment() {
             }
         }
 
-        // FAB para crear item
         binding.fabAddItem.setOnClickListener {
             if (categoriasMap.isEmpty()) {
                 Toast.makeText(requireContext(), "No puedes crear un item sin categorías", Toast.LENGTH_SHORT).show()
@@ -200,12 +198,17 @@ class ItemListByCollectionFragment : Fragment() {
             }
         }
 
-        // FAB para crear/editar categorías
-        binding.fabAddCategory.setOnClickListener {
-            showCreateCategoriaDialog()
+        binding.fabAddCategory.setOnClickListener { showCreateCategoriaDialog() }
+
+        // ── FAB tarjeta ───────────────────────────────────────────────────────
+        binding.fabTarjeta.setOnClickListener {
+            if (fullItemList.isEmpty()) {
+                showSnackbar("No hay items para generar la tarjeta")
+                return@setOnClickListener
+            }
+            generarTarjeta()
         }
 
-        // Swipe para eliminar items
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             override fun onMove(rv: androidx.recyclerview.widget.RecyclerView, vh: androidx.recyclerview.widget.RecyclerView.ViewHolder, t: androidx.recyclerview.widget.RecyclerView.ViewHolder) = false
             override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {
@@ -231,7 +234,6 @@ class ItemListByCollectionFragment : Fragment() {
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvItems)
 
-        // SearchView
         binding.searchItems.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -262,22 +264,15 @@ class ItemListByCollectionFragment : Fragment() {
 
     private fun openFilterSort() {
         viewLifecycleOwner.lifecycleScope.launch {
-            val sortedCategorias = categoriasMap.entries
-                .sortedBy { it.value.lowercase(Locale.getDefault()) }
-
+            val sortedCategorias = categoriasMap.entries.sortedBy { it.value.lowercase(Locale.getDefault()) }
             val categoryIds = intArrayOf(-1) + sortedCategorias.map { it.key }.toIntArray()
             val categoryNames = arrayOf("Todas") + sortedCategorias.map { it.value }.toTypedArray()
-
             val estados = (ItemEstados.DEFAULT + fullItemList.mapNotNull { it.estado.takeIf { s -> s.isNotBlank() } })
-                .distinct()
-                .sortedBy { it.lowercase(Locale.getDefault()) }
+                .distinct().sortedBy { it.lowercase(Locale.getDefault()) }
             val statusList = arrayOf("Cualquiera") + estados.toTypedArray()
-
-            val tags = tagRepo.getAllTagsOnce()
-                .sortedBy { it.nombre.lowercase(Locale.getDefault()) }
+            val tags = tagRepo.getAllTagsOnce().sortedBy { it.nombre.lowercase(Locale.getDefault()) }
             val tagIds = intArrayOf(-1) + tags.map { it.id }.toIntArray()
             val tagNames = arrayOf("Cualquiera") + tags.map { it.nombre }.toTypedArray()
-
             ItemFilterSortBottomSheet
                 .newInstance(categoryIds, categoryNames, statusList, tagIds, tagNames, filterSortState)
                 .show(parentFragmentManager, "ItemFilterSortBottomSheet")
@@ -287,36 +282,17 @@ class ItemListByCollectionFragment : Fragment() {
     private fun applyFiltersAndSort() {
         val query = searchQuery.trim().lowercase(Locale.getDefault())
         var list = fullItemList
-
-        if (query.isNotBlank()) {
-            list = list.filter { it.titulo.lowercase(Locale.getDefault()).contains(query) }
-        }
-
-        filterSortState.categoriaId?.let { categoriaId ->
-            list = list.filter { it.categoriaId == categoriaId }
-        }
-
-        filterSortState.tagId?.let { tagId ->
-            list = list.filter { tagIdsByItemId[it.id]?.contains(tagId) == true }
-        }
-
-        filterSortState.estado?.let { estado ->
-            list = list.filter { it.estado.equals(estado, ignoreCase = true) }
-        }
-
-        if (filterSortState.minCalificacion > 0f) {
-            val min = filterSortState.minCalificacion
-            list = list.filter { it.calificacion >= min }
-        }
-
+        if (query.isNotBlank()) list = list.filter { it.titulo.lowercase(Locale.getDefault()).contains(query) }
+        filterSortState.categoriaId?.let { cat -> list = list.filter { it.categoriaId == cat } }
+        filterSortState.tagId?.let { tagId -> list = list.filter { tagIdsByItemId[it.id]?.contains(tagId) == true } }
+        filterSortState.estado?.let { estado -> list = list.filter { it.estado.equals(estado, ignoreCase = true) } }
+        if (filterSortState.minCalificacion > 0f) list = list.filter { it.calificacion >= filterSortState.minCalificacion }
         val baseComparator = when (filterSortState.sortField) {
             ItemSortField.NAME -> compareBy<Item> { it.titulo.lowercase(Locale.getDefault()) }
             ItemSortField.VALUE -> compareBy<Item> { it.valor }
             ItemSortField.DATE -> compareBy<Item> { it.fechaAdquisicion.time }
         }
-        val comparator = (if (filterSortState.ascending) baseComparator else baseComparator.reversed())
-            .thenBy { it.id }
-
+        val comparator = (if (filterSortState.ascending) baseComparator else baseComparator.reversed()).thenBy { it.id }
         adapter.updateList(list.sortedWith(comparator))
     }
 
@@ -332,7 +308,69 @@ class ItemListByCollectionFragment : Fragment() {
             .show()
     }
 
-    // --- CREAR ITEM ---
+    // ── Tarjeta ───────────────────────────────────────────────────────────────
+
+    private fun generarTarjeta() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val coleccion = coleccionRepo.getById(collectionId) ?: return@launch
+            val topItems = fullItemList.sortedByDescending { it.valor }.take(4)
+            val file = TarjetaColeccionGenerator(requireContext()).generate(coleccion, topItems)
+
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Tarjeta generada ✅")
+                .setMessage("¿Qué quieres hacer con la tarjeta de \"${coleccion.nombre}\"?")
+                .setPositiveButton("Compartir") { _, _ -> compartirTarjeta(file) }
+                .setNegativeButton("Guardar en galería") { _, _ -> guardarTarjetaEnGaleria(file) }
+                .setNeutralButton("Cancelar", null)
+                .show()
+        }
+    }
+
+    private fun compartirTarjeta(file: File) {
+        val uri = FileProvider.getUriForFile(
+            requireContext(),
+            "${requireContext().packageName}.fileprovider",
+            file
+        )
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(intent, "Compartir tarjeta"))
+    }
+
+    private fun guardarTarjetaEnGaleria(file: File) {
+        try {
+            val fileName = "tarjeta_${System.currentTimeMillis()}.png"
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val resolver = requireContext().contentResolver
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                    put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/GestorColecciones")
+                    put(MediaStore.Images.Media.IS_PENDING, 1)
+                }
+                val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                uri?.let {
+                    resolver.openOutputStream(it)?.use { output -> file.inputStream().copyTo(output) }
+                    contentValues.clear()
+                    contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+                    resolver.update(it, contentValues, null, null)
+                }
+            } else {
+                val picturesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                val destDir = File(picturesDir, "GestorColecciones").also { it.mkdirs() }
+                file.copyTo(File(destDir, fileName), overwrite = true)
+            }
+            showSnackbar("✅ Tarjeta guardada en la galería")
+        } catch (e: Exception) {
+            showSnackbar("Error al guardar: ${e.message}")
+        }
+    }
+
+    // ── Crear item ────────────────────────────────────────────────────────────
+
     private fun showCreateItemDialog() {
         selectedItemImageUri = null
         val categoriasList = categoriasMap.entries.toList()
@@ -367,19 +405,14 @@ class ItemListByCollectionFragment : Fragment() {
         actvEstado.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) actvEstado.showDropDown() }
 
         val adapterSpinner = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_item,
-            categoriasList.map { it.value }
+            requireContext(), android.R.layout.simple_spinner_item, categoriasList.map { it.value }
         )
         adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerCategoria.adapter = adapterSpinner
 
         val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Nuevo item")
-            .setView(view)
-            .setPositiveButton("Crear", null)
-            .setNegativeButton("Cancelar", null)
-            .create()
+            .setTitle("Nuevo item").setView(view)
+            .setPositiveButton("Crear", null).setNegativeButton("Cancelar", null).create()
 
         dialog.setOnShowListener {
             val btnCrear = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
@@ -390,62 +423,34 @@ class ItemListByCollectionFragment : Fragment() {
                     Toast.makeText(requireContext(), "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-
                 val valor = etValor.text.toString().toDoubleOrNull() ?: 0.0
                 val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
                 val categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key
                 val estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { "Nuevo" }
-
-                // ── Detección de duplicados ───────────────────────────────────────
-                val posibleDuplicado = fullItemList.firstOrNull { item ->
-                    item.titulo.trim().equals(titulo, ignoreCase = true)
-                }
-
+                val posibleDuplicado = fullItemList.firstOrNull { it.titulo.trim().equals(titulo, ignoreCase = true) }
                 val insertarItem = {
-                    val newItem = Item(
-                        titulo = titulo,
-                        categoriaId = categoriaId,
-                        collectionId = collectionId,
-                        fechaAdquisicion = Date(),
-                        valor = valor,
-                        imagenPath = selectedItemImageUri?.let { uri ->
-                            copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg")
-                        },
-                        estado = estado,
-                        descripcion = descripcion,
-                        calificacion = rbCalificacion.rating
-                    )
-                    viewModel.insert(newItem) {
-                        showSnackbar("Item \"$titulo\" creado")
-                    }
+                    viewModel.insert(Item(
+                        titulo = titulo, categoriaId = categoriaId, collectionId = collectionId,
+                        fechaAdquisicion = Date(), valor = valor,
+                        imagenPath = selectedItemImageUri?.let { uri -> copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg") },
+                        estado = estado, descripcion = descripcion, calificacion = rbCalificacion.rating
+                    )) { showSnackbar("Item \"$titulo\" creado") }
                     dialog.dismiss()
                 }
-
                 if (posibleDuplicado != null) {
-                    // Mostrar alerta de duplicado con detalles del item existente
                     MaterialAlertDialogBuilder(requireContext())
                         .setTitle("⚠️ Posible duplicado")
-                        .setMessage(
-                            "Ya existe un item con un nombre similar:\n\n" +
-                                    "• Título: ${posibleDuplicado.titulo}\n" +
-                                    "• Estado: ${posibleDuplicado.estado}\n" +
-                                    "• Valor: ${"%.2f".format(posibleDuplicado.valor)} €\n\n" +
-                                    "¿Quieres añadirlo igualmente?"
-                        )
-                        .setPositiveButton("Añadir igualmente") { _, _ ->
-                            insertarItem()
-                        }
-                        .setNegativeButton("Cancelar", null)
-                        .show()
-                } else {
-                    insertarItem()
-                }
+                        .setMessage("Ya existe un item con un nombre similar:\n\n• Título: ${posibleDuplicado.titulo}\n• Estado: ${posibleDuplicado.estado}\n• Valor: ${"%.2f".format(posibleDuplicado.valor)} €\n\n¿Quieres añadirlo igualmente?")
+                        .setPositiveButton("Añadir igualmente") { _, _ -> insertarItem() }
+                        .setNegativeButton("Cancelar", null).show()
+                } else insertarItem()
             }
         }
         dialog.show()
     }
 
-    // --- EDITAR ITEM ---
+    // ── Editar item ───────────────────────────────────────────────────────────
+
     private fun showEditItemDialog(item: Item) {
         selectedItemImageUri = null
         val categoriasList = categoriasMap.entries.toList()
@@ -485,80 +490,57 @@ class ItemListByCollectionFragment : Fragment() {
         actvEstado.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) actvEstado.showDropDown() }
 
         val adapterSpinner = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_item,
-            categoriasList.map { it.value }
+            requireContext(), android.R.layout.simple_spinner_item, categoriasList.map { it.value }
         )
         adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerCategoria.adapter = adapterSpinner
-
         val selectedIndex = categoriasList.indexOfFirst { it.key == item.categoriaId }
         if (selectedIndex >= 0) spinnerCategoria.setSelection(selectedIndex)
 
         val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Editar item")
-            .setView(view)
-            .setPositiveButton("Guardar", null)
-            .setNegativeButton("Cancelar", null)
-            .create()
+            .setTitle("Editar item").setView(view)
+            .setPositiveButton("Guardar", null).setNegativeButton("Cancelar", null).create()
 
         dialog.setOnShowListener {
-            val btnGuardar = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            btnGuardar.setOnClickListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val titulo = etTitulo.text.toString().trim()
                 if (titulo.isBlank()) {
                     Toast.makeText(requireContext(), "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                val valor = etValor.text.toString().toDoubleOrNull() ?: item.valor
-                val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
-                val categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key
-                val estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { item.estado }
-
-                val actualizado = item.copy(
+                viewModel.update(item.copy(
                     titulo = titulo,
-                    valor = valor,
-                    descripcion = descripcion,
-                    categoriaId = categoriaId,
-                    imagenPath = selectedItemImageUri?.let { uri ->
-                        copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg")
-                    } ?: item.imagenPath,
-                    estado = estado,
+                    valor = etValor.text.toString().toDoubleOrNull() ?: item.valor,
+                    descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() },
+                    categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key,
+                    imagenPath = selectedItemImageUri?.let { uri -> copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg") } ?: item.imagenPath,
+                    estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { item.estado },
                     calificacion = rbCalificacion.rating
-                )
-                viewModel.update(actualizado) {
-                    showSnackbar("Item \"$titulo\" actualizado")
-                }
+                )) { showSnackbar("Item \"$titulo\" actualizado") }
                 dialog.dismiss()
             }
         }
         dialog.show()
     }
 
-    // --- CREAR / EDITAR CATEGORÍAS ---
+    // ── Categorías ────────────────────────────────────────────────────────────
+
     private fun showCreateCategoriaDialog() {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_categoria, null)
         val lvCategorias = view.findViewById<ListView>(R.id.lvCategorias)
         val etCategoriaNombre = view.findViewById<EditText>(R.id.etCategoriaNombre)
         val btnAddCategoria = view.findViewById<Button>(R.id.btnAddCategoria)
 
-        val adapterList = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_list_item_1,
-            categoriasMap.values.toMutableList()
-        )
+        val adapterList = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, categoriasMap.values.toMutableList())
         lvCategorias.adapter = adapterList
 
         btnAddCategoria.setOnClickListener {
             val nombre = etCategoriaNombre.text.toString().trim()
             if (nombre.isNotBlank()) {
                 viewLifecycleOwner.lifecycleScope.launch {
-                    val cat = Categoria(nombre = nombre)
-                    val id = categoriaRepo.insert(cat).toInt()
+                    val id = categoriaRepo.insert(Categoria(nombre = nombre)).toInt()
                     categoriasMap[id] = nombre
-                    adapterList.clear()
-                    adapterList.addAll(categoriasMap.values)
-                    adapterList.notifyDataSetChanged()
+                    adapterList.clear(); adapterList.addAll(categoriasMap.values); adapterList.notifyDataSetChanged()
                     etCategoriaNombre.text.clear()
                     updateFabState()
                     showSnackbar("Categoría \"$nombre\" creada")
@@ -569,56 +551,38 @@ class ItemListByCollectionFragment : Fragment() {
         lvCategorias.setOnItemClickListener { _, _, position, _ ->
             val categoriaId = categoriasMap.keys.toList()[position]
             val nombreActual = categoriasMap[categoriaId]!!
-            val editView = EditText(requireContext())
-            editView.setText(nombreActual)
+            val editView = EditText(requireContext()).also { it.setText(nombreActual) }
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Editar categoría")
-                .setView(editView)
+                .setTitle("Editar categoría").setView(editView)
                 .setPositiveButton("Guardar") { _, _ ->
                     viewLifecycleOwner.lifecycleScope.launch {
-                        val nuevoNombre = editView.text.toString()
-                        val cat = Categoria(id = categoriaId, nombre = nuevoNombre)
-                        categoriaRepo.update(cat)
-                        categoriasMap[categoriaId] = nuevoNombre
-                        adapterList.clear()
-                        adapterList.addAll(categoriasMap.values)
-                        adapterList.notifyDataSetChanged()
+                        categoriaRepo.update(Categoria(id = categoriaId, nombre = editView.text.toString()))
+                        categoriasMap[categoriaId] = editView.text.toString()
+                        adapterList.clear(); adapterList.addAll(categoriasMap.values); adapterList.notifyDataSetChanged()
                         showSnackbar("Categoría actualizada")
                     }
                 }
                 .setNegativeButton("Eliminar") { _, _ ->
                     viewLifecycleOwner.lifecycleScope.launch {
-                        val cat = Categoria(id = categoriaId, nombre = nombreActual)
-                        categoriaRepo.delete(cat)
+                        categoriaRepo.delete(Categoria(id = categoriaId, nombre = nombreActual))
                         categoriasMap.remove(categoriaId)
-                        adapterList.clear()
-                        adapterList.addAll(categoriasMap.values)
-                        adapterList.notifyDataSetChanged()
+                        adapterList.clear(); adapterList.addAll(categoriasMap.values); adapterList.notifyDataSetChanged()
                         updateFabState()
                         showSnackbar("Categoría \"$nombreActual\" eliminada")
                     }
-                }
-                .show()
+                }.show()
         }
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Gestionar categorías")
-            .setView(view)
-            .setNegativeButton("Cerrar", null)
-            .show()
+            .setTitle("Gestionar categorías").setView(view).setNegativeButton("Cerrar", null).show()
     }
 
     private fun copyImageToInternalStorage(uri: Uri, filename: String): String {
         val inputStream = requireContext().contentResolver.openInputStream(uri)
         val file = File(requireContext().filesDir, filename)
-        inputStream.use { input ->
-            FileOutputStream(file).use { output ->
-                input?.copyTo(output)
-            }
-        }
+        inputStream.use { input -> FileOutputStream(file).use { output -> input?.copyTo(output) } }
         return file.absolutePath
     }
-
 
     companion object {
         private const val ARG_COLLECTION_ID = "collection_id"

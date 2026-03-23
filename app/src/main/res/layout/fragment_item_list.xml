@@ -102,6 +102,20 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Añadir justo encima de fabAddCategory -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabTarjeta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:contentDescription="Generar tarjeta"
+        android:src="@android:drawable/ic_menu_share"
+        app:backgroundTint="?attr/colorTertiaryContainer"
+        app:tint="?attr/colorOnTertiaryContainer"
+        app:fabSize="mini"
+        app:layout_constraintBottom_toTopOf="@id/fabAddItem"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddCategory"
         android:layout_width="wrap_content"
