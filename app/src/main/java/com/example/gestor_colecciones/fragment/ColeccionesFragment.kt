@@ -405,39 +405,75 @@ class ColeccionesFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Nueva colección")
             .setView(view)
-            .setPositiveButton("Crear") { _, _ ->
-                val nombre = etNombre.text.toString().trim()
-                val descripcion = etDescripcion.text.toString()
-                var imagePath: String? = null
-                selectedImageUri?.let { uri ->
-                    imagePath = copyImageToInternalStorage(
-                        uri, "coleccion_${System.currentTimeMillis()}.jpg"
-                    )
-                }
-                if (nombre.isNotEmpty()) {
-                    viewLifecycleOwner.lifecycleScope.launch {
-                        viewModel.insert(
-                            Coleccion(
-                                nombre = nombre,
-                                descripcion = descripcion,
-                                fechaCreacion = Date(),
-                                imagenPath = imagePath,
-                                color = selectedColor
-                            )
-                        )
-                        showSnackbar("Colección \"$nombre\" creada")
-                    }
-                }
-                selectedImageUri = null
-                currentImageView = null
-            }
+            .setPositiveButton("Crear", null)
             .setNegativeButton("Cancelar") { _, _ ->
                 selectedImageUri = null
                 currentImageView = null
             }
-            .show()
-    }
+            .create()
+            .also { dialog ->
+                dialog.setOnShowListener {
+                    dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                        val nombre = etNombre.text.toString().trim()
+                        if (nombre.isBlank()) {
+                            Toast.makeText(requireContext(), "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show()
+                            return@setOnClickListener
+                        }
 
+                        val descripcion = etDescripcion.text.toString()
+                        var imagePath: String? = null
+                        selectedImageUri?.let { uri ->
+                            imagePath = copyImageToInternalStorage(
+                                uri, "coleccion_${System.currentTimeMillis()}.jpg"
+                            )
+                        }
+
+                        // ── Detección de duplicados ───────────────────────────────
+                        val posibleDuplicado = listaCompleta.firstOrNull { coleccion ->
+                            coleccion.nombre.trim().equals(nombre, ignoreCase = true)
+                        }
+
+                        val insertarColeccion = {
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                viewModel.insert(
+                                    Coleccion(
+                                        nombre = nombre,
+                                        descripcion = descripcion,
+                                        fechaCreacion = Date(),
+                                        imagenPath = imagePath,
+                                        color = selectedColor
+                                    )
+                                )
+                                showSnackbar("Colección \"$nombre\" creada")
+                            }
+                            selectedImageUri = null
+                            currentImageView = null
+                            dialog.dismiss()
+                        }
+
+                        if (posibleDuplicado != null) {
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setTitle("⚠️ Posible duplicado")
+                                .setMessage(
+                                    "Ya existe una colección con un nombre similar:\n\n" +
+                                            "• Nombre: ${posibleDuplicado.nombre}\n" +
+                                            "• Descripción: ${posibleDuplicado.descripcion?.ifBlank { "Sin descripción" } ?: "Sin descripción"}\n" +
+                                            "• Items: ${listaCompleta.indexOf(posibleDuplicado) + 1}\n\n" +
+                                            "¿Quieres crearla igualmente?"
+                                )
+                                .setPositiveButton("Crear igualmente") { _, _ ->
+                                    insertarColeccion()
+                                }
+                                .setNegativeButton("Cancelar", null)
+                                .show()
+                        } else {
+                            insertarColeccion()
+                        }
+                    }
+                }
+                dialog.show()
+            }
+    }
     private fun showEditCollectionDialog(coleccion: Coleccion) {
         selectedImageUri = null
         val view = LayoutInflater.from(requireContext())
