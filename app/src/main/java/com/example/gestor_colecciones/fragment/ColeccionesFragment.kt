@@ -3,7 +3,6 @@ package com.example.gestor_colecciones.fragment
 import android.content.ContentValues
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.graphics.BitmapFactory
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
@@ -27,6 +26,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialFadeThrough
 import com.google.android.material.transition.MaterialSharedAxis
+import com.bumptech.glide.Glide
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ColeccionAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
@@ -39,6 +39,8 @@ import com.example.gestor_colecciones.auth.AuthStore
 import com.example.gestor_colecciones.repository.ExportRepository
 import com.example.gestor_colecciones.repository.LogroRepository
 import com.example.gestor_colecciones.repository.RepositoryProvider
+import com.example.gestor_colecciones.util.ImageUtils
+import com.example.gestor_colecciones.network.UploadUtils
 import com.example.gestor_colecciones.viewmodel.*
 import com.example.gestor_colecciones.network.ApiProvider
 import kotlinx.coroutines.Job
@@ -398,6 +400,17 @@ class ColeccionesFragment : Fragment() {
             .show()
     }
 
+    private suspend fun uploadImage(uri: Uri): String? {
+        return try {
+            val api = ApiProvider.getApi(requireContext())
+            val part = UploadUtils.createImagePart(requireContext(), uri)
+            api.uploadImage(part).url
+        } catch (e: Exception) {
+            showSnackbar("Error subiendo imagen")
+            null
+        }
+    }
+
     private fun copyImageToInternalStorage(uri: Uri, fileName: String): String? {
         return try {
             val inputStream = requireContext().contentResolver.openInputStream(uri)
@@ -470,12 +483,6 @@ class ColeccionesFragment : Fragment() {
                         }
 
                         val descripcion = etDescripcion.text.toString()
-                        var imagePath: String? = null
-                        selectedImageUri?.let { uri ->
-                            imagePath = copyImageToInternalStorage(
-                                uri, "coleccion_${System.currentTimeMillis()}.jpg"
-                            )
-                        }
 
                         val posibleDuplicado = listaCompleta.firstOrNull { coleccion ->
                             coleccion.nombre.trim().equals(nombre, ignoreCase = true)
@@ -483,6 +490,7 @@ class ColeccionesFragment : Fragment() {
 
                         val insertarColeccion = {
                             viewLifecycleOwner.lifecycleScope.launch {
+                                val imagePath = selectedImageUri?.let { uri -> uploadImage(uri) }
                                 viewModel.insert(
                                     Coleccion(
                                         nombre = nombre,
@@ -534,7 +542,9 @@ class ColeccionesFragment : Fragment() {
 
         etNombre.setText(coleccion.nombre)
         etDescripcion.setText(coleccion.descripcion)
-        coleccion.imagenPath?.let { ivPreview.setImageBitmap(BitmapFactory.decodeFile(it)) }
+        ImageUtils.toGlideModel(coleccion.imagenPath)?.let { model ->
+            Glide.with(this).load(model).into(ivPreview)
+        }
 
         currentImageView = ivPreview
         btnSelectImage.setOnClickListener { pickImageLauncher.launch("image/*") }
@@ -546,13 +556,8 @@ class ColeccionesFragment : Fragment() {
             .setTitle("Editar colección")
             .setView(view)
             .setPositiveButton("Guardar") { _, _ ->
-                var imagePath = coleccion.imagenPath
-                selectedImageUri?.let { uri ->
-                    imagePath = copyImageToInternalStorage(
-                        uri, "coleccion_${System.currentTimeMillis()}.jpg"
-                    )
-                }
                 viewLifecycleOwner.lifecycleScope.launch {
+                    val imagePath = selectedImageUri?.let { uri -> uploadImage(uri) } ?: coleccion.imagenPath
                     viewModel.update(
                         coleccion.copy(
                             nombre = etNombre.text.toString().trim(),
@@ -634,3 +639,5 @@ class GridSpacingItemDecoration(
         }
     }
 }
+
+

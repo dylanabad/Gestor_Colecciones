@@ -40,7 +40,10 @@ import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemHistoryRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.repository.RepositoryProvider
+import com.example.gestor_colecciones.network.ApiProvider
+import com.example.gestor_colecciones.network.UploadUtils
 import com.example.gestor_colecciones.repository.TagRepository
+import com.example.gestor_colecciones.util.ImageUtils
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
@@ -117,12 +120,11 @@ class ItemListByCollectionFragment : Fragment() {
             if (coleccion != null) {
                 binding.tvCollectionName.text = coleccion.nombre
                 binding.tvCollectionName.visibility = View.VISIBLE
-                val imagePath = coleccion.imagenPath
-                val file = imagePath?.let { File(it) }
-                if (file != null && file.exists()) {
+                val model = ImageUtils.toGlideModel(coleccion.imagenPath)
+                if (model != null) {
                     binding.ivCollectionImage.visibility = View.VISIBLE
                     Glide.with(this@ItemListByCollectionFragment)
-                        .load(file)
+                        .load(model)
                         .transition(DrawableTransitionOptions.withCrossFade(180))
                         .into(binding.ivCollectionImage)
                 } else {
@@ -427,17 +429,20 @@ class ItemListByCollectionFragment : Fragment() {
                 val estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { "Nuevo" }
                 val posibleDuplicado = fullItemList.firstOrNull { it.titulo.trim().equals(titulo, ignoreCase = true) }
                 val insertarItem = {
-                    viewModel.insert(
-                        Item(
-                            titulo = titulo, categoriaId = categoriaId, collectionId = collectionId,
-                            fechaAdquisicion = Date(), valor = valor,
-                            imagenPath = selectedItemImageUri?.let { uri -> copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg") },
-                            estado = estado, descripcion = descripcion, calificacion = rbCalificacion.rating
-                        ),
-                        onInserted = { showSnackbar("Item \"$titulo\" creado") },
-                        onError = { msg -> showSnackbar(msg) }
-                    )
-                    dialog.dismiss()
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val imagePath = selectedItemImageUri?.let { uploadImage(it) }
+                        viewModel.insert(
+                            Item(
+                                titulo = titulo, categoriaId = categoriaId, collectionId = collectionId,
+                                fechaAdquisicion = Date(), valor = valor,
+                                imagenPath = imagePath,
+                                estado = estado, descripcion = descripcion, calificacion = rbCalificacion.rating
+                            ),
+                            onInserted = { showSnackbar("Item \"$titulo\" creado") },
+                            onError = { msg -> showSnackbar(msg) }
+                        )
+                        dialog.dismiss()
+                    }
                 }
                 if (posibleDuplicado != null) {
                     MaterialAlertDialogBuilder(requireContext())
@@ -470,7 +475,9 @@ class ItemListByCollectionFragment : Fragment() {
         val tvCalificacionValue = view.findViewById<TextView>(R.id.tvCalificacionValue)
 
         currentItemImageView = ivPreview
-        item.imagenPath?.let { Glide.with(requireContext()).load(File(it)).into(ivPreview) }
+        ImageUtils.toGlideModel(item.imagenPath)?.let { model ->
+            Glide.with(requireContext()).load(model).into(ivPreview)
+        }
         btnSelectImage.setOnClickListener { pickItemImageLauncher.launch("image/*") }
 
         etTitulo.setText(item.titulo)
@@ -511,20 +518,23 @@ class ItemListByCollectionFragment : Fragment() {
                     Toast.makeText(requireContext(), "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                viewModel.update(
-                    item.copy(
-                        titulo = titulo,
-                        valor = etValor.text.toString().toDoubleOrNull() ?: item.valor,
-                        descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() },
-                        categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key,
-                        imagenPath = selectedItemImageUri?.let { uri -> copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg") } ?: item.imagenPath,
-                        estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { item.estado },
-                        calificacion = rbCalificacion.rating
-                    ),
-                    onUpdated = { showSnackbar("Item \"$titulo\" actualizado") },
-                    onError = { msg -> showSnackbar(msg) }
-                )
-                dialog.dismiss()
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val imagePath = selectedItemImageUri?.let { uploadImage(it) } ?: item.imagenPath
+                    viewModel.update(
+                        item.copy(
+                            titulo = titulo,
+                            valor = etValor.text.toString().toDoubleOrNull() ?: item.valor,
+                            descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() },
+                            categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key,
+                            imagenPath = imagePath,
+                            estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { item.estado },
+                            calificacion = rbCalificacion.rating
+                        ),
+                        onUpdated = { showSnackbar("Item \"$titulo\" actualizado") },
+                        onError = { msg -> showSnackbar(msg) }
+                    )
+                    dialog.dismiss()
+                }
             }
         }
         dialog.show()
@@ -584,6 +594,17 @@ class ItemListByCollectionFragment : Fragment() {
             .setTitle("Gestionar categorías").setView(view).setNegativeButton("Cerrar", null).show()
     }
 
+    private suspend fun uploadImage(uri: Uri): String? {
+        return try {
+            val api = ApiProvider.getApi(requireContext())
+            val part = UploadUtils.createImagePart(requireContext(), uri)
+            api.uploadImage(part).url
+        } catch (e: Exception) {
+            showSnackbar("Error subiendo imagen")
+            null
+        }
+    }
+
     private fun copyImageToInternalStorage(uri: Uri, filename: String): String {
         val inputStream = requireContext().contentResolver.openInputStream(uri)
         val file = File(requireContext().filesDir, filename)
@@ -603,4 +624,5 @@ class ItemListByCollectionFragment : Fragment() {
         _binding = null
     }
 }
+
 

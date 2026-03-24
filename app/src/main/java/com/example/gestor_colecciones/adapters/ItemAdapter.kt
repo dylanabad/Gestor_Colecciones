@@ -12,7 +12,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.entities.Item
-import java.io.File
+import com.example.gestor_colecciones.util.ImageUtils
 
 class ItemAdapter(
     items: List<Item> = emptyList(),
@@ -92,12 +92,10 @@ class ItemAdapter(
         holder.ratingBar.rating = rating
         holder.ratingValue.text = String.format(java.util.Locale.getDefault(), "%.1f", rating)
 
-        // Cargar imagen del item (ruta en almacenamiento interno)
-        val imagePath = item.imagenPath
-        val file = imagePath?.let { File(it) }
-        if (file != null && file.exists()) {
+        val model = ImageUtils.toGlideModel(item.imagenPath)
+        if (model != null) {
             Glide.with(holder.itemView)
-                .load(file)
+                .load(model)
                 .centerCrop()
                 .transition(DrawableTransitionOptions.withCrossFade(180))
                 .placeholder(R.drawable.ic_no_image)

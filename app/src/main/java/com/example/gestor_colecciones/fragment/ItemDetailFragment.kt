@@ -269,11 +269,10 @@ class ItemDetailFragment : Fragment() {
                 val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 view.findViewById<TextView>(R.id.tvFecha).text = "Fecha: ${sdf.format(it.fechaAdquisicion)}"
 
-                val imagePath = it.imagenPath
-                val file = imagePath?.let { path -> File(path) }
-                if (file != null && file.exists()) {
+                val model = com.example.gestor_colecciones.util.ImageUtils.toGlideModel(it.imagenPath)
+                if (model != null) {
                     Glide.with(this@ItemDetailFragment)
-                        .load(file)
+                        .load(model)
                         .centerCrop()
                         .transition(DrawableTransitionOptions.withCrossFade(180))
                         .placeholder(R.drawable.ic_no_image)
@@ -298,6 +297,7 @@ class ItemDetailFragment : Fragment() {
         }
     }
 }
+
 
 
 

@@ -14,9 +14,9 @@ import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.entities.Coleccion
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.color.MaterialColors
-import java.io.File
 import android.content.res.ColorStateList
 import android.util.TypedValue
+import com.example.gestor_colecciones.util.ImageUtils
 
 class ColeccionAdapter(
     private var colecciones: List<Coleccion>,
@@ -82,22 +82,16 @@ class ColeccionAdapter(
             ).toInt()
         }
 
-        // Cargar imagen desde ruta interna si existe
-        coleccion.imagenPath?.let { path ->
-            val file = File(path)
-            if (file.exists()) {
-                Glide.with(holder.itemView)
-                    .load(file)
-                    .centerCrop()
-                    .transition(DrawableTransitionOptions.withCrossFade(180))
-                    .placeholder(R.drawable.ic_collection_default)
-                    .error(R.drawable.ic_collection_default)
-                    .into(holder.ivColeccion)
-            } else {
-                holder.ivColeccion.setImageResource(R.drawable.ic_collection_default)
-            }
-        } ?: run {
-            // Imagen por defecto si no hay ruta
+        val model = ImageUtils.toGlideModel(coleccion.imagenPath)
+        if (model != null) {
+            Glide.with(holder.itemView)
+                .load(model)
+                .centerCrop()
+                .transition(DrawableTransitionOptions.withCrossFade(180))
+                .placeholder(R.drawable.ic_collection_default)
+                .error(R.drawable.ic_collection_default)
+                .into(holder.ivColeccion)
+        } else {
             holder.ivColeccion.setImageResource(R.drawable.ic_collection_default)
         }
     }

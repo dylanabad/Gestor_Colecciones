@@ -9,12 +9,16 @@ import com.example.gestor_colecciones.network.dto.LogroDto
 import com.example.gestor_colecciones.network.dto.LoginRequest
 import com.example.gestor_colecciones.network.dto.RegisterRequest
 import com.example.gestor_colecciones.network.dto.TagDto
+import com.example.gestor_colecciones.network.dto.UploadResponse
+import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Part
 import retrofit2.http.Query
 
 interface ApiService {
@@ -94,6 +98,10 @@ interface ApiService {
 
     @DELETE("api/deseos/{id}")
     suspend fun deleteDeseo(@Path("id") id: Long)
+
+    @Multipart
+    @POST("api/uploads")
+    suspend fun uploadImage(@Part file: MultipartBody.Part): UploadResponse
 
     @GET("api/logros")
     suspend fun getLogros(): List<LogroDto>
