@@ -15,6 +15,7 @@ import com.example.gestor_colecciones.databinding.FragmentLogrosBinding
 import com.example.gestor_colecciones.model.LogroDefinicion
 import com.example.gestor_colecciones.model.LogroManager
 import com.example.gestor_colecciones.repository.LogroRepository
+import com.example.gestor_colecciones.network.ApiProvider
 import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.viewmodel.LogroViewModel
 import com.example.gestor_colecciones.viewmodel.LogroViewModelFactory
@@ -46,7 +47,10 @@ class LogrosFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val logroRepo = LogroRepository(DatabaseProvider.getDatabase(requireContext()).logroDao())
+        val logroRepo = LogroRepository(
+            DatabaseProvider.getDatabase(requireContext()).logroDao(),
+            ApiProvider.getApi(requireContext())
+        )
         val coleccionRepo = RepositoryProvider.coleccionRepository(requireContext())
         val itemRepo = RepositoryProvider.itemRepository(requireContext())
         val manager = LogroManager(logroRepo, coleccionRepo, itemRepo)

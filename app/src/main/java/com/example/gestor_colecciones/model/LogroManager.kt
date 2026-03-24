@@ -12,6 +12,7 @@ class LogroManager(
     // Devuelve lista de keys recién desbloqueados para mostrar notificación
     suspend fun checkAll(): List<String> {
         logroRepository.initLogros()
+        logroRepository.syncFromBackend()
         val recienDesbloqueados = mutableListOf<String>()
 
         val colecciones = coleccionRepository.getAllOnce()

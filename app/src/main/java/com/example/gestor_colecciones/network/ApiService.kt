@@ -4,6 +4,7 @@ import com.example.gestor_colecciones.network.dto.AuthResponse
 import com.example.gestor_colecciones.network.dto.CategoriaDto
 import com.example.gestor_colecciones.network.dto.ColeccionDto
 import com.example.gestor_colecciones.network.dto.ItemDto
+import com.example.gestor_colecciones.network.dto.LogroDto
 import com.example.gestor_colecciones.network.dto.LoginRequest
 import com.example.gestor_colecciones.network.dto.RegisterRequest
 import retrofit2.http.Body
@@ -57,4 +58,10 @@ interface ApiService {
 
     @DELETE("api/categorias/{id}")
     suspend fun deleteCategoria(@Path("id") id: Long)
+
+    @GET("api/logros")
+    suspend fun getLogros(): List<LogroDto>
+
+    @POST("api/logros/{key}/unlock")
+    suspend fun unlockLogro(@Path("key") key: String): LogroDto
 }

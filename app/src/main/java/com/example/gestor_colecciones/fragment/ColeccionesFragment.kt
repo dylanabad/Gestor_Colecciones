@@ -40,6 +40,7 @@ import com.example.gestor_colecciones.repository.ExportRepository
 import com.example.gestor_colecciones.repository.LogroRepository
 import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.viewmodel.*
+import com.example.gestor_colecciones.network.ApiProvider
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -108,7 +109,10 @@ class ColeccionesFragment : Fragment() {
         )[ExportViewModel::class.java]
 
         // ── Logros ────────────────────────────────────────────────────────────
-        val logroRepo = LogroRepository(DatabaseProvider.getDatabase(requireContext()).logroDao())
+        val logroRepo = LogroRepository(
+            DatabaseProvider.getDatabase(requireContext()).logroDao(),
+            ApiProvider.getApi(requireContext())
+        )
         val logroManager = LogroManager(logroRepo, repo, itemRepo)
         logroViewModel = ViewModelProvider(
             this, LogroViewModelFactory(logroRepo, logroManager)
