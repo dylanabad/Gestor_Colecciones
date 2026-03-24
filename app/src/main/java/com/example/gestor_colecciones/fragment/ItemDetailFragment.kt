@@ -6,13 +6,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
-import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.textview.MaterialTextView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.gestor_colecciones.R
@@ -22,7 +21,7 @@ import com.example.gestor_colecciones.entities.ItemHistory
 import com.example.gestor_colecciones.entities.Tag
 import com.example.gestor_colecciones.repository.ItemHistoryRepository
 import com.example.gestor_colecciones.repository.ItemTagRepository
-import com.example.gestor_colecciones.repository.ItemRepository
+import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.repository.TagRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
@@ -30,6 +29,7 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textview.MaterialTextView
 import com.google.android.material.transition.MaterialSharedAxis
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -58,7 +58,7 @@ class ItemDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val db = DatabaseProvider.getDatabase(requireContext())
-        val repo = ItemRepository(db.itemDao())
+        val repo = RepositoryProvider.itemRepository(requireContext())
         val tagRepository = TagRepository(db.tagDao())
         val itemTagRepository = ItemTagRepository(db.itemTagDao())
         val historyRepository = ItemHistoryRepository(db.itemHistoryDao())
@@ -85,9 +85,15 @@ class ItemDetailFragment : Fragment() {
             tvCalificacion.text = String.format(Locale.getDefault(), "%.1f", clamped)
             val updated = item.copy(calificacion = clamped)
             currentItem = updated
-            viewModel.update(updated) {
-                Snackbar.make(view, "Calificación actualizada", Snackbar.LENGTH_SHORT).show()
-            }
+            viewModel.update(
+                updated,
+                onUpdated = {
+                    Snackbar.make(view, "Calificacion actualizada", Snackbar.LENGTH_SHORT).show()
+                },
+                onError = { msg ->
+                    Snackbar.make(view, msg, Snackbar.LENGTH_SHORT).show()
+                }
+            )
         }
 
         fun renderTags(tags: List<Tag>) {
@@ -190,12 +196,12 @@ class ItemDetailFragment : Fragment() {
                     "STATUS_CHANGED" -> "Estado cambiado"
                     else -> entry.tipo
                 }
-                val base = "${sdf.format(entry.fecha)} · $tipo"
-                val text = entry.descripcion?.takeIf { it.isNotBlank() }?.let { "$base — $it" } ?: base
+                val base = "${sdf.format(entry.fecha)} � $tipo"
+                val text = entry.descripcion?.takeIf { it.isNotBlank() }?.let { "$base � $it" } ?: base
 
                 llItemHistory.addView(
                     MaterialTextView(requireContext()).apply {
-                        setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyMedium)
+                        setTextAppearance(android.R.style.TextAppearance_Material_Body1)
                         this.text = text
                         setPadding(0, 0, 0, dpToPx(8))
                     }
@@ -216,7 +222,7 @@ class ItemDetailFragment : Fragment() {
                 tvTitulo.text = it.titulo
                 tvValor.text = "Valor: ${it.valor}"
                 tvEstado.text = "Estado: ${it.estado}"
-                tvDescripcion.text = "Descripción: ${it.descripcion ?: "N/A"}"
+                tvDescripcion.text = "Descripcion: ${it.descripcion ?: "N/A"}"
                 val rating = it.calificacion.coerceIn(0f, 5f)
                 rbRating.rating = rating
                 tvCalificacion.text = String.format(Locale.getDefault(), "%.1f", rating)
@@ -224,7 +230,6 @@ class ItemDetailFragment : Fragment() {
                 val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 view.findViewById<TextView>(R.id.tvFecha).text = "Fecha: ${sdf.format(it.fechaAdquisicion)}"
 
-                // Cargar imagen si existe
                 val imagePath = it.imagenPath
                 val file = imagePath?.let { path -> File(path) }
                 if (file != null && file.exists()) {
@@ -236,13 +241,12 @@ class ItemDetailFragment : Fragment() {
                         .error(R.drawable.ic_no_image)
                         .into(ivImagen)
                 } else {
-                    ivImagen.setImageResource(R.drawable.ic_no_image) // icono por defecto
+                    ivImagen.setImageResource(R.drawable.ic_no_image)
                 }
 
-                // Cargar categoría (si quieres mostrar nombre de categoría)
                 val categoriaDao = db.categoriaDao()
                 val categoria = categoriaDao.getAllCategoriasOnce().find { cat -> cat.id == it.categoriaId }
-                tvCategoria.text = "Categoría: ${categoria?.nombre ?: "Sin categoría"}"
+                tvCategoria.text = "Categoria: ${categoria?.nombre ?: "Sin categoria"}"
             }
         }
     }

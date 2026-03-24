@@ -17,9 +17,8 @@ import com.google.android.material.transition.MaterialFadeThrough
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentStatsBinding
 import com.example.gestor_colecciones.repository.ColeccionExportData
-import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.repository.ExportRepository
-import com.example.gestor_colecciones.repository.ItemRepository
+import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.viewmodel.StatsState
 import com.example.gestor_colecciones.viewmodel.StatsViewModel
 import com.example.gestor_colecciones.viewmodel.StatsViewModelFactory
@@ -50,8 +49,8 @@ class StatsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val coleccionRepo = ColeccionRepository(DatabaseProvider.getColeccionDao(requireContext()))
-        val itemRepo = ItemRepository(DatabaseProvider.getItemDao(requireContext()))
+        val coleccionRepo = RepositoryProvider.coleccionRepository(requireContext())
+        val itemRepo = RepositoryProvider.itemRepository(requireContext())
         val exportRepo = ExportRepository(coleccionRepo, itemRepo)
 
         viewModel = ViewModelProvider(

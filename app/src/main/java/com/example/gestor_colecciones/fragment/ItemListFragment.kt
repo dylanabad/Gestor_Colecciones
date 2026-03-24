@@ -26,6 +26,7 @@ import com.example.gestor_colecciones.model.ItemEstados
 import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemHistoryRepository
 import com.example.gestor_colecciones.repository.ItemRepository
+import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.repository.TagRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
@@ -78,8 +79,8 @@ class ItemListFragment : Fragment() {
 
         // --- Inicialización repositorios ---
         val db = DatabaseProvider.getDatabase(requireContext())
-        itemRepo = ItemRepository(db.itemDao())
-        categoriaRepo = CategoriaRepository(db.categoriaDao())
+        itemRepo = RepositoryProvider.itemRepository(requireContext())
+        categoriaRepo = RepositoryProvider.categoriaRepository(requireContext())
         tagRepo = TagRepository(db.tagDao())
         historyRepo = ItemHistoryRepository(db.itemHistoryDao())
 
@@ -151,11 +152,7 @@ class ItemListFragment : Fragment() {
 
         // --- FAB para crear item ---
         binding.fabAddItem.setOnClickListener {
-            if (categoriasMap.isEmpty()) {
-                Toast.makeText(requireContext(), "No puedes crear un item sin categorías", Toast.LENGTH_SHORT).show()
-            } else {
-                showCreateItemDialog()
-            }
+            showSnackbar("Crea items desde dentro de una coleccion")
         }
 
         // --- FAB para crear categoría (siempre activo) ---
@@ -254,95 +251,9 @@ class ItemListFragment : Fragment() {
 
     // --- Actualiza estado del FAB de items ---
     private fun updateFabState() {
-        binding.fabAddItem.isEnabled = categoriasMap.isNotEmpty()
-        binding.fabAddItem.alpha = if (categoriasMap.isNotEmpty()) 1f else 0.5f
+        binding.fabAddItem.isEnabled = true
+        binding.fabAddItem.alpha = 0.7f
         adapter.categoriasMap = categoriasMap
-    }
-
-    // --- CREAR ITEM ---
-    private fun showCreateItemDialog() {
-        val categoriasList = categoriasMap.entries.toList()
-        if (categoriasList.isEmpty()) return
-
-        val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_item, null)
-        val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
-        val etValor = view.findViewById<EditText>(R.id.etValor)
-        val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
-        val actvEstado = view.findViewById<AutoCompleteTextView>(R.id.actvItemEstado)
-        val spinnerCategoria = view.findViewById<Spinner>(R.id.spinnerCategoria)
-        val rbCalificacion = view.findViewById<RatingBar>(R.id.rbCalificacion)
-        val tvCalificacionValue = view.findViewById<TextView>(R.id.tvCalificacionValue)
-
-        fun updateRatingLabel(rating: Float) {
-            tvCalificacionValue.text = String.format(Locale.getDefault(), "%.1f", rating)
-        }
-        updateRatingLabel(rbCalificacion.rating)
-        rbCalificacion.setOnRatingBarChangeListener { _, rating, _ -> updateRatingLabel(rating) }
-
-        val estadosAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, ItemEstados.DEFAULT)
-        actvEstado.setAdapter(estadosAdapter)
-        actvEstado.setText(ItemEstados.DEFAULT.firstOrNull().orEmpty(), false)
-        actvEstado.keyListener = null
-        actvEstado.isCursorVisible = false
-        actvEstado.setOnClickListener { actvEstado.showDropDown() }
-        actvEstado.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) actvEstado.showDropDown() }
-
-        val adapterSpinner = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_item,
-            categoriasList.map { it.value }
-        )
-        adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerCategoria.adapter = adapterSpinner
-
-        val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Nuevo item")
-            .setView(view)
-            .setPositiveButton("Crear", null)
-            .setNegativeButton("Cancelar", null)
-            .create()
-
-        dialog.setOnShowListener {
-            val btnCrear = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            btnCrear.isEnabled = categoriasList.isNotEmpty()
-            btnCrear.setOnClickListener {
-                val titulo = etTitulo.text.toString().trim()
-                if (titulo.isBlank()) {
-                    Toast.makeText(requireContext(), "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-
-                val valor = etValor.text.toString().toDoubleOrNull() ?: 0.0
-                val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
-                val categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key
-                val estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { "Nuevo" }
-
-                val newItem = Item(
-                    titulo = titulo,
-                    categoriaId = categoriaId,
-                    collectionId = 1,
-                    fechaAdquisicion = Date(),
-                    valor = valor,
-                    imagenPath = null,
-                    estado = estado,
-                    descripcion = descripcion,
-                    calificacion = rbCalificacion.rating
-                )
-
-                viewModel.insert(newItem) { id ->
-                    Toast.makeText(requireContext(), "Item \"$titulo\" creado", Toast.LENGTH_SHORT).show()
-                    val fragment = ItemDetailFragment.newInstance(id)
-                    parentFragmentManager.beginTransaction()
-                        .setReorderingAllowed(true)
-                        .replace(R.id.fragment_container, fragment)
-                        .addToBackStack(null)
-                        .commit()
-                }
-                dialog.dismiss()
-            }
-        }
-
-        dialog.show()
     }
 
     // --- EDITAR ITEM ---
@@ -418,9 +329,11 @@ class ItemListFragment : Fragment() {
                     calificacion = rbCalificacion.rating
                 )
 
-                viewModel.update(actualizado) {
-                    showSnackbar("Item \"$titulo\" actualizado")
-                }
+                viewModel.update(
+                    actualizado,
+                    onUpdated = { showSnackbar("Item \"$titulo\" actualizado") },
+                    onError = { msg -> showSnackbar(msg) }
+                )
                 dialog.dismiss()
             }
         }
@@ -506,3 +419,9 @@ class ItemListFragment : Fragment() {
         _binding = null
     }
 }
+
+
+
+
+
+

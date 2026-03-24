@@ -35,19 +35,21 @@ import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.model.ColeccionColors
 import com.example.gestor_colecciones.model.LogroDefinicion
 import com.example.gestor_colecciones.model.LogroManager
-import com.example.gestor_colecciones.repository.ColeccionRepository
+import com.example.gestor_colecciones.auth.AuthStore
 import com.example.gestor_colecciones.repository.ExportRepository
-import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.repository.LogroRepository
-import com.example.gestor_colecciones.repository.PapeleraRepository
+import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.viewmodel.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Date
 import com.example.gestor_colecciones.activities.MainActivity
+import androidx.fragment.app.FragmentManager
 
 class ColeccionesFragment : Fragment() {
 
@@ -94,10 +96,10 @@ class ColeccionesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val repo = ColeccionRepository(DatabaseProvider.getColeccionDao(requireContext()))
+        val repo = RepositoryProvider.coleccionRepository(requireContext())
         viewModel = ViewModelProvider(this, ColeccionViewModelFactory(repo))[ColeccionViewModel::class.java]
 
-        val itemRepo = ItemRepository(DatabaseProvider.getItemDao(requireContext()))
+        val itemRepo = RepositoryProvider.itemRepository(requireContext())
         itemViewModel = ViewModelProvider(this, ItemViewModelFactory(itemRepo))[ItemViewModel::class.java]
 
         val exportRepo = ExportRepository(repo, itemRepo)
@@ -142,10 +144,7 @@ class ColeccionesFragment : Fragment() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val coleccion = adapter.getItem(viewHolder.adapterPosition)
                 viewLifecycleOwner.lifecycleScope.launch {
-                    val papeleraRepo = PapeleraRepository(
-                        DatabaseProvider.getDatabase(requireContext()).coleccionDao(),
-                        DatabaseProvider.getDatabase(requireContext()).itemDao()
-                    )
+                    val papeleraRepo = RepositoryProvider.papeleraRepository(requireContext())
                     papeleraRepo.moverColeccionAPapelera(coleccion)
                     Snackbar.make(binding.root, "\"${coleccion.nombre}\" movida a la papelera", Snackbar.LENGTH_LONG)
                         .setAction("Ver papelera") {
@@ -222,6 +221,32 @@ class ColeccionesFragment : Fragment() {
                 .replace((view.parent as ViewGroup).id, PapeleraFragment())
                 .addToBackStack(null)
                 .commit()
+        }
+
+        binding.btnLogout.setOnClickListener { button ->
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Cerrar sesión")
+                .setMessage("¿Quieres cerrar la sesión y borrar los datos locales?")
+                .setPositiveButton("Cerrar sesión") { _, _ ->
+                    button.isEnabled = false
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        AuthStore(requireContext()).clear()
+                        withContext(Dispatchers.IO) {
+                            DatabaseProvider.getDatabase(requireContext()).clearAllTables()
+                        }
+                        parentFragmentManager.popBackStack(
+                            null,
+                            FragmentManager.POP_BACK_STACK_INCLUSIVE
+                        )
+                        parentFragmentManager.beginTransaction()
+                            .setReorderingAllowed(true)
+                            .replace((view.parent as ViewGroup).id, AuthFragment())
+                            .commit()
+                        button.isEnabled = true
+                    }
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
         }
 
         viewLifecycleOwner.lifecycleScope.launch {

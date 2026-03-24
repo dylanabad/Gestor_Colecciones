@@ -7,8 +7,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface CategoriaDao {
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(categoria: Categoria): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(categorias: List<Categoria>)
 
     @Update
     suspend fun update(categoria: Categoria)
@@ -22,4 +25,4 @@ interface CategoriaDao {
 
     @Query("SELECT * FROM Categoria")
     suspend fun getAllCategoriasOnce(): List<Categoria>
-    }
+}

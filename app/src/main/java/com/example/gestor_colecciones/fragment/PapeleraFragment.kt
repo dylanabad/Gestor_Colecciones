@@ -20,7 +20,7 @@ import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentPapeleraBinding
 import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.entities.Item
-import com.example.gestor_colecciones.repository.PapeleraRepository
+import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.viewmodel.PapeleraViewModel
 import com.example.gestor_colecciones.viewmodel.PapeleraViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
@@ -58,7 +58,7 @@ class PapeleraFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val db = DatabaseProvider.getDatabase(requireContext())
-        val repo = PapeleraRepository(db.coleccionDao(), db.itemDao())
+        val repo = RepositoryProvider.papeleraRepository(requireContext())
         viewModel = ViewModelProvider(this, PapeleraViewModelFactory(repo))[PapeleraViewModel::class.java]
 
         adapter = PapeleraAdapter(

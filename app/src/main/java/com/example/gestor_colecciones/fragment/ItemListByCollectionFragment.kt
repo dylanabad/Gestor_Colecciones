@@ -30,16 +30,16 @@ import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ItemAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.export.TarjetaColeccionGenerator
-import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.entities.Categoria
 import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.model.ItemFilterSortState
 import com.example.gestor_colecciones.model.ItemSortField
 import com.example.gestor_colecciones.model.ItemEstados
+import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemHistoryRepository
 import com.example.gestor_colecciones.repository.ItemRepository
-import com.example.gestor_colecciones.repository.PapeleraRepository
+import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.repository.TagRepository
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
@@ -101,9 +101,9 @@ class ItemListByCollectionFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val db = DatabaseProvider.getDatabase(requireContext())
-        itemRepo = ItemRepository(db.itemDao())
-        categoriaRepo = CategoriaRepository(db.categoriaDao())
-        coleccionRepo = ColeccionRepository(db.coleccionDao())
+        itemRepo = RepositoryProvider.itemRepository(requireContext())
+        categoriaRepo = RepositoryProvider.categoriaRepository(requireContext())
+        coleccionRepo = RepositoryProvider.coleccionRepository(requireContext())
         tagRepo = TagRepository(db.tagDao())
         historyRepo = ItemHistoryRepository(db.itemHistoryDao())
         viewModel = ViewModelProvider(
@@ -214,10 +214,7 @@ class ItemListByCollectionFragment : Fragment() {
             override fun onSwiped(viewHolder: androidx.recyclerview.widget.RecyclerView.ViewHolder, direction: Int) {
                 val item = adapter.getItem(viewHolder.adapterPosition)
                 viewLifecycleOwner.lifecycleScope.launch {
-                    val papeleraRepo = PapeleraRepository(
-                        DatabaseProvider.getDatabase(requireContext()).coleccionDao(),
-                        DatabaseProvider.getDatabase(requireContext()).itemDao()
-                    )
+                    val papeleraRepo = RepositoryProvider.papeleraRepository(requireContext())
                     papeleraRepo.moverItemAPapelera(item)
                     Snackbar.make(binding.root, "\"${item.titulo}\" movido a la papelera", Snackbar.LENGTH_LONG)
                         .setAction("Ver papelera") {
@@ -410,6 +407,7 @@ class ItemListByCollectionFragment : Fragment() {
         adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerCategoria.adapter = adapterSpinner
 
+
         val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle("Nuevo item").setView(view)
             .setPositiveButton("Crear", null).setNegativeButton("Cancelar", null).create()
@@ -429,12 +427,16 @@ class ItemListByCollectionFragment : Fragment() {
                 val estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { "Nuevo" }
                 val posibleDuplicado = fullItemList.firstOrNull { it.titulo.trim().equals(titulo, ignoreCase = true) }
                 val insertarItem = {
-                    viewModel.insert(Item(
-                        titulo = titulo, categoriaId = categoriaId, collectionId = collectionId,
-                        fechaAdquisicion = Date(), valor = valor,
-                        imagenPath = selectedItemImageUri?.let { uri -> copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg") },
-                        estado = estado, descripcion = descripcion, calificacion = rbCalificacion.rating
-                    )) { showSnackbar("Item \"$titulo\" creado") }
+                    viewModel.insert(
+                        Item(
+                            titulo = titulo, categoriaId = categoriaId, collectionId = collectionId,
+                            fechaAdquisicion = Date(), valor = valor,
+                            imagenPath = selectedItemImageUri?.let { uri -> copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg") },
+                            estado = estado, descripcion = descripcion, calificacion = rbCalificacion.rating
+                        ),
+                        onInserted = { showSnackbar("Item \"$titulo\" creado") },
+                        onError = { msg -> showSnackbar(msg) }
+                    )
                     dialog.dismiss()
                 }
                 if (posibleDuplicado != null) {
@@ -497,6 +499,7 @@ class ItemListByCollectionFragment : Fragment() {
         val selectedIndex = categoriasList.indexOfFirst { it.key == item.categoriaId }
         if (selectedIndex >= 0) spinnerCategoria.setSelection(selectedIndex)
 
+
         val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle("Editar item").setView(view)
             .setPositiveButton("Guardar", null).setNegativeButton("Cancelar", null).create()
@@ -508,15 +511,19 @@ class ItemListByCollectionFragment : Fragment() {
                     Toast.makeText(requireContext(), "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                viewModel.update(item.copy(
-                    titulo = titulo,
-                    valor = etValor.text.toString().toDoubleOrNull() ?: item.valor,
-                    descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() },
-                    categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key,
-                    imagenPath = selectedItemImageUri?.let { uri -> copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg") } ?: item.imagenPath,
-                    estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { item.estado },
-                    calificacion = rbCalificacion.rating
-                )) { showSnackbar("Item \"$titulo\" actualizado") }
+                viewModel.update(
+                    item.copy(
+                        titulo = titulo,
+                        valor = etValor.text.toString().toDoubleOrNull() ?: item.valor,
+                        descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() },
+                        categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key,
+                        imagenPath = selectedItemImageUri?.let { uri -> copyImageToInternalStorage(uri, "item_${System.currentTimeMillis()}.jpg") } ?: item.imagenPath,
+                        estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { item.estado },
+                        calificacion = rbCalificacion.rating
+                    ),
+                    onUpdated = { showSnackbar("Item \"$titulo\" actualizado") },
+                    onError = { msg -> showSnackbar(msg) }
+                )
                 dialog.dismiss()
             }
         }

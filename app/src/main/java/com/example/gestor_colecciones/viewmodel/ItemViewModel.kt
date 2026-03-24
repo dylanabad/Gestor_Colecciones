@@ -14,7 +14,7 @@ import java.util.Date
 
 class ItemViewModel(
     private val itemRepository: ItemRepository,
-    private val categoriaRepository: CategoriaRepository? = null, // opcional para crear categorías
+    private val categoriaRepository: CategoriaRepository? = null, // opcional para crear categorias
     private val historyRepository: ItemHistoryRepository? = null
 ) : ViewModel() {
 
@@ -25,89 +25,112 @@ class ItemViewModel(
             emptyList()
         )
 
-    // Insertar item con callback que devuelve el ID
-    fun insert(item: Item, onInserted: ((Int) -> Unit)? = null) {
+    fun insert(
+        item: Item,
+        onInserted: ((Int) -> Unit)? = null,
+        onError: ((String) -> Unit)? = null
+    ) {
         viewModelScope.launch {
-            val id = itemRepository.insert(item).toInt()
-            historyRepository?.insert(
-                ItemHistory(
-                    itemId = id,
-                    tipo = "CREATED",
-                    fecha = Date(),
-                    descripcion = "Item creado"
+            try {
+                val id = itemRepository.insert(item).toInt()
+                historyRepository?.insert(
+                    ItemHistory(
+                        itemId = id,
+                        tipo = "CREATED",
+                        fecha = Date(),
+                        descripcion = "Item creado"
+                    )
                 )
-            )
-            onInserted?.invoke(id)
+                onInserted?.invoke(id)
+            } catch (e: Exception) {
+                onError?.invoke(e.message ?: "Error al crear el item")
+            }
         }
     }
 
     fun update(item: Item) {
-        update(item, null)
+        update(item, null, null)
     }
 
     fun delete(item: Item) {
-        delete(item, null)
+        delete(item, null, null)
     }
 
-    fun update(item: Item, onUpdated: (() -> Unit)? = null) {
+    fun update(
+        item: Item,
+        onUpdated: (() -> Unit)? = null,
+        onError: ((String) -> Unit)? = null
+    ) {
         viewModelScope.launch {
-            val old = historyRepository?.let { itemRepository.getItemById(item.id) }
-            itemRepository.update(item)
+            try {
+                val old = historyRepository?.let { itemRepository.getItemById(item.id) }
+                itemRepository.update(item)
 
-            if (historyRepository != null) {
-                val now = Date()
-                if (old != null) {
-                    val estadoChanged = old.estado != item.estado
-                    val otherChanged = old.copy(estado = item.estado) != item
+                if (historyRepository != null) {
+                    val now = Date()
+                    if (old != null) {
+                        val estadoChanged = old.estado != item.estado
+                        val otherChanged = old.copy(estado = item.estado) != item
 
-                    if (estadoChanged) {
-                        historyRepository.insert(
-                            ItemHistory(
-                                itemId = item.id,
-                                tipo = "STATUS_CHANGED",
-                                fecha = now,
-                                descripcion = "Estado: ${old.estado} \u2192 ${item.estado}"
+                        if (estadoChanged) {
+                            historyRepository.insert(
+                                ItemHistory(
+                                    itemId = item.id,
+                                    tipo = "STATUS_CHANGED",
+                                    fecha = now,
+                                    descripcion = "Estado: ${old.estado} -> ${item.estado}"
+                                )
                             )
-                        )
-                    }
-
-                    if (otherChanged) {
-                        val fields = buildList {
-                            if (old.titulo != item.titulo) add("Título")
-                            if (old.valor != item.valor) add("Valor")
-                            if (old.descripcion != item.descripcion) add("Descripción")
-                            if (old.categoriaId != item.categoriaId) add("Categoría")
-                            if (old.imagenPath != item.imagenPath) add("Imagen")
-                            if (old.calificacion != item.calificacion) add("Calificación")
                         }
+
+                        if (otherChanged) {
+                            val fields = buildList {
+                                if (old.titulo != item.titulo) add("Titulo")
+                                if (old.valor != item.valor) add("Valor")
+                                if (old.descripcion != item.descripcion) add("Descripcion")
+                                if (old.categoriaId != item.categoriaId) add("Categoria")
+                                if (old.imagenPath != item.imagenPath) add("Imagen")
+                                if (old.calificacion != item.calificacion) add("Calificacion")
+                            }
+                            historyRepository.insert(
+                                ItemHistory(
+                                    itemId = item.id,
+                                    tipo = "EDITED",
+                                    fecha = now,
+                                    descripcion = if (fields.isEmpty()) "Item actualizado" else "Editado: ${fields.joinToString()}"
+                                )
+                            )
+                        }
+                    } else {
                         historyRepository.insert(
                             ItemHistory(
                                 itemId = item.id,
                                 tipo = "EDITED",
                                 fecha = now,
-                                descripcion = if (fields.isEmpty()) "Item actualizado" else "Editado: ${fields.joinToString()}"
+                                descripcion = "Item actualizado"
                             )
                         )
                     }
-                } else {
-                    historyRepository.insert(
-                        ItemHistory(
-                            itemId = item.id,
-                            tipo = "EDITED",
-                            fecha = now,
-                            descripcion = "Item actualizado"
-                        )
-                    )
                 }
+                onUpdated?.invoke()
+            } catch (e: Exception) {
+                onError?.invoke(e.message ?: "Error al actualizar el item")
             }
-            onUpdated?.invoke()
         }
     }
 
-    fun delete(item: Item, onDeleted: (() -> Unit)? = null) {
+    fun delete(
+        item: Item,
+        onDeleted: (() -> Unit)? = null,
+        onError: ((String) -> Unit)? = null
+    ) {
         viewModelScope.launch {
-            itemRepository.delete(item)
-            onDeleted?.invoke()
+            try {
+                itemRepository.delete(item)
+                onDeleted?.invoke()
+            } catch (e: Exception) {
+                onError?.invoke(e.message ?: "Error al eliminar el item")
+            }
         }
     }
 
@@ -125,7 +148,6 @@ class ItemViewModel(
 
     suspend fun getItemById(id: Int) = itemRepository.getItemById(id)
 
-    // --- NUEVO: Funciones para categorías ---
     suspend fun insertCategoria(nombre: String): Categoria? {
         return if (categoriaRepository != null && nombre.isNotBlank()) {
             val categoria = Categoria(nombre = nombre)

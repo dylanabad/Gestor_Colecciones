@@ -7,9 +7,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.example.gestor_colecciones.R
+import com.example.gestor_colecciones.auth.AuthStore
+import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.transition.MaterialFadeThrough
+import kotlinx.coroutines.launch
 
 class WelcomeFragment : Fragment() {
 
@@ -25,19 +29,44 @@ class WelcomeFragment : Fragment() {
     ): View {
         val view = inflater.inflate(R.layout.fragment_welcome, container, false)
 
-        view.findViewById<MaterialButton>(R.id.btnEnter).setOnClickListener {
+        view.findViewById<MaterialButton>(R.id.btnEnter).setOnClickListener { button ->
             val onboardingCompleted = requireContext()
                 .getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
                 .getBoolean("onboarding_completed", false)
 
-            val destino = if (onboardingCompleted) ColeccionesFragment()
-            else OnboardingFragment()
+            val authStore = AuthStore(requireContext())
+            if (authStore.getToken().isNullOrBlank()) {
+                parentFragmentManager.beginTransaction()
+                    .setReorderingAllowed(true)
+                    .replace(R.id.fragment_container, AuthFragment())
+                    .addToBackStack(null)
+                    .commit()
+            } else {
+                button.isEnabled = false
+                viewLifecycleOwner.lifecycleScope.launch {
+                    try {
+                        RepositoryProvider.syncRepository(requireContext()).syncAll()
 
-            parentFragmentManager.beginTransaction()
-                .setReorderingAllowed(true)
-                .replace(R.id.fragment_container, destino)
-                .addToBackStack(null)
-                .commit()
+                        val destino = if (onboardingCompleted) ColeccionesFragment()
+                        else OnboardingFragment()
+
+                        parentFragmentManager.beginTransaction()
+                            .setReorderingAllowed(true)
+                            .replace(R.id.fragment_container, destino)
+                            .addToBackStack(null)
+                            .commit()
+                    } catch (e: Exception) {
+                        authStore.clear()
+                        parentFragmentManager.beginTransaction()
+                            .setReorderingAllowed(true)
+                            .replace(R.id.fragment_container, AuthFragment())
+                            .addToBackStack(null)
+                            .commit()
+                    } finally {
+                        button.isEnabled = true
+                    }
+                }
+            }
         }
 
         return view
