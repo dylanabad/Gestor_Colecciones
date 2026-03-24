@@ -9,6 +9,7 @@ import com.example.gestor_colecciones.dao.ItemDao
 import com.example.gestor_colecciones.dao.CategoriaDao
 import com.example.gestor_colecciones.dao.TagDao
 import com.example.gestor_colecciones.dao.ItemTagDao
+import com.example.gestor_colecciones.dao.ItemDeseoDao
 
 object DatabaseProvider {
 
@@ -102,4 +103,5 @@ object DatabaseProvider {
     fun getCategoriaDao(context: Context): CategoriaDao = getDatabase(context).categoriaDao()
     fun getTagDao(context: Context): TagDao = getDatabase(context).tagDao()
     fun getItemTagDao(context: Context): ItemTagDao = getDatabase(context).itemTagDao()
+    fun getItemDeseoDao(context: Context): ItemDeseoDao = getDatabase(context).itemDeseoDao()
 }

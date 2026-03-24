@@ -3,6 +3,7 @@ package com.example.gestor_colecciones.network
 import com.example.gestor_colecciones.network.dto.AuthResponse
 import com.example.gestor_colecciones.network.dto.CategoriaDto
 import com.example.gestor_colecciones.network.dto.ColeccionDto
+import com.example.gestor_colecciones.network.dto.ItemDeseoDto
 import com.example.gestor_colecciones.network.dto.ItemDto
 import com.example.gestor_colecciones.network.dto.LogroDto
 import com.example.gestor_colecciones.network.dto.LoginRequest
@@ -84,6 +85,15 @@ interface ApiService {
         @Path("id") itemId: Long,
         @Body tagIds: List<Long>
     ): List<TagDto>
+
+    @GET("api/deseos")
+    suspend fun getDeseos(): List<ItemDeseoDto>
+
+    @POST("api/deseos")
+    suspend fun saveDeseo(@Body deseo: ItemDeseoDto): ItemDeseoDto
+
+    @DELETE("api/deseos/{id}")
+    suspend fun deleteDeseo(@Path("id") id: Long)
 
     @GET("api/logros")
     suspend fun getLogros(): List<LogroDto>

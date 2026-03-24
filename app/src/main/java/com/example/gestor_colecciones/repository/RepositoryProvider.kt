@@ -57,4 +57,11 @@ object RepositoryProvider {
             ApiProvider.getApi(context)
         )
     }
+
+    fun itemDeseoRepository(context: Context): ItemDeseoRepository {
+        return ItemDeseoRepository(
+            DatabaseProvider.getDatabase(context).itemDeseoDao(),
+            ApiProvider.getApi(context)
+        )
+    }
 }

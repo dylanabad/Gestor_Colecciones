@@ -16,10 +16,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialFadeThrough
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.DeseoAdapter
-import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentDeseosBinding
 import com.example.gestor_colecciones.entities.ItemDeseo
-import com.example.gestor_colecciones.repository.ItemDeseoRepository
+import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.viewmodel.DeseoViewModel
 import com.example.gestor_colecciones.viewmodel.DeseoViewModelFactory
 import com.google.android.material.snackbar.Snackbar
@@ -51,7 +50,7 @@ class DeseosFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val repo = ItemDeseoRepository(DatabaseProvider.getDatabase(requireContext()).itemDeseoDao())
+        val repo = RepositoryProvider.itemDeseoRepository(requireContext())
         viewModel = ViewModelProvider(this, DeseoViewModelFactory(repo))[DeseoViewModel::class.java]
 
         adapter = DeseoAdapter(
@@ -219,3 +218,4 @@ class DeseosFragment : Fragment() {
         _binding = null
     }
 }
+

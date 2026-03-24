@@ -51,6 +51,11 @@ class SyncRepository(
             if (itemTags.isNotEmpty()) {
                 db.itemTagDao().insertAll(itemTags)
             }
+
+            val deseos = api.getDeseos().map { it.toEntity() }
+            if (deseos.isNotEmpty()) {
+                db.itemDeseoDao().insertAll(deseos)
+            }
         }
     }
 }
