@@ -81,7 +81,7 @@ class ItemListFragment : Fragment() {
         val db = DatabaseProvider.getDatabase(requireContext())
         itemRepo = RepositoryProvider.itemRepository(requireContext())
         categoriaRepo = RepositoryProvider.categoriaRepository(requireContext())
-        tagRepo = TagRepository(db.tagDao())
+        tagRepo = RepositoryProvider.tagRepository(requireContext())
         historyRepo = ItemHistoryRepository(db.itemHistoryDao())
 
         // --- ViewModel ---
@@ -419,6 +419,7 @@ class ItemListFragment : Fragment() {
         _binding = null
     }
 }
+
 
 
 

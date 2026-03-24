@@ -41,4 +41,20 @@ object RepositoryProvider {
             DatabaseProvider.getDatabase(context)
         )
     }
+
+    fun tagRepository(context: Context): TagRepository {
+        return TagRepository(
+            DatabaseProvider.getTagDao(context),
+            ApiProvider.getApi(context)
+        )
+    }
+
+    fun itemTagRepository(context: Context): ItemTagRepository {
+        val db = DatabaseProvider.getDatabase(context)
+        return ItemTagRepository(
+            db.itemTagDao(),
+            db.tagDao(),
+            ApiProvider.getApi(context)
+        )
+    }
 }

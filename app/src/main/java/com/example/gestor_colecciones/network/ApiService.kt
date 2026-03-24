@@ -7,10 +7,12 @@ import com.example.gestor_colecciones.network.dto.ItemDto
 import com.example.gestor_colecciones.network.dto.LogroDto
 import com.example.gestor_colecciones.network.dto.LoginRequest
 import com.example.gestor_colecciones.network.dto.RegisterRequest
+import com.example.gestor_colecciones.network.dto.TagDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -58,6 +60,24 @@ interface ApiService {
 
     @DELETE("api/categorias/{id}")
     suspend fun deleteCategoria(@Path("id") id: Long)
+
+    @GET("api/tags")
+    suspend fun getTags(): List<TagDto>
+
+    @POST("api/tags")
+    suspend fun saveTag(@Body tag: TagDto): TagDto
+
+    @DELETE("api/tags/{id}")
+    suspend fun deleteTag(@Path("id") id: Long)
+
+    @GET("api/items/{id}/tags")
+    suspend fun getItemTags(@Path("id") itemId: Long): List<TagDto>
+
+    @PUT("api/items/{id}/tags")
+    suspend fun setItemTags(
+        @Path("id") itemId: Long,
+        @Body tagIds: List<Long>
+    ): List<TagDto>
 
     @GET("api/logros")
     suspend fun getLogros(): List<LogroDto>

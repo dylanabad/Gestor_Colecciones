@@ -3,6 +3,7 @@ package com.example.gestor_colecciones.repository
 import com.example.gestor_colecciones.database.AppDataBase
 import com.example.gestor_colecciones.network.ApiService
 import com.example.gestor_colecciones.network.dto.toEntity
+import com.example.gestor_colecciones.entities.ItemTag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -32,6 +33,23 @@ class SyncRepository(
             }
             if (allItems.isNotEmpty()) {
                 db.itemDao().insertAll(allItems)
+            }
+
+            val tags = api.getTags().map { it.toEntity() }
+            if (tags.isNotEmpty()) {
+                db.tagDao().insertAll(tags)
+            }
+
+            val itemTags = mutableListOf<ItemTag>()
+            for (item in allItems) {
+                val tagsForItem = api.getItemTags(item.id.toLong())
+                tagsForItem.forEach { dto ->
+                    val tagId = dto.id?.toInt() ?: return@forEach
+                    itemTags.add(ItemTag(itemId = item.id, tagId = tagId))
+                }
+            }
+            if (itemTags.isNotEmpty()) {
+                db.itemTagDao().insertAll(itemTags)
             }
         }
     }

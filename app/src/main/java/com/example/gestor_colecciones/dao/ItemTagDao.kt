@@ -11,6 +11,9 @@ interface ItemTagDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(itemTag: ItemTag)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(items: List<ItemTag>)
+
     @Delete
     suspend fun delete(itemTag: ItemTag)
 

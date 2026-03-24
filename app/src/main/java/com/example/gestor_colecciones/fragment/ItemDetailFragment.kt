@@ -59,8 +59,8 @@ class ItemDetailFragment : Fragment() {
 
         val db = DatabaseProvider.getDatabase(requireContext())
         val repo = RepositoryProvider.itemRepository(requireContext())
-        val tagRepository = TagRepository(db.tagDao())
-        val itemTagRepository = ItemTagRepository(db.itemTagDao())
+        val tagRepository = RepositoryProvider.tagRepository(requireContext())
+        val itemTagRepository = RepositoryProvider.itemTagRepository(requireContext())
         val historyRepository = ItemHistoryRepository(db.itemHistoryDao())
         viewModel = ViewModelProvider(this, ItemViewModelFactory(repo, null, historyRepository))[ItemViewModel::class.java]
 
@@ -119,7 +119,6 @@ class ItemDetailFragment : Fragment() {
                 )
             }
         }
-
         fun showCreateTagDialog(onCreated: () -> Unit) {
             val input = EditText(requireContext()).apply {
                 hint = "Nombre de etiqueta"
@@ -140,6 +139,45 @@ class ItemDetailFragment : Fragment() {
                 .show()
         }
 
+        fun showManageTagsDialog() {
+            viewLifecycleOwner.lifecycleScope.launch {
+                val allTags = tagRepository.getAllTagsOnce()
+                if (allTags.isEmpty()) {
+                    showCreateTagDialog { showManageTagsDialog() }
+                    return@launch
+                }
+
+                val names = allTags.map { it.nombre }.toTypedArray()
+                var selectedIndex = 0
+
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Gestionar etiquetas")
+                    .setSingleChoiceItems(names, 0) { _, which ->
+                        selectedIndex = which
+                    }
+                    .setPositiveButton("Eliminar") { _, _ ->
+                        val tag = allTags.getOrNull(selectedIndex) ?: return@setPositiveButton
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Eliminar etiqueta")
+                            .setMessage("Eliminar \"${tag.nombre}\"? Se quitara de los items.")
+                            .setPositiveButton("Eliminar") { _, _ ->
+                                viewLifecycleOwner.lifecycleScope.launch {
+                                    tagRepository.delete(tag)
+                                    itemTagRepository.syncTagsForItem(itemId)
+                                    Snackbar.make(view, "Etiqueta \"${tag.nombre}\" eliminada", Snackbar.LENGTH_SHORT).show()
+                                }
+                            }
+                            .setNegativeButton("Cancelar", null)
+                            .show()
+                    }
+                    .setNeutralButton("Nueva") { _, _ ->
+                        showCreateTagDialog { showManageTagsDialog() }
+                    }
+                    .setNegativeButton("Cerrar", null)
+                    .show()
+            }
+        }
+
         fun showTagPickerDialog() {
             viewLifecycleOwner.lifecycleScope.launch {
                 val allTags = tagRepository.getAllTagsOnce()
@@ -157,8 +195,8 @@ class ItemDetailFragment : Fragment() {
                     .setMultiChoiceItems(names, checked) { _, which, isChecked ->
                         checked[which] = isChecked
                     }
-                    .setNeutralButton("Nueva") { _, _ ->
-                        showCreateTagDialog { showTagPickerDialog() }
+                    .setNeutralButton("Gestionar") { _, _ ->
+                        showManageTagsDialog()
                     }
                     .setNegativeButton("Cancelar", null)
                     .setPositiveButton("Guardar") { _, _ ->
@@ -171,6 +209,7 @@ class ItemDetailFragment : Fragment() {
                     .show()
             }
         }
+
 
         btnEditTags.setOnClickListener { showTagPickerDialog() }
 
@@ -259,3 +298,7 @@ class ItemDetailFragment : Fragment() {
         }
     }
 }
+
+
+
+

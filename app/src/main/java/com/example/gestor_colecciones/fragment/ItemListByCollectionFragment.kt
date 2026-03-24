@@ -104,7 +104,7 @@ class ItemListByCollectionFragment : Fragment() {
         itemRepo = RepositoryProvider.itemRepository(requireContext())
         categoriaRepo = RepositoryProvider.categoriaRepository(requireContext())
         coleccionRepo = RepositoryProvider.coleccionRepository(requireContext())
-        tagRepo = TagRepository(db.tagDao())
+        tagRepo = RepositoryProvider.tagRepository(requireContext())
         historyRepo = ItemHistoryRepository(db.itemHistoryDao())
         viewModel = ViewModelProvider(
             this,
@@ -603,3 +603,4 @@ class ItemListByCollectionFragment : Fragment() {
         _binding = null
     }
 }
+

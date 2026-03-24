@@ -4,15 +4,32 @@ import com.example.gestor_colecciones.dao.TagDao
 import com.example.gestor_colecciones.entities.Tag
 import com.example.gestor_colecciones.model.ItemTagInfo
 import com.example.gestor_colecciones.model.ItemTagName
+import com.example.gestor_colecciones.network.ApiService
+import com.example.gestor_colecciones.network.dto.toEntity
+import com.example.gestor_colecciones.network.dto.toDto
 import kotlinx.coroutines.flow.Flow
 
-class TagRepository(private val tagDao: TagDao) {
+class TagRepository(
+    private val tagDao: TagDao,
+    private val api: ApiService
+) {
 
     val allTags: Flow<List<Tag>> = tagDao.getAllTags()
 
-    suspend fun insert(tag: Tag) = tagDao.insert(tag)
-    suspend fun update(tag: Tag) = tagDao.update(tag)
-    suspend fun delete(tag: Tag) = tagDao.delete(tag)
+    suspend fun insert(tag: Tag): Long {
+        val saved = api.saveTag(tag.toDto())
+        return tagDao.insert(saved.toEntity())
+    }
+
+    suspend fun update(tag: Tag) {
+        val saved = api.saveTag(tag.toDto())
+        tagDao.insert(saved.toEntity())
+    }
+
+    suspend fun delete(tag: Tag) {
+        if (tag.id > 0) api.deleteTag(tag.id.toLong())
+        tagDao.delete(tag)
+    }
 
     suspend fun getAllTagsOnce(): List<Tag> = tagDao.getAllTagsOnce()
 

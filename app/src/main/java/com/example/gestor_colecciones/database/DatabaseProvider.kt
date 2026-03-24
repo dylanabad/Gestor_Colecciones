@@ -7,6 +7,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.gestor_colecciones.dao.ColeccionDao
 import com.example.gestor_colecciones.dao.ItemDao
 import com.example.gestor_colecciones.dao.CategoriaDao
+import com.example.gestor_colecciones.dao.TagDao
+import com.example.gestor_colecciones.dao.ItemTagDao
 
 object DatabaseProvider {
 
@@ -98,4 +100,6 @@ object DatabaseProvider {
     fun getColeccionDao(context: Context): ColeccionDao = getDatabase(context).coleccionDao()
     fun getItemDao(context: Context): ItemDao = getDatabase(context).itemDao()
     fun getCategoriaDao(context: Context): CategoriaDao = getDatabase(context).categoriaDao()
+    fun getTagDao(context: Context): TagDao = getDatabase(context).tagDao()
+    fun getItemTagDao(context: Context): ItemTagDao = getDatabase(context).itemTagDao()
 }
