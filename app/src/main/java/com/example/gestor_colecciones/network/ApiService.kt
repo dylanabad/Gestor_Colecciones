@@ -36,6 +36,9 @@ interface ApiService {
     @DELETE("api/colecciones/{id}")
     suspend fun deleteColeccion(@Path("id") id: Long)
 
+    @DELETE("api/colecciones/{id}/hard")
+    suspend fun deleteColeccionHard(@Path("id") id: Long)
+
     @GET("api/items/coleccion/{coleccionId}")
     suspend fun getItemsByColeccion(@Path("coleccionId") coleccionId: Long): List<ItemDto>
 
@@ -51,6 +54,9 @@ interface ApiService {
 
     @DELETE("api/items/{id}")
     suspend fun deleteItem(@Path("id") id: Long)
+
+    @DELETE("api/items/{id}/hard")
+    suspend fun deleteItemHard(@Path("id") id: Long)
 
     @GET("api/categorias")
     suspend fun getCategorias(): List<CategoriaDto>

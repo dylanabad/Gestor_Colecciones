@@ -47,12 +47,12 @@ class PapeleraRepository(
     }
 
     suspend fun eliminarColeccionDefinitivamente(coleccion: Coleccion) {
-        api.deleteColeccion(coleccion.id.toLong())
+        api.deleteColeccionHard(coleccion.id.toLong())
         coleccionDao.delete(coleccion)
     }
 
     suspend fun eliminarItemDefinitivamente(item: Item) {
-        api.deleteItem(item.id.toLong())
+        api.deleteItemHard(item.id.toLong())
         itemDao.delete(item)
     }
 
