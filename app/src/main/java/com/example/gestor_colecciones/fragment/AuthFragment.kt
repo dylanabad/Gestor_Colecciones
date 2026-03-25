@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -48,6 +49,7 @@ class AuthFragment : Fragment() {
 
         binding.btnLogin.setOnClickListener { handleLogin() }
         binding.btnRegister.setOnClickListener { handleRegister() }
+        animateEntry()
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.state.collect { state ->
@@ -78,7 +80,7 @@ class AuthFragment : Fragment() {
         val password = binding.etPassword.text?.toString()?.trim().orEmpty()
 
         if (email.isBlank() || password.isBlank()) {
-            Toast.makeText(requireContext(), "Email/usuario y contraseña son obligatorios", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Email/usuario y contrasena son obligatorios", Toast.LENGTH_SHORT).show()
             return
         }
         binding.tvError.isVisible = false
@@ -91,7 +93,7 @@ class AuthFragment : Fragment() {
         val password = binding.etPassword.text?.toString()?.trim().orEmpty()
 
         if (username.isBlank() || email.isBlank() || password.isBlank()) {
-            Toast.makeText(requireContext(), "Usuario, email y contraseña son obligatorios", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Usuario, email y contrasena son obligatorios", Toast.LENGTH_SHORT).show()
             return
         }
         binding.tvError.isVisible = false
@@ -102,6 +104,18 @@ class AuthFragment : Fragment() {
         binding.progressBar.isVisible = loading
         binding.btnLogin.isEnabled = !loading
         binding.btnRegister.isEnabled = !loading
+    }
+
+    private fun animateEntry() {
+        val card = binding.authCard
+        card.alpha = 0f
+        card.translationY = (16 * resources.displayMetrics.density)
+        card.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setDuration(320)
+            .setInterpolator(DecelerateInterpolator())
+            .start()
     }
 
     private fun syncAndNavigate() {
