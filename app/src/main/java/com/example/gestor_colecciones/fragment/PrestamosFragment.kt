@@ -7,6 +7,9 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Spinner
+import com.example.gestor_colecciones.repository.RepositoryProvider
+import com.example.gestor_colecciones.entities.Item
+import kotlinx.coroutines.flow.first
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -16,6 +19,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import com.example.gestor_colecciones.R
+import com.example.gestor_colecciones.auth.AuthStore
 import com.example.gestor_colecciones.adapters.PrestamoAdapter
 import com.example.gestor_colecciones.network.ApiProvider
 import com.example.gestor_colecciones.network.dto.PrestamoDto
@@ -112,6 +116,16 @@ class PrestamosFragment : Fragment() {
                     }
                     is PrestamoState.Error -> {
                         Snackbar.make(view, state.message, Snackbar.LENGTH_LONG).show()
+                        // Si el error es por no estar autenticado, limpiamos el token y navegamos al login
+                        val msg = state.message
+                        if (msg.contains("No autenticado", ignoreCase = true) || msg.contains("autenticad", ignoreCase = true)) {
+                            AuthStore(requireContext()).clear()
+                            // Reemplazamos el fragment actual por AuthFragment (navegación simple)
+                            parentFragmentManager.beginTransaction()
+                                .setReorderingAllowed(true)
+                                .replace((view.parent as ViewGroup).id, AuthFragment())
+                                .commit()
+                        }
                         viewModel.resetState()
                     }
                     else -> {}
@@ -135,13 +149,13 @@ class PrestamosFragment : Fragment() {
     private fun showCrearPrestamoDialog() {
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_crear_prestamo, null)
-
-        val etItemId = dialogView.findViewById<EditText>(R.id.etItemId)
+        val spinnerItem = dialogView.findViewById<Spinner>(R.id.spinnerItem)
         val spinnerUsuario = dialogView.findViewById<Spinner>(R.id.spinnerUsuario)
         val etFechaDevolucion = dialogView.findViewById<EditText>(R.id.etFechaDevolucion)
         val etNotas = dialogView.findViewById<EditText>(R.id.etNotas)
 
         var usuariosLista: List<UsuarioDto> = emptyList()
+        var itemsLista: List<Item> = emptyList()
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.usuarios.collectLatest { usuarios ->
@@ -154,17 +168,33 @@ class PrestamosFragment : Fragment() {
             }
         }
 
+        // Cargamos items locales y rellenamos spinner de items
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val itemRepo = RepositoryProvider.itemRepository(requireContext())
+                val items = itemRepo.allItems.first()
+                itemsLista = items
+                spinnerItem.adapter = ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_spinner_dropdown_item,
+                    items.map { it.titulo }
+                )
+            } catch (_: Exception) {
+                // Si falla la carga de items, dejamos el spinner vacío
+                spinnerItem.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, emptyList<String>())
+            }
+        }
+
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Nuevo préstamo")
             .setView(dialogView)
             .setPositiveButton("Prestar") { _, _ ->
-                val itemId = etItemId.text.toString().toLongOrNull()
                 val usuarioSeleccionado = usuariosLista.getOrNull(spinnerUsuario.selectedItemPosition)
+                val itemSeleccionado = itemsLista.getOrNull(spinnerItem.selectedItemPosition)
                 val fechaDevolucion = etFechaDevolucion.text.toString().ifBlank { null }
                 val notas = etNotas.text.toString().ifBlank { null }
-
-                if (itemId == null) {
-                    Snackbar.make(requireView(), "Introduce un ID de ítem válido", Snackbar.LENGTH_SHORT).show()
+                if (itemSeleccionado == null) {
+                    Snackbar.make(requireView(), "Selecciona un ítem", Snackbar.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
                 if (usuarioSeleccionado == null) {
@@ -173,7 +203,7 @@ class PrestamosFragment : Fragment() {
                 }
                 viewModel.crearPrestamo(
                     PrestamoRequest(
-                        itemId = itemId,
+                        itemId = itemSeleccionado.id.toLong(),
                         prestatarioUsuarioId = usuarioSeleccionado.id,
                         fechaDevolucionPrevista = fechaDevolucion,
                         notas = notas
