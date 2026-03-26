@@ -110,7 +110,6 @@ class ColeccionesFragment : Fragment() {
             this, ExportViewModelFactory(exportRepo)
         )[ExportViewModel::class.java]
 
-        // ── Logros ────────────────────────────────────────────────────────────
         val logroRepo = LogroRepository(
             DatabaseProvider.getDatabase(requireContext()).logroDao(),
             ApiProvider.getApi(requireContext())
@@ -187,7 +186,6 @@ class ColeccionesFragment : Fragment() {
         binding.fabAddColeccion.setOnClickListener { showCreateCollectionDialog() }
         binding.fabExport.setOnClickListener { showExportDialog() }
 
-        // ── Navegación a búsqueda global ──────────────────────────────────────
         binding.btnBusqueda.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .setReorderingAllowed(true)
@@ -220,7 +218,15 @@ class ColeccionesFragment : Fragment() {
                 .commit()
         }
 
-        // ── Navegación a papelera ─────────────────────────────────────────────
+        // ← NUEVO
+        binding.btnPrestamos.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .setReorderingAllowed(true)
+                .replace((view.parent as ViewGroup).id, PrestamosFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
         binding.btnPapelera.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .setReorderingAllowed(true)
@@ -291,8 +297,6 @@ class ColeccionesFragment : Fragment() {
             }
         })
     }
-
-    // ── Exportación ──────────────────────────────────────────────────────────
 
     private fun showExportDialog() {
         if (listaCompleta.isEmpty()) {
@@ -391,8 +395,6 @@ class ColeccionesFragment : Fragment() {
             showSnackbar("Error al guardar: ${e.message}")
         }
     }
-
-    // ── Resto del fragment ────────────────────────────────────────────────────
 
     private fun showSnackbar(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
@@ -639,5 +641,3 @@ class GridSpacingItemDecoration(
         }
     }
 }
-
-

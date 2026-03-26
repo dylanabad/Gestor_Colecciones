@@ -36,6 +36,7 @@ data class Item(
     val estado: String,
     val descripcion: String?,
     val calificacion: Float,
-    val eliminado: Boolean = false,          // ← añadido
-    val fechaEliminacion: Date? = null       // ← añadido
+    val eliminado: Boolean = false,
+    val fechaEliminacion: Date? = null,
+    val prestado: Boolean = false       // ← añadido
 )

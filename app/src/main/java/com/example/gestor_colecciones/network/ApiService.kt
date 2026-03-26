@@ -10,6 +10,9 @@ import com.example.gestor_colecciones.network.dto.LoginRequest
 import com.example.gestor_colecciones.network.dto.RegisterRequest
 import com.example.gestor_colecciones.network.dto.TagDto
 import com.example.gestor_colecciones.network.dto.UploadResponse
+import com.example.gestor_colecciones.network.dto.PrestamoDto
+import com.example.gestor_colecciones.network.dto.PrestamoRequest
+import com.example.gestor_colecciones.network.dto.UsuarioDto
 import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -108,4 +111,21 @@ interface ApiService {
 
     @POST("api/logros/{key}/unlock")
     suspend fun unlockLogro(@Path("key") key: String): LogroDto
+
+    // ── Usuarios ──────────────────────────────────────────────────────────────
+    @GET("api/usuarios")
+    suspend fun getUsuarios(): List<UsuarioDto>
+
+    // ── Préstamos ─────────────────────────────────────────────────────────────
+    @POST("api/prestamos")
+    suspend fun crearPrestamo(@Body request: PrestamoRequest): PrestamoDto
+
+    @PUT("api/prestamos/{id}/devolver")
+    suspend fun devolverPrestamo(@Path("id") id: Long): PrestamoDto
+
+    @GET("api/prestamos/prestados")
+    suspend fun getPrestados(): List<PrestamoDto>
+
+    @GET("api/prestamos/recibidos")
+    suspend fun getPrestamosRecibidos(): List<PrestamoDto>
 }

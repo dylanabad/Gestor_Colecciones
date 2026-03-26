@@ -20,4 +20,6 @@
     <color name="on_app_surface_variant">#FFC5C6D0</color>
 
     <color name="app_outline">#FF8F909A</color>
+    <color name="colorEstadoActivo">#4CAF50</color>
+    <color name="colorEstadoDevuelto">#9E9E9E</color>
 </resources>

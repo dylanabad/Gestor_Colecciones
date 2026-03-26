@@ -75,10 +75,44 @@ object DatabaseProvider {
 
     private val MIGRATION_7_8 = object : Migration(7, 8) {
         override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("ALTER TABLE `Coleccion` ADD COLUMN `eliminado` INTEGER NOT NULL DEFAULT 0")
-            db.execSQL("ALTER TABLE `Coleccion` ADD COLUMN `fechaEliminacion` INTEGER")
-            db.execSQL("ALTER TABLE `Item` ADD COLUMN `eliminado` INTEGER NOT NULL DEFAULT 0")
-            db.execSQL("ALTER TABLE `Item` ADD COLUMN `fechaEliminacion` INTEGER")
+            try {
+                db.execSQL("ALTER TABLE `Coleccion` ADD COLUMN `eliminado` INTEGER NOT NULL DEFAULT 0")
+            } catch (_: Exception) {}
+            try {
+                db.execSQL("ALTER TABLE `Coleccion` ADD COLUMN `fechaEliminacion` INTEGER")
+            } catch (_: Exception) {}
+            try {
+                db.execSQL("ALTER TABLE `Item` ADD COLUMN `eliminado` INTEGER NOT NULL DEFAULT 0")
+            } catch (_: Exception) {}
+            try {
+                db.execSQL("ALTER TABLE `Item` ADD COLUMN `fechaEliminacion` INTEGER")
+            } catch (_: Exception) {}
+        }
+    }
+
+    private val MIGRATION_8_9 = object : Migration(8, 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            try {
+                db.execSQL("ALTER TABLE `Item` ADD COLUMN `prestado` INTEGER NOT NULL DEFAULT 0")
+            } catch (_: Exception) {}
+            try {
+                db.execSQL("ALTER TABLE `Persona` ADD COLUMN `usuarioId` INTEGER NOT NULL DEFAULT 0")
+            } catch (_: Exception) {}
+            try {
+                db.execSQL("ALTER TABLE `Persona` ADD COLUMN `usuarioRefId` INTEGER")
+            } catch (_: Exception) {}
+            try {
+                db.execSQL("ALTER TABLE `Movimiento` ADD COLUMN `estado` TEXT")
+            } catch (_: Exception) {}
+            try {
+                db.execSQL("ALTER TABLE `Movimiento` ADD COLUMN `fechaDevolucionPrevista` INTEGER")
+            } catch (_: Exception) {}
+            try {
+                db.execSQL("ALTER TABLE `Movimiento` ADD COLUMN `fechaDevolucionReal` INTEGER")
+            } catch (_: Exception) {}
+            try {
+                db.execSQL("ALTER TABLE `Movimiento` ADD COLUMN `notas` TEXT")
+            } catch (_: Exception) {}
         }
     }
 
@@ -89,7 +123,14 @@ object DatabaseProvider {
                 AppDataBase::class.java,
                 "gestor_colecciones_db"
             )
-                .addMigrations(MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                .addMigrations(
+                    MIGRATION_3_4,
+                    MIGRATION_4_5,
+                    MIGRATION_5_6,
+                    MIGRATION_6_7,
+                    MIGRATION_7_8,
+                    MIGRATION_8_9
+                )
                 .fallbackToDestructiveMigration()
                 .build()
 

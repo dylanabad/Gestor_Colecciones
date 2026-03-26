@@ -18,4 +18,7 @@ interface PersonaDao {
 
     @Query("SELECT * FROM Persona ORDER BY nombre ASC")
     fun getAllPersonas(): Flow<List<Persona>>
+
+    @Query("SELECT * FROM Persona WHERE usuarioRefId = :usuarioRefId LIMIT 1")
+    suspend fun findByUsuarioRefId(usuarioRefId: Int): Persona?  // ← añadido
 }

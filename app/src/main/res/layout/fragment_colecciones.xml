@@ -7,6 +7,7 @@
     android:background="@color/app_background"
     android:padding="16dp">
 
+    <!-- Fila 1: Título -->
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tvColeccionesTitle"
         android:layout_width="0dp"
@@ -15,63 +16,75 @@
         android:textAppearance="?attr/textAppearanceHeadlineSmall"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/btnBusqueda" />
-
-    <!-- Botón búsqueda global -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnBusqueda"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="Buscar"
-        app:icon="@android:drawable/ic_menu_search"
-        app:layout_constraintTop_toTopOf="@id/tvColeccionesTitle"
-        app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
-        app:layout_constraintEnd_toStartOf="@id/btnDeseos" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnDeseos"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="Lista de deseos"
-        app:icon="@android:drawable/ic_menu_agenda"
-        app:layout_constraintTop_toTopOf="@id/tvColeccionesTitle"
-        app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
-        app:layout_constraintEnd_toStartOf="@id/btnStats" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnStats"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="Estadísticas"
-        app:icon="@android:drawable/ic_menu_info_details"
-        app:layout_constraintTop_toTopOf="@id/tvColeccionesTitle"
-        app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
-        app:layout_constraintEnd_toStartOf="@id/btnLogros" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnLogros"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="Logros"
-        app:icon="@android:drawable/btn_star"
-        app:layout_constraintTop_toTopOf="@id/tvColeccionesTitle"
-        app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
-        app:layout_constraintEnd_toStartOf="@id/btnPapelera" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnPapelera"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="Papelera"
-        app:icon="@android:drawable/ic_menu_delete"
-        app:layout_constraintTop_toTopOf="@id/tvColeccionesTitle"
-        app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Fila 2: Botones de navegación + cerrar sesión -->
+    <HorizontalScrollView
+        android:id="@+id/scrollBotones"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/tvColeccionesTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnLogout">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBusqueda"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Buscar"
+                app:icon="@android:drawable/ic_menu_search" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDeseos"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Lista de deseos"
+                app:icon="@android:drawable/ic_menu_agenda" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStats"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Estadísticas"
+                app:icon="@android:drawable/ic_menu_info_details" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLogros"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Logros"
+                app:icon="@android:drawable/btn_star" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPrestamos"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Préstamos"
+                app:icon="@android:drawable/ic_menu_send" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPapelera"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="Papelera"
+                app:icon="@android:drawable/ic_menu_delete" />
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnLogout"
@@ -79,10 +92,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Cerrar sesión"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/tvColeccionesTitle"
+        app:layout_constraintTop_toTopOf="@id/scrollBotones"
+        app:layout_constraintBottom_toBottomOf="@id/scrollBotones"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Buscador -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardSearchColecciones"
         android:layout_width="0dp"
@@ -92,7 +106,7 @@
         app:cardElevation="0dp"
         app:strokeWidth="1dp"
         app:strokeColor="?attr/colorOutline"
-        app:layout_constraintTop_toBottomOf="@id/btnLogout"
+        app:layout_constraintTop_toBottomOf="@id/scrollBotones"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -104,6 +118,7 @@
             android:queryHint="Buscar colección"
             android:paddingStart="8dp"
             android:paddingEnd="8dp" />
+
     </com.google.android.material.card.MaterialCardView>
 
     <androidx.recyclerview.widget.RecyclerView

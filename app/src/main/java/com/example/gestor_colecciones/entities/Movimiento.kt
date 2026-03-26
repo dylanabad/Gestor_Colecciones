@@ -25,15 +25,14 @@ import java.util.Date
     indices = [Index("itemId"), Index("personaId")]
 )
 data class Movimiento(
-
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-
     val itemId: Int,
-
-    val tipo: String,
-
+    val tipo: String,                           // PRESTAMO | DEVOLUCION
     val personaId: Int?,
-
-    val fechaHora: Date
+    val fechaHora: Date,
+    val estado: String? = null,                 // ← ACTIVO | DEVUELTO
+    val fechaDevolucionPrevista: Date? = null,  // ←
+    val fechaDevolucionReal: Date? = null,      // ←
+    val notas: String? = null                   // ←
 )

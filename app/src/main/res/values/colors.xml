@@ -29,4 +29,6 @@
     <color name="on_app_surface_variant">#FF44464F</color>
 
     <color name="app_outline">#FF757780</color>
+    <color name="colorEstadoActivo">#4CAF50</color>
+    <color name="colorEstadoDevuelto">#9E9E9E</color>
 </resources>
