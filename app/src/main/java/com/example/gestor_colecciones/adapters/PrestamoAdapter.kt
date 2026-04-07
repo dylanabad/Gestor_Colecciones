@@ -12,7 +12,9 @@ import com.example.gestor_colecciones.network.dto.PrestamoDto
 class PrestamoAdapter(
     private var lista: List<PrestamoDto>,
     private val modo: Modo,
-    private val onDevolver: ((PrestamoDto) -> Unit)? = null
+    private val onDevolver: ((PrestamoDto) -> Unit)? = null,
+    private val onDelete: ((PrestamoDto) -> Unit)? = null,
+    private val currentUsername: String? = null
 ) : RecyclerView.Adapter<PrestamoAdapter.ViewHolder>() {
 
     enum class Modo { PRESTADOS, RECIBIDOS }
@@ -25,6 +27,7 @@ class PrestamoAdapter(
         val tvEstado: TextView = view.findViewById(R.id.tvEstado)
         val tvNotas: TextView = view.findViewById(R.id.tvNotas)
         val btnDevolver: View = view.findViewById(R.id.btnDevolver)
+        val btnEliminar: View = view.findViewById(R.id.btnEliminar)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -60,6 +63,9 @@ class PrestamoAdapter(
             if (modo == Modo.PRESTADOS && prestamo.estado == "ACTIVO") View.VISIBLE
             else View.GONE
         holder.btnDevolver.setOnClickListener { onDevolver?.invoke(prestamo) }
+        // Mostrar el botón eliminar sólo si el usuario actual es el propietario (o si no se conoce, ocultarlo)
+        holder.btnEliminar.visibility = if (currentUsername != null && prestamo.propietarioUsername == currentUsername) View.VISIBLE else View.GONE
+        holder.btnEliminar.setOnClickListener { onDelete?.invoke(prestamo) }
     }
 
     override fun getItemCount() = lista.size

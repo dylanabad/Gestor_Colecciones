@@ -67,7 +67,9 @@ class PrestamoViewModel(private val repository: PrestamoRepository) : ViewModel(
             try {
                 repository.crearPrestamo(request)
                 _state.value = PrestamoState.Success("Préstamo creado correctamente")
+                // Refrescamos ambas listas para que tanto prestador como destinatario vean la actualización
                 cargarPrestados()
+                cargarRecibidos()
             } catch (e: Exception) {
                 _state.value = PrestamoState.Error(e.message ?: "Error al crear el préstamo")
             }
@@ -80,9 +82,26 @@ class PrestamoViewModel(private val repository: PrestamoRepository) : ViewModel(
             try {
                 repository.devolverPrestamo(id)
                 _state.value = PrestamoState.Success("Devolución registrada correctamente")
+                // Refrescamos ambas listas tras la devolución
                 cargarPrestados()
+                cargarRecibidos()
             } catch (e: Exception) {
                 _state.value = PrestamoState.Error(e.message ?: "Error al registrar la devolución")
+            }
+        }
+    }
+
+    fun eliminarPrestamo(id: Long) {
+        viewModelScope.launch {
+            _state.value = PrestamoState.Loading
+            try {
+                repository.deletePrestamo(id)
+                _state.value = PrestamoState.Success("Préstamo eliminado correctamente")
+                // Refrescamos listas
+                cargarPrestados()
+                cargarRecibidos()
+            } catch (e: Exception) {
+                _state.value = PrestamoState.Error(e.message ?: "Error al eliminar el préstamo")
             }
         }
     }

@@ -128,4 +128,7 @@ interface ApiService {
 
     @GET("api/prestamos/recibidos")
     suspend fun getPrestamosRecibidos(): List<PrestamoDto>
+
+    @DELETE("api/prestamos/{id}")
+    suspend fun deletePrestamo(@Path("id") id: Long)
 }

@@ -41,6 +41,8 @@ class PrestamosFragment : Fragment() {
     private lateinit var tabLayout: TabLayout
     private lateinit var rvPrestados: RecyclerView
     private lateinit var rvRecibidos: RecyclerView
+    private lateinit var layoutPrestados: View
+    private lateinit var layoutRecibidos: View
     private lateinit var fabNuevoPrestamo: View
     private lateinit var emptyPrestados: View
     private lateinit var emptyRecibidos: View
@@ -61,16 +63,27 @@ class PrestamosFragment : Fragment() {
         tabLayout = view.findViewById(R.id.tabLayoutPrestamos)
         rvPrestados = view.findViewById(R.id.rvPrestados)
         rvRecibidos = view.findViewById(R.id.rvRecibidos)
+        layoutPrestados = view.findViewById(R.id.layoutPrestados)
+        layoutRecibidos = view.findViewById(R.id.layoutRecibidos)
         fabNuevoPrestamo = view.findViewById(R.id.fabNuevoPrestamo)
         emptyPrestados = view.findViewById(R.id.emptyPrestados)
         emptyRecibidos = view.findViewById(R.id.emptyRecibidos)
 
+        val currentUsername = AuthStore(requireContext()).getUsername()
         adapterPrestados = PrestamoAdapter(
             emptyList(),
             PrestamoAdapter.Modo.PRESTADOS,
-            onDevolver = { prestamo -> confirmarDevolucion(prestamo) }
+            onDevolver = { prestamo -> confirmarDevolucion(prestamo) },
+            onDelete = { prestamo -> confirmarEliminacion(prestamo) },
+            currentUsername = currentUsername
         )
-        adapterRecibidos = PrestamoAdapter(emptyList(), PrestamoAdapter.Modo.RECIBIDOS)
+        adapterRecibidos = PrestamoAdapter(
+            emptyList(),
+            PrestamoAdapter.Modo.RECIBIDOS,
+            onDevolver = null,
+            onDelete = { prestamo -> confirmarEliminacion(prestamo) },
+            currentUsername = currentUsername
+        )
 
         rvPrestados.layoutManager = LinearLayoutManager(requireContext())
         rvPrestados.adapter = adapterPrestados
@@ -80,8 +93,16 @@ class PrestamosFragment : Fragment() {
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 when (tab?.position) {
-                    0 -> { rvPrestados.visibility = View.VISIBLE; rvRecibidos.visibility = View.GONE }
-                    1 -> { rvPrestados.visibility = View.GONE; rvRecibidos.visibility = View.VISIBLE }
+                    0 -> {
+                        layoutPrestados.visibility = View.VISIBLE
+                        layoutRecibidos.visibility = View.GONE
+                        viewModel.cargarPrestados()
+                    }
+                    1 -> {
+                        layoutPrestados.visibility = View.GONE
+                        layoutRecibidos.visibility = View.VISIBLE
+                        viewModel.cargarRecibidos()
+                    }
                 }
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
@@ -142,6 +163,15 @@ class PrestamosFragment : Fragment() {
             .setTitle("Registrar devolución")
             .setMessage("¿Confirmas que \"${prestamo.itemTitulo}\" ha sido devuelto por ${prestamo.prestatarioUsername}?")
             .setPositiveButton("Confirmar") { _, _ -> viewModel.devolverPrestamo(prestamo.movimientoId) }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun confirmarEliminacion(prestamo: PrestamoDto) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Eliminar préstamo")
+            .setMessage("¿Deseas eliminar el préstamo de \"${prestamo.itemTitulo}\"?")
+            .setPositiveButton("Eliminar") { _, _ -> viewModel.eliminarPrestamo(prestamo.movimientoId) }
             .setNegativeButton("Cancelar", null)
             .show()
     }

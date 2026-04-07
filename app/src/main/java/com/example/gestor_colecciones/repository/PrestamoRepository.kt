@@ -37,6 +37,18 @@ class PrestamoRepository(private val api: ApiService) {
         throw Exception("Error de red al devolver el préstamo: ${e.message}")
     }
 
+    suspend fun deletePrestamo(id: Long) {
+        try {
+            api.deletePrestamo(id)
+        } catch (e: HttpException) {
+            if (e.code() == 401) throw Exception("No autenticado. Por favor inicia sesión.")
+            if (e.code() == 403) throw Exception("No tienes permisos para eliminar este préstamo")
+            throw Exception("Error del servidor al eliminar el préstamo: ${e.message}")
+        } catch (e: IOException) {
+            throw Exception("Error de red al eliminar el préstamo: ${e.message}")
+        }
+    }
+
     suspend fun getPrestados(): List<PrestamoDto> = try {
         api.getPrestados()
     } catch (e: HttpException) {
