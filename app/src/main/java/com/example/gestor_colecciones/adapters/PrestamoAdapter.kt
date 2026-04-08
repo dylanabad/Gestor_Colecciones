@@ -46,8 +46,8 @@ class PrestamoAdapter(
         }
         holder.tvFechaPrestamo.text = "Fecha: ${prestamo.fechaPrestamo.take(10)}"
         holder.tvFechaDevolucion.text = prestamo.fechaDevolucionPrevista
-            ?.let { "Devolución prevista: ${it.take(10)}" }
-            ?: "Sin fecha de devolución"
+            ?.let { "Devolucion prevista: ${it.take(10)}" }
+            ?: "Sin fecha de devolucion"
         holder.tvEstado.text = prestamo.estado
         holder.tvEstado.setTextColor(
             ContextCompat.getColor(
@@ -63,8 +63,12 @@ class PrestamoAdapter(
             if (modo == Modo.PRESTADOS && prestamo.estado == "ACTIVO") View.VISIBLE
             else View.GONE
         holder.btnDevolver.setOnClickListener { onDevolver?.invoke(prestamo) }
-        // Mostrar el botón eliminar sólo si el usuario actual es el propietario (o si no se conoce, ocultarlo)
-        holder.btnEliminar.visibility = if (currentUsername != null && prestamo.propietarioUsername == currentUsername) View.VISIBLE else View.GONE
+
+        val puedeEliminar = when (modo) {
+            Modo.PRESTADOS -> currentUsername != null && prestamo.propietarioUsername == currentUsername
+            Modo.RECIBIDOS -> currentUsername != null && prestamo.prestatarioUsername == currentUsername
+        }
+        holder.btnEliminar.visibility = if (puedeEliminar) View.VISIBLE else View.GONE
         holder.btnEliminar.setOnClickListener { onDelete?.invoke(prestamo) }
     }
 
