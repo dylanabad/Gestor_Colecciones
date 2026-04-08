@@ -12,6 +12,12 @@ import nl.dionsegijn.konfetti.core.models.Size
 import nl.dionsegijn.konfetti.xml.KonfettiView
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.fragment.WelcomeFragment
+import com.example.gestor_colecciones.widget.ColeccionesWidgetProvider
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -39,6 +45,16 @@ class MainActivity : AppCompatActivity() {
                 .setReorderingAllowed(true)
                 .replace(R.id.fragment_container, WelcomeFragment())
                 .commit()
+        }
+
+        // Actualizar widget al abrir la app
+        val appWidgetManager = AppWidgetManager.getInstance(this)
+        val component = ComponentName(this, ColeccionesWidgetProvider::class.java)
+        val ids = appWidgetManager.getAppWidgetIds(component)
+        if (ids.isNotEmpty()) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                ColeccionesWidgetProvider.updateWidgets(this@MainActivity, appWidgetManager, ids)
+            }
         }
     }
 

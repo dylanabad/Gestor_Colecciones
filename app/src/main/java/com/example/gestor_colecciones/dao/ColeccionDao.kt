@@ -29,6 +29,9 @@ interface ColeccionDao {
     @Query("SELECT * FROM Coleccion WHERE eliminado = 0 ORDER BY fechaCreacion DESC")
     suspend fun getAllColeccionesOnce(): List<Coleccion>
 
+    @Query("SELECT COUNT(*) FROM Coleccion WHERE eliminado = 0")
+    suspend fun countColecciones(): Int
+
     // ── Papelera ──────────────────────────────────────────────────────────────
     @Query("SELECT * FROM Coleccion WHERE eliminado = 1 ORDER BY fechaEliminacion DESC")
     fun getColeccionesEliminadas(): Flow<List<Coleccion>>
