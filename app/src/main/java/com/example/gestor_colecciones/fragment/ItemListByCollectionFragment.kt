@@ -2,6 +2,7 @@ package com.example.gestor_colecciones.fragment
 
 import android.content.ContentValues
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -96,16 +97,40 @@ class ItemListByCollectionFragment : Fragment() {
                 currentItemImageView?.setImageURI(it)
                 finalizePendingImage(it)
             }
+        } else {
+            takeItemImagePreviewLauncher.launch(null)
+        }
+    }
+
+    private val takeItemImagePreviewLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            val uri = saveBitmapToGallery(bitmap, "item")
+            if (uri != null) {
+                selectedItemImageUri = uri
+                currentItemImageView?.setImageURI(uri)
+            } else {
+                showSnackbar("No se pudo guardar la foto")
+            }
+        } else {
+            showSnackbar("No se pudo capturar la foto")
         }
     }
 
     private val cameraItemPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) {
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { grants ->
+        val cameraGranted = grants[Manifest.permission.CAMERA] == true
+        val storageGranted = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            grants[Manifest.permission.WRITE_EXTERNAL_STORAGE] == true
+        } else {
+            true
+        }
+        if (cameraGranted && storageGranted) {
             openCameraForItem()
         } else {
-            showSnackbar("Permiso de camara denegado")
+            showSnackbar("Permiso de camara/almacenamiento denegado")
         }
     }
 
@@ -341,11 +366,28 @@ class ItemListByCollectionFragment : Fragment() {
                 when (which) {
                     0 -> pickItemImageLauncher.launch("image/*")
                     1 -> {
-                        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
-                            == PackageManager.PERMISSION_GRANTED) {
+                        val cameraGranted = ContextCompat.checkSelfPermission(
+                            requireContext(), Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+                        val storageGranted = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                            ContextCompat.checkSelfPermission(
+                                requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            ) == PackageManager.PERMISSION_GRANTED
+                        } else {
+                            true
+                        }
+                        if (cameraGranted && storageGranted) {
                             openCameraForItem()
                         } else {
-                            cameraItemPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            val perms = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                                arrayOf(
+                                    Manifest.permission.CAMERA,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                )
+                            } else {
+                                arrayOf(Manifest.permission.CAMERA)
+                            }
+                            cameraItemPermissionLauncher.launch(perms)
                         }
                     }
                 }
@@ -387,6 +429,30 @@ class ItemListByCollectionFragment : Fragment() {
             }
             resolver.update(uri, values, null, null)
         }
+    }
+
+    private fun saveBitmapToGallery(bitmap: Bitmap, prefix: String): Uri? {
+        val fileName = "${prefix}_${System.currentTimeMillis()}.jpg"
+        val resolver = requireContext().contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/GestorColecciones")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+            } else {
+                val picturesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                val destDir = File(picturesDir, "GestorColecciones").also { it.mkdirs() }
+                val file = File(destDir, fileName)
+                put(MediaStore.Images.Media.DATA, file.absolutePath)
+            }
+        }
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return null
+        resolver.openOutputStream(uri)?.use { out ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 92, out)
+        }
+        finalizePendingImage(uri)
+        return uri
     }
 
     // ── Tarjeta ───────────────────────────────────────────────────────────────
