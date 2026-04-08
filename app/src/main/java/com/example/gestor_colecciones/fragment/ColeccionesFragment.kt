@@ -9,6 +9,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
+import android.Manifest
+import android.content.pm.PackageManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +18,7 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.FileProvider
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -70,6 +73,7 @@ class ColeccionesFragment : Fragment() {
 
     private var selectedImageUri: Uri? = null
     private var currentImageView: ImageView? = null
+    private var cameraImageUri: Uri? = null
 
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -77,6 +81,28 @@ class ColeccionesFragment : Fragment() {
         uri?.let {
             selectedImageUri = it
             currentImageView?.setImageURI(it)
+        }
+    }
+
+    private val takeImageLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            cameraImageUri?.let {
+                selectedImageUri = it
+                currentImageView?.setImageURI(it)
+                finalizePendingImage(it)
+            }
+        }
+    }
+
+    private val cameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            openCameraForCollection()
+        } else {
+            showSnackbar("Permiso de camara denegado")
         }
     }
 
@@ -402,6 +428,62 @@ class ColeccionesFragment : Fragment() {
             .show()
     }
 
+    private fun showImageSourceDialog() {
+        val options = arrayOf("Galeria", "Camara")
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Seleccionar imagen")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> pickImageLauncher.launch("image/*")
+                    1 -> {
+                        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+                            == PackageManager.PERMISSION_GRANTED) {
+                            openCameraForCollection()
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun openCameraForCollection() {
+        val uri = createGalleryImageUri("coleccion")
+        cameraImageUri = uri
+        takeImageLauncher.launch(uri)
+    }
+
+    private fun createGalleryImageUri(prefix: String): Uri {
+        val fileName = "${prefix}_${System.currentTimeMillis()}.jpg"
+        val resolver = requireContext().contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/GestorColecciones")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+            } else {
+                val picturesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                val destDir = File(picturesDir, "GestorColecciones").also { it.mkdirs() }
+                val file = File(destDir, fileName)
+                put(MediaStore.Images.Media.DATA, file.absolutePath)
+            }
+        }
+        return resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+            ?: throw IllegalStateException("No se pudo crear la imagen en la galeria")
+    }
+
+    private fun finalizePendingImage(uri: Uri) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val resolver = requireContext().contentResolver
+            val values = ContentValues().apply {
+                put(MediaStore.Images.Media.IS_PENDING, 0)
+            }
+            resolver.update(uri, values, null, null)
+        }
+    }
+
     private suspend fun uploadImage(uri: Uri): String? {
         return try {
             val api = ApiProvider.getApi(requireContext())
@@ -461,7 +543,7 @@ class ColeccionesFragment : Fragment() {
         val chipGroupColors = view.findViewById<ChipGroup>(R.id.chipGroupCollectionColors)
 
         currentImageView = ivPreview
-        btnSelectImage.setOnClickListener { pickImageLauncher.launch("image/*") }
+        btnSelectImage.setOnClickListener { showImageSourceDialog() }
 
         var selectedColor = 0
         setupCollectionColorChips(chipGroupColors, selectedColor) { selectedColor = it }
@@ -549,7 +631,7 @@ class ColeccionesFragment : Fragment() {
         }
 
         currentImageView = ivPreview
-        btnSelectImage.setOnClickListener { pickImageLauncher.launch("image/*") }
+        btnSelectImage.setOnClickListener { showImageSourceDialog() }
 
         var selectedColor = coleccion.color
         setupCollectionColorChips(chipGroupColors, selectedColor) { selectedColor = it }

@@ -11,10 +11,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import android.Manifest
+import android.content.pm.PackageManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.FileProvider
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -74,12 +77,35 @@ class ItemListByCollectionFragment : Fragment() {
 
     private var selectedItemImageUri: Uri? = null
     private var currentItemImageView: ImageView? = null
+    private var cameraItemImageUri: Uri? = null
     private val pickItemImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
             selectedItemImageUri = it
             currentItemImageView?.setImageURI(it)
+        }
+    }
+
+    private val takeItemImageLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            cameraItemImageUri?.let {
+                selectedItemImageUri = it
+                currentItemImageView?.setImageURI(it)
+                finalizePendingImage(it)
+            }
+        }
+    }
+
+    private val cameraItemPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            openCameraForItem()
+        } else {
+            showSnackbar("Permiso de camara denegado")
         }
     }
 
@@ -307,6 +333,62 @@ class ItemListByCollectionFragment : Fragment() {
             .show()
     }
 
+    private fun showItemImageSourceDialog() {
+        val options = arrayOf("Galeria", "Camara")
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Seleccionar imagen")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> pickItemImageLauncher.launch("image/*")
+                    1 -> {
+                        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+                            == PackageManager.PERMISSION_GRANTED) {
+                            openCameraForItem()
+                        } else {
+                            cameraItemPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun openCameraForItem() {
+        val uri = createGalleryImageUri("item")
+        cameraItemImageUri = uri
+        takeItemImageLauncher.launch(uri)
+    }
+
+    private fun createGalleryImageUri(prefix: String): Uri {
+        val fileName = "${prefix}_${System.currentTimeMillis()}.jpg"
+        val resolver = requireContext().contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/GestorColecciones")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+            } else {
+                val picturesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                val destDir = File(picturesDir, "GestorColecciones").also { it.mkdirs() }
+                val file = File(destDir, fileName)
+                put(MediaStore.Images.Media.DATA, file.absolutePath)
+            }
+        }
+        return resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+            ?: throw IllegalStateException("No se pudo crear la imagen en la galeria")
+    }
+
+    private fun finalizePendingImage(uri: Uri) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val resolver = requireContext().contentResolver
+            val values = ContentValues().apply {
+                put(MediaStore.Images.Media.IS_PENDING, 0)
+            }
+            resolver.update(uri, values, null, null)
+        }
+    }
+
     // ── Tarjeta ───────────────────────────────────────────────────────────────
 
     private fun generarTarjeta() {
@@ -387,7 +469,7 @@ class ItemListByCollectionFragment : Fragment() {
         val tvCalificacionValue = view.findViewById<TextView>(R.id.tvCalificacionValue)
 
         currentItemImageView = ivPreview
-        btnSelectImage.setOnClickListener { pickItemImageLauncher.launch("image/*") }
+        btnSelectImage.setOnClickListener { showItemImageSourceDialog() }
 
         fun updateRatingLabel(rating: Float) {
             tvCalificacionValue.text = String.format(Locale.getDefault(), "%.1f", rating)
@@ -478,7 +560,7 @@ class ItemListByCollectionFragment : Fragment() {
         ImageUtils.toGlideModel(item.imagenPath)?.let { model ->
             Glide.with(requireContext()).load(model).into(ivPreview)
         }
-        btnSelectImage.setOnClickListener { pickItemImageLauncher.launch("image/*") }
+        btnSelectImage.setOnClickListener { showItemImageSourceDialog() }
 
         etTitulo.setText(item.titulo)
         etValor.setText(item.valor.toString())

@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <!-- Solo necesario en Android 9 o inferior, en versiones superiores no hace falta -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
