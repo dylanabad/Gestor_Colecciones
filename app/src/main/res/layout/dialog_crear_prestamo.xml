@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -9,7 +10,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ítem:" />
+        android:text="Item:" />
 
     <Spinner
         android:id="@+id/spinnerItem"
@@ -31,16 +32,21 @@
         android:layout_marginTop="4dp" />
 
     <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilFechaDevolucion"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:hint="Fecha devolución prevista (YYYY-MM-DD)">
+        android:hint="Fecha devolucion prevista"
+        app:endIconMode="custom"
+        app:endIconDrawable="@android:drawable/ic_menu_my_calendar">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etFechaDevolucion"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="date" />
+            android:inputType="none"
+            android:focusable="false"
+            android:clickable="true" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
