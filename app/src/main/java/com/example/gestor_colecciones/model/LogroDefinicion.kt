@@ -1,4 +1,4 @@
-package com.example.gestor_colecciones.model
+﻿package com.example.gestor_colecciones.model
 
 data class LogroInfo(
     val key: String,
@@ -10,21 +10,26 @@ data class LogroInfo(
 object LogroDefinicion {
     val TODOS = listOf(
         // Colecciones
-        LogroInfo("PRIMERA_COLECCION",   "Primera colección",       "Crea tu primera colección",                   "🗂️"),
-        LogroInfo("COLECCIONES_5",        "Aficionado",              "Crea 5 colecciones",                          "📦"),
-        LogroInfo("COLECCIONES_10",       "Coleccionista serio",     "Crea 10 colecciones",                         "🏆"),
+        LogroInfo("PRIMERA_COLECCION",     "Primera colección",        "Crea tu primera colección",                 "🗂️"),
+        LogroInfo("COLECCIONES_5",         "Aficionado",               "Crea 5 colecciones",                         "📦"),
+        LogroInfo("COLECCIONES_10",        "Coleccionista serio",      "Crea 10 colecciones",                        "🏆"),
         // Items
-        LogroInfo("PRIMER_ITEM",          "Primer tesoro",           "Añade tu primer item",                        "⭐"),
-        LogroInfo("ITEMS_10",             "Empezando fuerte",        "Añade 10 items en total",                     "🔥"),
-        LogroInfo("ITEMS_50",             "Medio centenar",          "Añade 50 items en total",                     "💎"),
-        LogroInfo("ITEMS_100",            "Centenario",              "Añade 100 items en total",                    "🎯"),
+        LogroInfo("PRIMER_ITEM",           "Primer tesoro",            "Añade tu primer item",                       "⭐"),
+        LogroInfo("ITEMS_10",              "Empezando fuerte",         "Añade 10 items en total",                    "🔥"),
+        LogroInfo("ITEMS_50",              "Medio centenar",           "Añade 50 items en total",                    "💎"),
+        LogroInfo("ITEMS_100",             "Centenario",               "Añade 100 items en total",                   "🎯"),
         // Valor
-        LogroInfo("VALOR_1000",           "Inversión notable",       "Alcanza 1.000€ de valor total",               "💰"),
-        LogroInfo("VALOR_10000",          "Gran coleccionista",      "Alcanza 10.000€ de valor total",              "👑"),
+        LogroInfo("VALOR_1000",            "Inversión notable",        "Alcanza 1.000€ de valor total",              "💰"),
+        LogroInfo("VALOR_10000",           "Gran coleccionista",       "Alcanza 10.000€ de valor total",             "💸"),
         // Especiales
-        LogroInfo("PRIMERA_IMAGEN",       "Fotógrafo",               "Añade una imagen a una colección o item",     "📷"),
-        LogroInfo("COLECCION_20_ITEMS",   "Colección completa",      "Una sola colección con 20 o más items",       "✅"),
-        LogroInfo("CALIFICACION_5",       "Perfeccionista",          "Añade un item con calificación máxima (5★)",  "⭐")
+        LogroInfo("PRIMERA_IMAGEN",        "Fotógrafo",                "Añade una imagen a una colección o item",    "📷"),
+        LogroInfo("COLECCION_20_ITEMS",    "Colección completa",       "Una sola colección con 20 o más items",      "✅"),
+        LogroInfo("CALIFICACION_5",        "Perfeccionista",           "Añade un item con calificación máxima (5★)", "🌟"),
+        // Préstamos
+        LogroInfo("PRIMER_PRESTAMO",       "Primer préstamo",          "Presta tu primer item",                        "🤝"),
+        LogroInfo("PRESTAMOS_5",           "Prestamista",              "Presta 5 items",                               "📤"),
+        LogroInfo("PRIMER_PRESTAMO_RECIBIDO","Primer préstamo recibido","Recibe tu primer préstamo",                  "📥"),
+        LogroInfo("PRESTAMOS_RECIBIDOS_5", "Confiable",                "Recibe 5 préstamos",                           "🤗")
     )
 
     fun getInfo(key: String): LogroInfo? = TODOS.find { it.key == key }

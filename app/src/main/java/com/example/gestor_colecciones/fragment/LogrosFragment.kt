@@ -17,6 +17,7 @@ import com.example.gestor_colecciones.model.LogroManager
 import com.example.gestor_colecciones.repository.LogroRepository
 import com.example.gestor_colecciones.network.ApiProvider
 import com.example.gestor_colecciones.repository.RepositoryProvider
+import com.example.gestor_colecciones.repository.PrestamoRepository
 import com.example.gestor_colecciones.viewmodel.LogroViewModel
 import com.example.gestor_colecciones.viewmodel.LogroViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
@@ -53,7 +54,8 @@ class LogrosFragment : Fragment() {
         )
         val coleccionRepo = RepositoryProvider.coleccionRepository(requireContext())
         val itemRepo = RepositoryProvider.itemRepository(requireContext())
-        val manager = LogroManager(logroRepo, coleccionRepo, itemRepo)
+        val prestamoRepo = PrestamoRepository(ApiProvider.getApi(requireContext()))
+        val manager = LogroManager(logroRepo, coleccionRepo, itemRepo, prestamoRepo)
 
         viewModel = ViewModelProvider(
             this, LogroViewModelFactory(logroRepo, manager)

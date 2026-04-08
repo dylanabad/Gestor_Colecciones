@@ -3,11 +3,13 @@ package com.example.gestor_colecciones.model
 import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.repository.LogroRepository
+import com.example.gestor_colecciones.repository.PrestamoRepository
 
 class LogroManager(
     private val logroRepository: LogroRepository,
     private val coleccionRepository: ColeccionRepository,
-    private val itemRepository: ItemRepository
+    private val itemRepository: ItemRepository,
+    private val prestamoRepository: PrestamoRepository
 ) {
     // Devuelve lista de keys recién desbloqueados para mostrar notificación
     suspend fun checkAll(): List<String> {
@@ -77,6 +79,26 @@ class LogroManager(
         if (items.any { it.calificacion >= 5f })
             if (logroRepository.desbloquear("CALIFICACION_5"))
                 recienDesbloqueados.add("CALIFICACION_5")
+
+        // —— Prestamos ——————————————————————————————————————————————
+        val prestados = runCatching { prestamoRepository.getPrestados() }.getOrDefault(emptyList())
+        val recibidos = runCatching { prestamoRepository.getPrestamosRecibidos() }.getOrDefault(emptyList())
+
+        if (prestados.size >= 1)
+            if (logroRepository.desbloquear("PRIMER_PRESTAMO"))
+                recienDesbloqueados.add("PRIMER_PRESTAMO")
+
+        if (prestados.size >= 5)
+            if (logroRepository.desbloquear("PRESTAMOS_5"))
+                recienDesbloqueados.add("PRESTAMOS_5")
+
+        if (recibidos.size >= 1)
+            if (logroRepository.desbloquear("PRIMER_PRESTAMO_RECIBIDO"))
+                recienDesbloqueados.add("PRIMER_PRESTAMO_RECIBIDO")
+
+        if (recibidos.size >= 5)
+            if (logroRepository.desbloquear("PRESTAMOS_RECIBIDOS_5"))
+                recienDesbloqueados.add("PRESTAMOS_RECIBIDOS_5")
 
         return recienDesbloqueados
     }

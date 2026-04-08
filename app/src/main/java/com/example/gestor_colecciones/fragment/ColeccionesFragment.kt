@@ -43,6 +43,7 @@ import com.example.gestor_colecciones.auth.AuthStore
 import com.example.gestor_colecciones.repository.ExportRepository
 import com.example.gestor_colecciones.repository.LogroRepository
 import com.example.gestor_colecciones.repository.RepositoryProvider
+import com.example.gestor_colecciones.repository.PrestamoRepository
 import com.example.gestor_colecciones.util.ImageUtils
 import com.example.gestor_colecciones.network.UploadUtils
 import com.example.gestor_colecciones.viewmodel.*
@@ -165,7 +166,8 @@ class ColeccionesFragment : Fragment() {
             DatabaseProvider.getDatabase(requireContext()).logroDao(),
             ApiProvider.getApi(requireContext())
         )
-        val logroManager = LogroManager(logroRepo, repo, itemRepo)
+        val prestamoRepo = PrestamoRepository(ApiProvider.getApi(requireContext()))
+        val logroManager = LogroManager(logroRepo, repo, itemRepo, prestamoRepo)
         logroViewModel = ViewModelProvider(
             this, LogroViewModelFactory(logroRepo, logroManager)
         )[LogroViewModel::class.java]
