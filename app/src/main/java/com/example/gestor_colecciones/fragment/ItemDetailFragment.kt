@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RatingBar
@@ -72,12 +73,41 @@ class ItemDetailFragment : Fragment() {
         val tvCalificacion = view.findViewById<TextView>(R.id.tvCalificacion)
         val ivImagen = view.findViewById<ImageView>(R.id.ivImagen)
         val rbRating = view.findViewById<RatingBar>(R.id.rbItemRating)
+        val btnFavorito = view.findViewById<ImageButton>(R.id.btnFavorito)
         val chipGroupTags = view.findViewById<ChipGroup>(R.id.chipGroupTags)
         val btnEditTags = view.findViewById<View>(R.id.btnEditTags)
         val tvHistoryEmpty = view.findViewById<TextView>(R.id.tvHistoryEmpty)
         val llItemHistory = view.findViewById<LinearLayout>(R.id.llItemHistory)
 
         var currentItem: Item? = null
+        btnFavorito.isEnabled = false
+
+        fun renderFavorito(isFavorito: Boolean) {
+            btnFavorito.setImageResource(
+                if (isFavorito) R.drawable.ic_favorite else R.drawable.ic_favorite_border
+            )
+            btnFavorito.contentDescription =
+                if (isFavorito) "Quitar de favoritos" else "Marcar como favorito"
+        }
+
+        btnFavorito.setOnClickListener {
+            val item = currentItem ?: return@setOnClickListener
+            val updated = item.copy(favorito = !item.favorito)
+            currentItem = updated
+            renderFavorito(updated.favorito)
+            viewModel.update(
+                updated,
+                onUpdated = {
+                    val msg = if (updated.favorito) "Item marcado como favorito" else "Item quitado de favoritos"
+                    Snackbar.make(view, msg, Snackbar.LENGTH_SHORT).show()
+                },
+                onError = { msg ->
+                    currentItem = item
+                    renderFavorito(item.favorito)
+                    Snackbar.make(view, msg, Snackbar.LENGTH_SHORT).show()
+                }
+            )
+        }
         rbRating.setOnRatingBarChangeListener { _, rating, fromUser ->
             if (!fromUser) return@setOnRatingBarChangeListener
             val item = currentItem ?: return@setOnRatingBarChangeListener
@@ -265,6 +295,8 @@ class ItemDetailFragment : Fragment() {
                 val rating = it.calificacion.coerceIn(0f, 5f)
                 rbRating.rating = rating
                 tvCalificacion.text = String.format(Locale.getDefault(), "%.1f", rating)
+                renderFavorito(it.favorito)
+                btnFavorito.isEnabled = true
 
                 val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 view.findViewById<TextView>(R.id.tvFecha).text = "Fecha: ${sdf.format(it.fechaAdquisicion)}"

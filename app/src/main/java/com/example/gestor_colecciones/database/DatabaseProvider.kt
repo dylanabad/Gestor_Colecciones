@@ -116,6 +116,14 @@ object DatabaseProvider {
         }
     }
 
+    private val MIGRATION_9_10 = object : Migration(9, 10) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            try {
+                db.execSQL("ALTER TABLE `Item` ADD COLUMN `favorito` INTEGER NOT NULL DEFAULT 0")
+            } catch (_: Exception) {}
+        }
+    }
+
     fun getDatabase(context: Context): AppDataBase {
         return instance ?: synchronized(this) {
             val db = Room.databaseBuilder(
@@ -129,7 +137,8 @@ object DatabaseProvider {
                     MIGRATION_5_6,
                     MIGRATION_6_7,
                     MIGRATION_7_8,
-                    MIGRATION_8_9
+                    MIGRATION_8_9,
+                    MIGRATION_9_10
                 )
                 .fallbackToDestructiveMigration()
                 .build()

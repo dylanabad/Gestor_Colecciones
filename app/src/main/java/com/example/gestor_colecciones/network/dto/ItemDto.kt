@@ -16,6 +16,7 @@ data class ItemDto(
     val eliminado: Boolean? = false,
     val fechaEliminacion: String? = null,
     val prestado: Boolean? = false,
+    val favorito: Boolean? = false,
     val categoria: CategoriaDto? = null
 )
 
@@ -33,7 +34,8 @@ fun ItemDto.toEntity(collectionId: Int): Item {
         calificacion = calificacion ?: 0f,
         eliminado = eliminado ?: false,
         fechaEliminacion = DateMapper.parse(fechaEliminacion),
-        prestado = prestado ?: false
+        prestado = prestado ?: false,
+        favorito = favorito ?: false
     )
 }
 
@@ -49,6 +51,7 @@ fun Item.toDto(): ItemDto {
         calificacion = calificacion,
         eliminado = eliminado,
         fechaEliminacion = DateMapper.format(fechaEliminacion),
-        prestado = prestado
+        prestado = prestado,
+        favorito = favorito
     )
 }

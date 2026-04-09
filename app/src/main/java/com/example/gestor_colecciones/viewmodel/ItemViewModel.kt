@@ -91,6 +91,7 @@ class ItemViewModel(
                                 if (old.categoriaId != item.categoriaId) add("Categoria")
                                 if (old.imagenPath != item.imagenPath) add("Imagen")
                                 if (old.calificacion != item.calificacion) add("Calificacion")
+                                if (old.favorito != item.favorito) add("Favorito")
                             }
                             historyRepository.insert(
                                 ItemHistory(

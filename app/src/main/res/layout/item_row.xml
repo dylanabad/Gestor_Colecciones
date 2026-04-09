@@ -115,5 +115,16 @@
                 android:textAppearance="?attr/textAppearanceLabelLarge"
                 android:textColor="?attr/colorOnSurface" />
         </LinearLayout>
+
+        <ImageView
+            android:id="@+id/iv_item_favorite"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="8dp"
+            android:contentDescription="Favorito"
+            android:src="@drawable/ic_favorite"
+            android:tint="?attr/colorPrimary"
+            android:visibility="gone" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

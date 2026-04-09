@@ -38,5 +38,6 @@ data class Item(
     val calificacion: Float,
     val eliminado: Boolean = false,
     val fechaEliminacion: Date? = null,
-    val prestado: Boolean = false       // ← añadido
+    val prestado: Boolean = false,
+    val favorito: Boolean = false
 )

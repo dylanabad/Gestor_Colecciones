@@ -49,6 +49,7 @@ class ItemAdapter(
         val image: ImageView = view.findViewById(R.id.ivItemImage)
         val ratingBar: RatingBar = view.findViewById(R.id.rb_item_rating)
         val ratingValue: TextView = view.findViewById(R.id.tv_item_rating_value)
+        val favorite: ImageView = view.findViewById(R.id.iv_item_favorite)
 
         init {
             view.setOnClickListener {
@@ -91,6 +92,7 @@ class ItemAdapter(
         val rating = item.calificacion.coerceIn(0f, 5f)
         holder.ratingBar.rating = rating
         holder.ratingValue.text = String.format(java.util.Locale.getDefault(), "%.1f", rating)
+        holder.favorite.visibility = if (item.favorito) View.VISIBLE else View.GONE
 
         val model = ImageUtils.toGlideModel(item.imagenPath)
         if (model != null) {
