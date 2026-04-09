@@ -74,19 +74,25 @@
                     android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textColor="?attr/colorOnSurfaceVariant" />
 
-                <LinearLayout
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:baselineAligned="false">
 
                     <com.google.android.material.textview.MaterialTextView
-                        android:layout_width="wrap_content"
+                        android:id="@+id/tvCalificacionLabel"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Calificación"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="Calificacion"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/rbItemRating"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
                     <androidx.appcompat.widget.AppCompatRatingBar
                         android:id="@+id/rbItemRating"
@@ -95,17 +101,26 @@
                         android:layout_marginStart="10dp"
                         android:numStars="5"
                         android:rating="0"
-                        android:stepSize="0.5" />
+                        android:stepSize="0.5"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/tvCalificacion"
+                        app:layout_constraintStart_toEndOf="@id/tvCalificacionLabel"
+                        app:layout_constraintTop_toTopOf="parent" />
 
                     <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/tvCalificacion"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
+                        android:includeFontPadding="false"
                         android:text="0.0"
                         android:textAppearance="?attr/textAppearanceBodyMedium"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
-                </LinearLayout>
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/rbItemRating"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
