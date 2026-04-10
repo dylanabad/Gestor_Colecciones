@@ -21,12 +21,20 @@ import com.example.gestor_colecciones.network.ApiProvider
 import com.example.gestor_colecciones.repository.RepositoryProvider
 import kotlinx.coroutines.launch
 
+/**
+ * Fragment que gestiona el login y registro de usuarios.
+ * Tras autenticarse correctamente, sincroniza los datos del servidor
+ * y navega al onboarding o a la pantalla principal según corresponda.
+ */
 class AuthFragment : Fragment() {
 
+    // View Binding: se anula en onDestroyView para evitar memory leaks
     private var _binding: FragmentAuthBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var viewModel: AuthViewModel
+
+    // Evita procesar el estado Success más de una vez si el flow emite varias veces
     private var handledSuccess = false
 
     override fun onCreateView(
@@ -41,6 +49,7 @@ class AuthFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // AuthRepository necesita la API para llamadas de red y AuthStore para persistir el token
         val authRepo = AuthRepository(
             ApiProvider.getApi(requireContext()),
             AuthStore(requireContext())
@@ -54,22 +63,27 @@ class AuthFragment : Fragment() {
         binding.btnLogin.setOnClickListener { handleLogin() }
         binding.btnRegister.setOnClickListener { handleRegister() }
 
+        // Anima la tarjeta de login al entrar en la pantalla
         animateEntry()
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.state.collect { state ->
                 when (state) {
 
+                    // Estado inicial: oculta el indicador de carga
                     is AuthState.Idle -> setLoading(false)
 
+                    // Operación en curso: muestra el indicador y bloquea los botones
                     is AuthState.Loading -> setLoading(true)
 
+                    // Error de autenticación: muestra el mensaje devuelto por el servidor
                     is AuthState.Error -> {
                         setLoading(false)
                         binding.tvError.text = state.message
                         binding.tvError.isVisible = true
                     }
 
+                    // Autenticación correcta: sincroniza datos y navega al siguiente destino
                     is AuthState.Success -> {
                         binding.tvError.isVisible = false
                         if (!handledSuccess) {
@@ -82,10 +96,15 @@ class AuthFragment : Fragment() {
         }
     }
 
+    /**
+     * Valida los campos de login y lanza la llamada al ViewModel.
+     * Acepta email o nombre de usuario en el mismo campo etEmail.
+     */
     private fun handleLogin() {
         val emailInput = binding.etEmail.text?.toString()?.trim().orEmpty()
         val usernameInput = binding.etUsername.text?.toString()?.trim().orEmpty()
 
+        // Si hay email lo usa; si no, intenta con el nombre de usuario
         val email = if (emailInput.isNotBlank()) emailInput else usernameInput
         val password = binding.etPassword.text?.toString()?.trim().orEmpty()
 
@@ -102,6 +121,10 @@ class AuthFragment : Fragment() {
         viewModel.login(email, password)
     }
 
+    /**
+     * Valida los campos de registro y lanza la llamada al ViewModel.
+     * El registro requiere los tres campos: usuario, email y contraseña.
+     */
     private fun handleRegister() {
         val username = binding.etUsername.text?.toString()?.trim().orEmpty()
         val email = binding.etEmail.text?.toString()?.trim().orEmpty()
@@ -120,18 +143,28 @@ class AuthFragment : Fragment() {
         viewModel.register(username, email, password)
     }
 
+    /**
+     * Muestra u oculta el indicador de carga y habilita o bloquea
+     * los botones de acción para evitar envíos duplicados.
+     */
     private fun setLoading(loading: Boolean) {
         binding.progressBar.isVisible = loading
         binding.btnLogin.isEnabled = !loading
         binding.btnRegister.isEnabled = !loading
     }
 
+    /**
+     * Anima la tarjeta de autenticación con un fade + deslizamiento hacia arriba
+     * al entrar en la pantalla, usando DecelerateInterpolator para suavizar el final.
+     */
     private fun animateEntry() {
         val card = binding.authCard
 
+        // Parte invisible y ligeramente desplazada hacia abajo
         card.alpha = 0f
         card.translationY = (16 * resources.displayMetrics.density)
 
+        // Anima hasta su posición y opacidad natural
         card.animate()
             .alpha(1f)
             .translationY(0f)
@@ -140,6 +173,10 @@ class AuthFragment : Fragment() {
             .start()
     }
 
+    /**
+     * Tras el login exitoso, sincroniza todos los datos del servidor antes de navegar.
+     * Si la sincronización falla muestra el error sin navegar.
+     */
     private fun syncAndNavigate() {
         setLoading(true)
 
@@ -156,11 +193,16 @@ class AuthFragment : Fragment() {
         }
     }
 
+    /**
+     * Decide el destino de navegación según si el usuario ya completó el onboarding.
+     * Usa SharedPreferences para leer el flag guardado en el primer uso de la app.
+     */
     private fun navigateToNext() {
         val onboardingCompleted = requireContext()
             .getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
             .getBoolean("onboarding_completed", false)
 
+        // Si ya vio el onboarding va a colecciones; si no, al onboarding primero
         val destino =
             if (onboardingCompleted) ColeccionesFragment()
             else OnboardingFragment()
@@ -173,6 +215,6 @@ class AuthFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        _binding = null // Limpia la referencia al binding para evitar memory leaks
     }
 }

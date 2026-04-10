@@ -24,8 +24,14 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import com.example.gestor_colecciones.R
 
+/**
+ * Fragment que implementa la búsqueda global de la app.
+ * Busca en tiempo real entre colecciones e items, mostrando
+ * los resultados agrupados por tipo con cabeceras separadoras.
+ */
 class BusquedaFragment : Fragment() {
 
+    // View Binding: se anula en onDestroyView para evitar memory leaks
     private var _binding: FragmentBusquedaBinding? = null
     private val binding get() = _binding!!
 
@@ -35,6 +41,7 @@ class BusquedaFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Transición de entrada y salida con fade
         enterTransition = MaterialFadeThrough().apply {
             duration = 220
         }
@@ -58,6 +65,7 @@ class BusquedaFragment : Fragment() {
 
         val db = DatabaseProvider.getDatabase(requireContext())
 
+        // El repositorio necesita ambos DAOs para buscar en colecciones e items a la vez
         val repo = BusquedaRepository(
             db.coleccionDao(),
             db.itemDao()
@@ -68,6 +76,7 @@ class BusquedaFragment : Fragment() {
             BusquedaViewModelFactory(repo)
         )[BusquedaViewModel::class.java]
 
+        // Al pulsar un resultado navega a su pantalla correspondiente
         adapter = BusquedaAdapter(emptyList()) { resultado ->
             navegarAResultado(resultado)
         }
@@ -75,20 +84,24 @@ class BusquedaFragment : Fragment() {
         binding.rvResultados.layoutManager = LinearLayoutManager(requireContext())
         binding.rvResultados.adapter = adapter
 
+        // Vuelve al fragment anterior en el back stack
         binding.btnBack.setOnClickListener {
             parentFragmentManager.popBackStack()
         }
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
 
+            // No se usa: la búsqueda es en tiempo real con onQueryTextChange
             override fun onQueryTextSubmit(query: String?) = false
 
+            // Lanza la búsqueda en el ViewModel cada vez que el texto cambia
             override fun onQueryTextChange(newText: String?): Boolean {
                 viewModel.buscar(newText.orEmpty())
                 return true
             }
         })
 
+        // Abre el teclado automáticamente al entrar en la pantalla
         binding.searchView.requestFocus()
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -96,24 +109,28 @@ class BusquedaFragment : Fragment() {
 
                 when (state) {
 
+                    // El usuario aún no ha escrito nada
                     is BusquedaState.Idle -> {
                         binding.layoutIdle.visibility = View.VISIBLE
                         binding.layoutEmpty.visibility = View.GONE
                         binding.rvResultados.visibility = View.GONE
                     }
 
+                    // Búsqueda en curso: oculta todo mientras se procesan los resultados
                     is BusquedaState.Loading -> {
                         binding.layoutIdle.visibility = View.GONE
                         binding.layoutEmpty.visibility = View.GONE
                         binding.rvResultados.visibility = View.GONE
                     }
 
+                    // La búsqueda terminó sin encontrar resultados
                     is BusquedaState.Empty -> {
                         binding.layoutIdle.visibility = View.GONE
                         binding.layoutEmpty.visibility = View.VISIBLE
                         binding.rvResultados.visibility = View.GONE
                     }
 
+                    // Hay resultados: construye la lista agrupada y actualiza el adapter
                     is BusquedaState.Success -> {
                         binding.layoutIdle.visibility = View.GONE
                         binding.layoutEmpty.visibility = View.GONE
@@ -131,6 +148,10 @@ class BusquedaFragment : Fragment() {
         }
     }
 
+    /**
+     * Construye una lista plana combinando colecciones e items con cabeceras separadoras.
+     * Solo añade un grupo si tiene al menos un elemento.
+     */
     private fun buildList(
         colecciones: List<Coleccion>,
         items: List<Item>
@@ -140,6 +161,7 @@ class BusquedaFragment : Fragment() {
 
         if (colecciones.isNotEmpty()) {
 
+            // Cabecera del grupo con el total de colecciones encontradas
             lista.add(
                 BusquedaItem.Header("Colecciones (${colecciones.size})")
             )
@@ -150,10 +172,11 @@ class BusquedaFragment : Fragment() {
                         id = c.id,
                         icono = "📦",
                         titulo = c.nombre,
+                        // Muestra "Sin descripción" si está vacía o es null
                         subtitulo = c.descripcion?.ifBlank { "Sin descripción" }
                             ?: "Sin descripción",
                         tipo = "Colección",
-                        esColeccion = true
+                        esColeccion = true // Usado en navegarAResultado para decidir el destino
                     )
                 )
             }
@@ -161,6 +184,7 @@ class BusquedaFragment : Fragment() {
 
         if (items.isNotEmpty()) {
 
+            // Cabecera del grupo con el total de items encontrados
             lista.add(
                 BusquedaItem.Header("Items (${items.size})")
             )
@@ -171,6 +195,7 @@ class BusquedaFragment : Fragment() {
                         id = item.id,
                         icono = "🗂",
                         titulo = item.titulo,
+                        // Muestra estado y valor con 2 decimales separados por un punto medio
                         subtitulo = "${item.estado}  ·  ${"%.2f".format(item.valor)} €",
                         tipo = "Item",
                         esColeccion = false
@@ -182,6 +207,10 @@ class BusquedaFragment : Fragment() {
         return lista
     }
 
+    /**
+     * Navega al detalle del resultado pulsado.
+     * Si es colección abre su lista de items; si es item abre su detalle.
+     */
     private fun navegarAResultado(resultado: BusquedaItem.Resultado) {
 
         val fragment = if (resultado.esColeccion) {
@@ -193,12 +222,12 @@ class BusquedaFragment : Fragment() {
         parentFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
             .replace(R.id.fragment_container, fragment)
-            .addToBackStack(null)
+            .addToBackStack(null) // Permite volver a la búsqueda pulsando atrás
             .commit()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        _binding = null // Limpia la referencia al binding para evitar memory leaks
     }
 }
