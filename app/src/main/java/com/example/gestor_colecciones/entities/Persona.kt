@@ -3,12 +3,23 @@ package com.example.gestor_colecciones.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+// Entidad que representa una persona asociada a préstamos o contactos
 @Entity(tableName = "Persona")
 data class Persona(
+
+    // Identificador único de la persona
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+
+    // Nombre de la persona
     val nombre: String,
+
+    // Información de contacto (teléfono, email, etc.)
     val contacto: String?,
-    val usuarioId: Int = 0,             // ← añadido: propietario del contacto
-    val usuarioRefId: Int? = null       // ← añadido: usuario registrado vinculado
+
+    // ID del usuario propietario de este registro
+    val usuarioId: Int = 0,
+
+    // Referencia opcional a un usuario registrado en el sistema
+    val usuarioRefId: Int? = null
 )

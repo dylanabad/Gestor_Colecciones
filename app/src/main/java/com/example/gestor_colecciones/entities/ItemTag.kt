@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 
+// Entidad intermedia que representa la relación muchos-a-muchos entre Item y Tag
 @Entity(
     tableName = "item_tags",
     primaryKeys = ["itemId", "tagId"],
@@ -25,7 +26,9 @@ import androidx.room.Index
 )
 data class ItemTag(
 
+    // ID del item relacionado
     val itemId: Int,
 
+    // ID del tag relacionado
     val tagId: Int
 )

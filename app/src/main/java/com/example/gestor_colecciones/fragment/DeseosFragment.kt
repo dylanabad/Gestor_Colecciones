@@ -25,16 +25,18 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+// Fragmento que muestra y gestiona la lista de deseos del usuario
 class DeseosFragment : Fragment() {
 
-    private var _binding: FragmentDeseosBinding? = null
-    private val binding get() = _binding!!
+    private var _binding: FragmentDeseosBinding? = null // Binding de la vista del fragmento
+    private val binding get() = _binding!! // Acceso seguro al binding
 
-    private lateinit var viewModel: DeseoViewModel
-    private lateinit var adapter: DeseoAdapter
+    private lateinit var viewModel: DeseoViewModel // ViewModel para la lógica de deseos
+    private lateinit var adapter: DeseoAdapter // Adapter del RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Transición de entrada y salida del fragmento
         enterTransition = MaterialFadeThrough().apply { duration = 220 }
         returnTransition = MaterialFadeThrough().apply { duration = 200 }
     }
@@ -43,16 +45,18 @@ class DeseosFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentDeseosBinding.inflate(inflater, container, false)
+        _binding = FragmentDeseosBinding.inflate(inflater, container, false) // Inflado del layout
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Inicialización del repositorio y ViewModel
         val repo = RepositoryProvider.itemDeseoRepository(requireContext())
         viewModel = ViewModelProvider(this, DeseoViewModelFactory(repo))[DeseoViewModel::class.java]
 
+        // Inicialización del adapter con acciones de usuario
         adapter = DeseoAdapter(
             emptyList(),
             onConseguido = { item ->
@@ -69,10 +73,11 @@ class DeseosFragment : Fragment() {
             onLongClick = { item -> showEditDialog(item) }
         )
 
+        // Configuración del RecyclerView
         binding.rvDeseos.layoutManager = LinearLayoutManager(requireContext())
         binding.rvDeseos.adapter = adapter
 
-        // Swipe para eliminar
+        // Swipe para eliminar elementos
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             override fun onMove(
                 recyclerView: RecyclerView,
@@ -88,19 +93,20 @@ class DeseosFragment : Fragment() {
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvDeseos)
 
+        // Botones de navegación y acción
         binding.btnBack.setOnClickListener { parentFragmentManager.popBackStack() }
         binding.fabAddDeseo.setOnClickListener { showAddDialog() }
 
-        // Observar lista
+        // Observación de la lista de deseos
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.all.collectLatest { lista ->
                 adapter.updateList(lista)
 
-                // Contador de pendientes
+                // Contador de elementos pendientes
                 val pendientes = lista.count { !it.conseguido }
                 binding.tvContador.text = "$pendientes pendientes"
 
-                // Alerta — items sin precio definido
+                // Alerta de elementos sin precio objetivo
                 val sinPrecio = lista.count { !it.conseguido && it.precioObjetivo == 0.0 }
                 if (sinPrecio > 0) {
                     binding.cardAlerta.visibility = View.VISIBLE
@@ -113,6 +119,7 @@ class DeseosFragment : Fragment() {
         }
     }
 
+    // Diálogo para añadir un nuevo deseo
     private fun showAddDialog() {
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_add_deseo, null)
@@ -154,11 +161,12 @@ class DeseosFragment : Fragment() {
             .show()
     }
 
+    // Diálogo para editar un deseo existente
     private fun showEditDialog(item: ItemDeseo) {
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_add_deseo, null)
 
-        // Rellenar con datos existentes
+        // Relleno de datos actuales
         dialogView.findViewById<EditText>(R.id.etTituloDeseo).setText(item.titulo)
         dialogView.findViewById<EditText>(R.id.etDescripcionDeseo).setText(item.descripcion ?: "")
         dialogView.findViewById<EditText>(R.id.etPrecioDeseo)
@@ -207,6 +215,7 @@ class DeseosFragment : Fragment() {
             .show()
     }
 
+    // Muestra un Snackbar con un mensaje
     private fun showSnackbar(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
             .setAnchorView(binding.fabAddDeseo)
@@ -215,7 +224,6 @@ class DeseosFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        _binding = null // Evita fugas de memoria
     }
 }
-

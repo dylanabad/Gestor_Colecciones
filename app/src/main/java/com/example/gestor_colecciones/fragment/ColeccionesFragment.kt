@@ -134,6 +134,7 @@ class ColeccionesFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         enterTransition = MaterialFadeThrough().apply { duration = 220 }
         returnTransition = MaterialFadeThrough().apply { duration = 200 }
         exitTransition = MaterialSharedAxis(MaterialSharedAxis.X, true).apply { duration = 240 }
@@ -141,7 +142,8 @@ class ColeccionesFragment : Fragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentColeccionesBinding.inflate(inflater, container, false)
@@ -271,7 +273,6 @@ class ColeccionesFragment : Fragment() {
                 .commit()
         }
 
-        // ← NUEVO
         binding.btnPrestamos.setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .setReorderingAllowed(true)

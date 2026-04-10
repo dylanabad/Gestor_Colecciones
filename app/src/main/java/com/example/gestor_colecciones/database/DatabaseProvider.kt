@@ -11,10 +11,13 @@ import com.example.gestor_colecciones.dao.TagDao
 import com.example.gestor_colecciones.dao.ItemTagDao
 import com.example.gestor_colecciones.dao.ItemDeseoDao
 
+// Proveedor único de la base de datos (singleton)
 object DatabaseProvider {
 
+    // Instancia única de la base de datos
     private var instance: AppDataBase? = null
 
+    // Migración de la versión 3 a 4: creación de tabla de historial de items
     private val MIGRATION_3_4 = object : Migration(3, 4) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
@@ -33,12 +36,14 @@ object DatabaseProvider {
         }
     }
 
+    // Migración 4 → 5: añadir color a colecciones
     private val MIGRATION_4_5 = object : Migration(4, 5) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE `Coleccion` ADD COLUMN `color` INTEGER NOT NULL DEFAULT 0")
         }
     }
 
+    // Migración 5 → 6: creación de tabla Logro
     private val MIGRATION_5_6 = object : Migration(5, 6) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
@@ -53,6 +58,7 @@ object DatabaseProvider {
         }
     }
 
+    // Migración 6 → 7: creación de tabla de deseos
     private val MIGRATION_6_7 = object : Migration(6, 7) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL(
@@ -73,6 +79,7 @@ object DatabaseProvider {
         }
     }
 
+    // Migración 7 → 8: campos de eliminación lógica
     private val MIGRATION_7_8 = object : Migration(7, 8) {
         override fun migrate(db: SupportSQLiteDatabase) {
             try {
@@ -90,6 +97,7 @@ object DatabaseProvider {
         }
     }
 
+    // Migración 8 → 9: mejoras en préstamos y personas
     private val MIGRATION_8_9 = object : Migration(8, 9) {
         override fun migrate(db: SupportSQLiteDatabase) {
             try {
@@ -116,6 +124,7 @@ object DatabaseProvider {
         }
     }
 
+    // Migración 9 → 10: favorito en items
     private val MIGRATION_9_10 = object : Migration(9, 10) {
         override fun migrate(db: SupportSQLiteDatabase) {
             try {
@@ -124,6 +133,7 @@ object DatabaseProvider {
         }
     }
 
+    // Obtiene la instancia de la base de datos (singleton thread-safe)
     fun getDatabase(context: Context): AppDataBase {
         return instance ?: synchronized(this) {
             val db = Room.databaseBuilder(
@@ -148,6 +158,7 @@ object DatabaseProvider {
         }
     }
 
+    // Helpers para acceso directo a DAOs desde el proveedor
     fun getColeccionDao(context: Context): ColeccionDao = getDatabase(context).coleccionDao()
     fun getItemDao(context: Context): ItemDao = getDatabase(context).itemDao()
     fun getCategoriaDao(context: Context): CategoriaDao = getDatabase(context).categoriaDao()

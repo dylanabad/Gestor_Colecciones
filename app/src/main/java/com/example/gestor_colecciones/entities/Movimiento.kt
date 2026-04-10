@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import java.util.Date
 
+// Entidad que representa un movimiento sobre un item (préstamo, devolución, etc.)
 @Entity(
     tableName = "Movimiento",
     foreignKeys = [
@@ -25,14 +26,32 @@ import java.util.Date
     indices = [Index("itemId"), Index("personaId")]
 )
 data class Movimiento(
+
+    // Identificador único del movimiento
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+
+    // ID del item involucrado en el movimiento
     val itemId: Int,
-    val tipo: String,                           // PRESTAMO | DEVOLUCION
+
+    // Tipo de movimiento (ej: PRESTAMO, DEVOLUCION)
+    val tipo: String,
+
+    // Persona asociada al movimiento (puede ser null)
     val personaId: Int?,
+
+    // Fecha y hora del movimiento
     val fechaHora: Date,
-    val estado: String? = null,                 // ← ACTIVO | DEVUELTO
-    val fechaDevolucionPrevista: Date? = null,  // ←
-    val fechaDevolucionReal: Date? = null,      // ←
-    val notas: String? = null                   // ←
+
+    // Estado del movimiento (ACTIVO, DEVUELTO, etc.)
+    val estado: String? = null,
+
+    // Fecha prevista de devolución
+    val fechaDevolucionPrevista: Date? = null,
+
+    // Fecha real de devolución
+    val fechaDevolucionReal: Date? = null,
+
+    // Notas adicionales del movimiento
+    val notas: String? = null
 )

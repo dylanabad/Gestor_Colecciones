@@ -38,14 +38,16 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Fragmento que muestra el detalle de un item y permite gestionarlo
 class ItemDetailFragment : Fragment() {
 
-    private var itemId: Int = 0
-    private lateinit var viewModel: ItemViewModel
+    private var itemId: Int = 0 // ID del item recibido por argumentos
+    private lateinit var viewModel: ItemViewModel // ViewModel del item
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         itemId = arguments?.getInt(ARG_ITEM_ID) ?: 0
+        // Transiciones entre fragments
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true).apply { duration = 240 }
         returnTransition = MaterialSharedAxis(MaterialSharedAxis.X, false).apply { duration = 220 }
     }
@@ -58,13 +60,20 @@ class ItemDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Repositorios
         val db = DatabaseProvider.getDatabase(requireContext())
         val repo = RepositoryProvider.itemRepository(requireContext())
         val tagRepository = RepositoryProvider.tagRepository(requireContext())
         val itemTagRepository = RepositoryProvider.itemTagRepository(requireContext())
         val historyRepository = ItemHistoryRepository(db.itemHistoryDao())
-        viewModel = ViewModelProvider(this, ItemViewModelFactory(repo, null, historyRepository))[ItemViewModel::class.java]
 
+        // ViewModel
+        viewModel = ViewModelProvider(
+            this,
+            ItemViewModelFactory(repo, null, historyRepository)
+        )[ItemViewModel::class.java]
+
+        // Vistas
         val tvTitulo = view.findViewById<TextView>(R.id.tvTitulo)
         val tvValor = view.findViewById<TextView>(R.id.tvValor)
         val tvEstado = view.findViewById<TextView>(R.id.tvEstado)
@@ -82,6 +91,7 @@ class ItemDetailFragment : Fragment() {
         var currentItem: Item? = null
         btnFavorito.isEnabled = false
 
+        // Render de favorito
         fun renderFavorito(isFavorito: Boolean) {
             btnFavorito.setImageResource(
                 if (isFavorito) R.drawable.ic_favorite else R.drawable.ic_favorite_border
@@ -90,6 +100,7 @@ class ItemDetailFragment : Fragment() {
                 if (isFavorito) "Quitar de favoritos" else "Marcar como favorito"
         }
 
+        // Toggle favorito
         btnFavorito.setOnClickListener {
             val item = currentItem ?: return@setOnClickListener
             val updated = item.copy(favorito = !item.favorito)
@@ -98,7 +109,10 @@ class ItemDetailFragment : Fragment() {
             viewModel.update(
                 updated,
                 onUpdated = {
-                    val msg = if (updated.favorito) "Item marcado como favorito" else "Item quitado de favoritos"
+                    val msg = if (updated.favorito)
+                        "Item marcado como favorito"
+                    else
+                        "Item quitado de favoritos"
                     Snackbar.make(view, msg, Snackbar.LENGTH_SHORT).show()
                 },
                 onError = { msg ->
@@ -108,6 +122,8 @@ class ItemDetailFragment : Fragment() {
                 }
             )
         }
+
+        // Rating del item
         rbRating.setOnRatingBarChangeListener { _, rating, fromUser ->
             if (!fromUser) return@setOnRatingBarChangeListener
             val item = currentItem ?: return@setOnRatingBarChangeListener
@@ -126,6 +142,7 @@ class ItemDetailFragment : Fragment() {
             )
         }
 
+        // Render de tags
         fun renderTags(tags: List<Tag>) {
             chipGroupTags.removeAllViews()
             if (tags.isEmpty()) {
@@ -149,6 +166,8 @@ class ItemDetailFragment : Fragment() {
                 )
             }
         }
+
+        // Crear tag
         fun showCreateTagDialog(onCreated: () -> Unit) {
             val input = EditText(requireContext()).apply {
                 hint = "Nombre de etiqueta"
@@ -169,6 +188,7 @@ class ItemDetailFragment : Fragment() {
                 .show()
         }
 
+        // Gestionar tags
         fun showManageTagsDialog() {
             viewLifecycleOwner.lifecycleScope.launch {
                 val allTags = tagRepository.getAllTagsOnce()
@@ -208,6 +228,7 @@ class ItemDetailFragment : Fragment() {
             }
         }
 
+        // Selección de tags
         fun showTagPickerDialog() {
             viewLifecycleOwner.lifecycleScope.launch {
                 val allTags = tagRepository.getAllTagsOnce()
@@ -231,7 +252,9 @@ class ItemDetailFragment : Fragment() {
                     .setNegativeButton("Cancelar", null)
                     .setPositiveButton("Guardar") { _, _ ->
                         viewLifecycleOwner.lifecycleScope.launch {
-                            val tagIds = allTags.mapIndexedNotNull { index, tag -> tag.id.takeIf { checked[index] } }
+                            val tagIds = allTags.mapIndexedNotNull { index, tag ->
+                                tag.id.takeIf { checked[index] }
+                            }
                             itemTagRepository.replaceTagsForItem(itemId, tagIds)
                             Snackbar.make(view, "Etiquetas actualizadas", Snackbar.LENGTH_SHORT).show()
                         }
@@ -240,18 +263,16 @@ class ItemDetailFragment : Fragment() {
             }
         }
 
-
         btnEditTags.setOnClickListener { showTagPickerDialog() }
 
+        // Observación de tags
         viewLifecycleOwner.lifecycleScope.launch {
             tagRepository.getTagsForItem(itemId).collect { tags ->
                 renderTags(tags)
             }
         }
 
-        fun dpToPx(dp: Int): Int =
-            (dp * resources.displayMetrics.density).toInt()
-
+        // Render historial
         fun renderHistory(list: List<ItemHistory>) {
             llItemHistory.removeAllViews()
             tvHistoryEmpty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
@@ -265,25 +286,27 @@ class ItemDetailFragment : Fragment() {
                     "STATUS_CHANGED" -> "Estado cambiado"
                     else -> entry.tipo
                 }
-                val base = "${sdf.format(entry.fecha)} � $tipo"
-                val text = entry.descripcion?.takeIf { it.isNotBlank() }?.let { "$base � $it" } ?: base
+                val base = "${sdf.format(entry.fecha)} · $tipo"
+                val text = entry.descripcion?.takeIf { it.isNotBlank() }?.let { "$base · $it" } ?: base
 
                 llItemHistory.addView(
                     MaterialTextView(requireContext()).apply {
                         setTextAppearance(android.R.style.TextAppearance_Material_Body1)
                         this.text = text
-                        setPadding(0, 0, 0, dpToPx(8))
+                        setPadding(0, 0, 0, 0)
                     }
                 )
             }
         }
 
+        // Observación historial
         viewLifecycleOwner.lifecycleScope.launch {
             historyRepository.getHistoryForItem(itemId).collect { history ->
                 renderHistory(history)
             }
         }
 
+        // Carga del item
         viewLifecycleOwner.lifecycleScope.launch {
             val item: Item? = viewModel.getItemById(itemId)
             item?.let {
@@ -292,14 +315,17 @@ class ItemDetailFragment : Fragment() {
                 tvValor.text = "Valor: ${it.valor}"
                 tvEstado.text = "Estado: ${it.estado}"
                 tvDescripcion.text = "Descripcion: ${it.descripcion ?: "N/A"}"
+
                 val rating = it.calificacion.coerceIn(0f, 5f)
                 rbRating.rating = rating
                 tvCalificacion.text = String.format(Locale.getDefault(), "%.1f", rating)
+
                 renderFavorito(it.favorito)
                 btnFavorito.isEnabled = true
 
                 val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                view.findViewById<TextView>(R.id.tvFecha).text = "Fecha: ${sdf.format(it.fechaAdquisicion)}"
+                view.findViewById<TextView>(R.id.tvFecha).text =
+                    "Fecha: ${sdf.format(it.fechaAdquisicion)}"
 
                 val model = com.example.gestor_colecciones.util.ImageUtils.toGlideModel(it.imagenPath)
                 if (model != null) {
@@ -315,7 +341,9 @@ class ItemDetailFragment : Fragment() {
                 }
 
                 val categoriaDao = db.categoriaDao()
-                val categoria = categoriaDao.getAllCategoriasOnce().find { cat -> cat.id == it.categoriaId }
+                val categoria = categoriaDao.getAllCategoriasOnce()
+                    .find { cat -> cat.id == it.categoriaId }
+
                 tvCategoria.text = "Categoria: ${categoria?.nombre ?: "Sin categoria"}"
             }
         }
@@ -329,8 +357,3 @@ class ItemDetailFragment : Fragment() {
         }
     }
 }
-
-
-
-
-

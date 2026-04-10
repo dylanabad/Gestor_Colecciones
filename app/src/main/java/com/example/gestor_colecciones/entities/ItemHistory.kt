@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
+// Entidad que representa el historial de cambios de un Item
 @Entity(
     tableName = "item_history",
     foreignKeys = [
@@ -19,11 +20,20 @@ import java.util.Date
     indices = [Index("itemId")]
 )
 data class ItemHistory(
+
+    // Identificador único del registro de historial
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+
+    // ID del item al que pertenece este registro de historial
     val itemId: Int,
+
+    // Tipo de evento registrado (ej: creación, edición, préstamo, etc.)
     val tipo: String,
+
+    // Fecha en la que ocurrió el evento
     val fecha: Date,
+
+    // Descripción opcional del cambio realizado
     val descripcion: String? = null
 )
-

@@ -45,22 +45,31 @@ class AuthFragment : Fragment() {
             ApiProvider.getApi(requireContext()),
             AuthStore(requireContext())
         )
-        viewModel = ViewModelProvider(this, AuthViewModelFactory(authRepo))[AuthViewModel::class.java]
+
+        viewModel = ViewModelProvider(
+            this,
+            AuthViewModelFactory(authRepo)
+        )[AuthViewModel::class.java]
 
         binding.btnLogin.setOnClickListener { handleLogin() }
         binding.btnRegister.setOnClickListener { handleRegister() }
+
         animateEntry()
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.state.collect { state ->
                 when (state) {
+
                     is AuthState.Idle -> setLoading(false)
+
                     is AuthState.Loading -> setLoading(true)
+
                     is AuthState.Error -> {
                         setLoading(false)
                         binding.tvError.text = state.message
                         binding.tvError.isVisible = true
                     }
+
                     is AuthState.Success -> {
                         binding.tvError.isVisible = false
                         if (!handledSuccess) {
@@ -76,13 +85,19 @@ class AuthFragment : Fragment() {
     private fun handleLogin() {
         val emailInput = binding.etEmail.text?.toString()?.trim().orEmpty()
         val usernameInput = binding.etUsername.text?.toString()?.trim().orEmpty()
+
         val email = if (emailInput.isNotBlank()) emailInput else usernameInput
         val password = binding.etPassword.text?.toString()?.trim().orEmpty()
 
         if (email.isBlank() || password.isBlank()) {
-            Toast.makeText(requireContext(), "Email/usuario y contrasena son obligatorios", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                "Email/usuario y contrasena son obligatorios",
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
+
         binding.tvError.isVisible = false
         viewModel.login(email, password)
     }
@@ -93,9 +108,14 @@ class AuthFragment : Fragment() {
         val password = binding.etPassword.text?.toString()?.trim().orEmpty()
 
         if (username.isBlank() || email.isBlank() || password.isBlank()) {
-            Toast.makeText(requireContext(), "Usuario, email y contrasena son obligatorios", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                "Usuario, email y contrasena son obligatorios",
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
+
         binding.tvError.isVisible = false
         viewModel.register(username, email, password)
     }
@@ -108,8 +128,10 @@ class AuthFragment : Fragment() {
 
     private fun animateEntry() {
         val card = binding.authCard
+
         card.alpha = 0f
         card.translationY = (16 * resources.displayMetrics.density)
+
         card.animate()
             .alpha(1f)
             .translationY(0f)
@@ -120,6 +142,7 @@ class AuthFragment : Fragment() {
 
     private fun syncAndNavigate() {
         setLoading(true)
+
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 RepositoryProvider.syncRepository(requireContext()).syncAll()
@@ -138,7 +161,9 @@ class AuthFragment : Fragment() {
             .getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
             .getBoolean("onboarding_completed", false)
 
-        val destino = if (onboardingCompleted) ColeccionesFragment() else OnboardingFragment()
+        val destino =
+            if (onboardingCompleted) ColeccionesFragment()
+            else OnboardingFragment()
 
         parentFragmentManager.beginTransaction()
             .setReorderingAllowed(true)

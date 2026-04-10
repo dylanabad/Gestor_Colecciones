@@ -10,10 +10,11 @@ class CsvExporter(private val context: Context) {
 
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
+    // Exporta datos a CSV (colecciones + items)
     fun export(data: List<ColeccionExportData>): File {
         val sb = StringBuilder()
 
-        // Cabecera colecciones
+        // Sección de colecciones
         sb.appendLine("=== COLECCIONES ===")
         sb.appendLine("ID,Nombre,Descripcion,Fecha Creacion,Total Items,Valor Total")
 
@@ -31,7 +32,7 @@ class CsvExporter(private val context: Context) {
 
         sb.appendLine()
 
-        // Cabecera items
+        // Sección de items
         sb.appendLine("=== ITEMS ===")
         sb.appendLine("ID,Coleccion,Titulo,Estado,Valor,Calificacion,Fecha Adquisicion,Descripcion")
 
@@ -50,6 +51,7 @@ class CsvExporter(private val context: Context) {
             }
         }
 
+        // Escritura del archivo en cache
         val file = File(context.cacheDir, "colecciones_export.csv")
         file.writeText(sb.toString())
         return file

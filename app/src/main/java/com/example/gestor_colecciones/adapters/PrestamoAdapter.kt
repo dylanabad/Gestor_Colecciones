@@ -9,17 +9,21 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.network.dto.PrestamoDto
 
+// Adapter para mostrar préstamos en un RecyclerView (tanto prestados como recibidos)
 class PrestamoAdapter(
-    private var lista: List<PrestamoDto>,
-    private val modo: Modo,
-    private val onDevolver: ((PrestamoDto) -> Unit)? = null,
-    private val onDelete: ((PrestamoDto) -> Unit)? = null,
-    private val currentUsername: String? = null
+    private var lista: List<PrestamoDto>,                          // Lista de préstamos a mostrar
+    private val modo: Modo,                                        // Define si es vista de prestados o recibidos
+    private val onDevolver: ((PrestamoDto) -> Unit)? = null,      // Callback para devolver un préstamo
+    private val onDelete: ((PrestamoDto) -> Unit)? = null,        // Callback para eliminar un préstamo
+    private val currentUsername: String? = null                   // Usuario actual para control de permisos
 ) : RecyclerView.Adapter<PrestamoAdapter.ViewHolder>() {
 
+    // Modos posibles del adapter
     enum class Modo { PRESTADOS, RECIBIDOS }
 
+    // ViewHolder que contiene las vistas del item de préstamo
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
         val tvTituloItem: TextView = view.findViewById(R.id.tvTituloItem)
         val tvUsuario: TextView = view.findViewById(R.id.tvUsuario)
         val tvFechaPrestamo: TextView = view.findViewById(R.id.tvFechaPrestamo)
@@ -30,50 +34,94 @@ class PrestamoAdapter(
         val btnEliminar: View = view.findViewById(R.id.btnEliminar)
     }
 
+    // Inflado del layout del item de préstamo
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_prestamo, parent, false)
+
         return ViewHolder(view)
     }
 
+    // Vinculación de datos con la vista
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+
         val prestamo = lista[position]
 
+        // --- INFORMACIÓN PRINCIPAL ---
         holder.tvTituloItem.text = prestamo.itemTitulo
+
+        // Texto del usuario depende del modo (prestado o recibido)
         holder.tvUsuario.text = when (modo) {
             Modo.PRESTADOS -> "Prestado a: ${prestamo.prestatarioUsername}"
             Modo.RECIBIDOS -> "Prestado por: ${prestamo.propietarioUsername}"
         }
-        holder.tvFechaPrestamo.text = "Fecha: ${prestamo.fechaPrestamo.take(10)}"
-        holder.tvFechaDevolucion.text = prestamo.fechaDevolucionPrevista
-            ?.let { "Devolucion prevista: ${it.take(10)}" }
-            ?: "Sin fecha de devolucion"
+
+        // Fecha de préstamo (recorta a formato YYYY-MM-DD)
+        holder.tvFechaPrestamo.text =
+            "Fecha: ${prestamo.fechaPrestamo.take(10)}"
+
+        // Fecha de devolución prevista (si existe)
+        holder.tvFechaDevolucion.text =
+            prestamo.fechaDevolucionPrevista
+                ?.let { "Devolucion prevista: ${it.take(10)}" }
+                ?: "Sin fecha de devolucion"
+
+        // Estado del préstamo (ACTIVO / DEVUELTO)
         holder.tvEstado.text = prestamo.estado
+
+        // Color del estado según condición
         holder.tvEstado.setTextColor(
             ContextCompat.getColor(
                 holder.itemView.context,
-                if (prestamo.estado == "ACTIVO") R.color.colorEstadoActivo
-                else R.color.colorEstadoDevuelto
+                if (prestamo.estado == "ACTIVO")
+                    R.color.colorEstadoActivo
+                else
+                    R.color.colorEstadoDevuelto
             )
         )
+
+        // --- NOTAS ---
         holder.tvNotas.text = prestamo.notas ?: ""
+
         holder.tvNotas.visibility =
             if (prestamo.notas.isNullOrBlank()) View.GONE else View.VISIBLE
-        holder.btnDevolver.visibility =
-            if (modo == Modo.PRESTADOS && prestamo.estado == "ACTIVO") View.VISIBLE
-            else View.GONE
-        holder.btnDevolver.setOnClickListener { onDevolver?.invoke(prestamo) }
 
-        val puedeEliminar = when (modo) {
-            Modo.PRESTADOS -> currentUsername != null && prestamo.propietarioUsername == currentUsername
-            Modo.RECIBIDOS -> currentUsername != null && prestamo.prestatarioUsername == currentUsername
+        // --- BOTÓN DEVOLVER ---
+        holder.btnDevolver.visibility =
+            if (modo == Modo.PRESTADOS && prestamo.estado == "ACTIVO")
+                View.VISIBLE
+            else
+                View.GONE
+
+        holder.btnDevolver.setOnClickListener {
+            onDevolver?.invoke(prestamo)
         }
-        holder.btnEliminar.visibility = if (puedeEliminar) View.VISIBLE else View.GONE
-        holder.btnEliminar.setOnClickListener { onDelete?.invoke(prestamo) }
+
+        // --- BOTÓN ELIMINAR ---
+        val puedeEliminar = when (modo) {
+
+            Modo.PRESTADOS ->
+                currentUsername != null &&
+                        prestamo.propietarioUsername == currentUsername
+
+            Modo.RECIBIDOS ->
+                currentUsername != null &&
+                        prestamo.prestatarioUsername == currentUsername
+        }
+
+        holder.btnEliminar.visibility =
+            if (puedeEliminar) View.VISIBLE else View.GONE
+
+        holder.btnEliminar.setOnClickListener {
+            onDelete?.invoke(prestamo)
+        }
     }
 
+    // Número total de elementos
     override fun getItemCount() = lista.size
 
+    // Actualiza la lista completa
     fun updateList(nuevaLista: List<PrestamoDto>) {
         lista = nuevaLista
         notifyDataSetChanged()

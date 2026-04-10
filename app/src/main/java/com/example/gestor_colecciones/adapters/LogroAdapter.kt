@@ -11,12 +11,16 @@ import com.example.gestor_colecciones.model.LogroDefinicion
 import java.text.SimpleDateFormat
 import java.util.*
 
+// Adapter encargado de mostrar la lista de logros en un RecyclerView
 class LogroAdapter(private var logros: List<Logro>) :
     RecyclerView.Adapter<LogroAdapter.LogroViewHolder>() {
 
+    // Formateador de fechas para mostrar la fecha de desbloqueo
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
+    // ViewHolder que contiene las vistas de cada logro
     inner class LogroViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
         val tvIcono: TextView = itemView.findViewById(R.id.tvIcono)
         val tvTitulo: TextView = itemView.findViewById(R.id.tvTitulo)
         val tvDescripcion: TextView = itemView.findViewById(R.id.tvDescripcion)
@@ -24,40 +28,63 @@ class LogroAdapter(private var logros: List<Logro>) :
         val tvEstado: TextView = itemView.findViewById(R.id.tvEstado)
     }
 
+    // Inflado del layout de cada item de logro
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LogroViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_logro, parent, false)
         return LogroViewHolder(view)
     }
 
+    // Vinculación de datos con la vista
     override fun onBindViewHolder(holder: LogroViewHolder, position: Int) {
+
         val logro = logros[position]
+
+        // Obtiene la definición del logro (icono, título, descripción)
         val info = LogroDefinicion.getInfo(logro.key)
 
+        // --- ICONO Y TEXTO ---
         holder.tvIcono.text = info?.icono ?: "🏅"
         holder.tvTitulo.text = info?.titulo ?: logro.key
         holder.tvDescripcion.text = info?.descripcion ?: ""
 
+        // --- ESTADO DEL LOGRO ---
         if (logro.desbloqueado) {
+
+            // Logro desbloqueado
             holder.tvEstado.text = "✅"
             holder.itemView.alpha = 1f
+
+            // Muestra la fecha de desbloqueo si existe
             logro.fechaDesbloqueo?.let {
                 holder.tvFecha.visibility = View.VISIBLE
-                holder.tvFecha.text = "Desbloqueado el ${dateFormat.format(it)}"
+                holder.tvFecha.text =
+                    "Desbloqueado el ${dateFormat.format(it)}"
             }
+
         } else {
+
+            // Logro bloqueado
             holder.tvEstado.text = "🔒"
             holder.itemView.alpha = 0.45f
+
+            // Oculta la fecha si no está desbloqueado
             holder.tvFecha.visibility = View.GONE
         }
     }
 
+    // Número total de logros
     override fun getItemCount() = logros.size
 
+    // Actualiza la lista de logros con orden personalizado
     fun updateList(nuevos: List<Logro>) {
-        // Ordenar: desbloqueados primero, luego bloqueados
-        logros = nuevos.sortedWith(compareByDescending<Logro> { it.desbloqueado }
-            .thenByDescending { it.fechaDesbloqueo })
+
+        // Orden: primero desbloqueados, luego bloqueados
+        logros = nuevos.sortedWith(
+            compareByDescending<Logro> { it.desbloqueado }
+                .thenByDescending { it.fechaDesbloqueo }
+        )
+
         notifyDataSetChanged()
     }
 }

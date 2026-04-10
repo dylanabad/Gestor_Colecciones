@@ -18,18 +18,22 @@ import android.content.res.ColorStateList
 import android.util.TypedValue
 import com.example.gestor_colecciones.util.ImageUtils
 
+// Adapter para mostrar una lista de colecciones en RecyclerView
 class ColeccionAdapter(
-    private var colecciones: List<Coleccion>,
-    private val onClick: (Coleccion) -> Unit,
-    private val onLongClick: (Coleccion) -> Unit,
-    private val coleccionStats: Map<Int, String> = emptyMap()
+    private var colecciones: List<Coleccion>,                     // Lista principal de colecciones
+    private val onClick: (Coleccion) -> Unit,                    // Click normal en una colección
+    private val onLongClick: (Coleccion) -> Unit,               // Click largo en una colección
+    private val coleccionStats: Map<Int, String> = emptyMap()    // Estadísticas asociadas a cada colección
 ) : RecyclerView.Adapter<ColeccionAdapter.ColeccionViewHolder>() {
 
     init {
+        // Permite optimizar RecyclerView usando IDs estables
         setHasStableIds(true)
     }
 
+    // ViewHolder que contiene las vistas de cada item de colección
     inner class ColeccionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
         val card: MaterialCardView = itemView.findViewById(R.id.cardColeccion)
         val tvNombre: TextView = itemView.findViewById(R.id.tvNombreColeccion)
         val tvDescripcion: TextView = itemView.findViewById(R.id.tvDescripcionColeccion)
@@ -38,43 +42,74 @@ class ColeccionAdapter(
         val colorDot: View = itemView.findViewById(R.id.viewColeccionColor)
 
         init {
+
+            // Click normal en item
             itemView.setOnClickListener {
                 val position = adapterPosition
-                if (position != RecyclerView.NO_POSITION) onClick(colecciones[position])
+                if (position != RecyclerView.NO_POSITION)
+                    onClick(colecciones[position])
             }
+
+            // Click largo en item
             itemView.setOnLongClickListener {
                 val position = adapterPosition
-                if (position != RecyclerView.NO_POSITION) onLongClick(colecciones[position])
+                if (position != RecyclerView.NO_POSITION)
+                    onLongClick(colecciones[position])
                 true
             }
         }
     }
 
+    // Inflado del layout del item
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ColeccionViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_coleccion, parent, false)
         return ColeccionViewHolder(view)
     }
 
+    // Vinculación de datos con la vista
     override fun onBindViewHolder(holder: ColeccionViewHolder, position: Int) {
+
         val coleccion = colecciones[position]
+
+        // Datos básicos
         holder.tvNombre.text = coleccion.nombre
         holder.tvDescripcion.text = coleccion.descripcion ?: "Sin descripción"
+
+        // Estadísticas asociadas (si existen)
         holder.tvStats.text = coleccionStats[coleccion.id] ?: ""
 
+        // --- GESTIÓN DE COLOR DE COLECCIÓN ---
         val color = coleccion.color
+
         if (color != 0) {
+
+            // Si la colección tiene color personalizado
             holder.colorDot.visibility = View.VISIBLE
-            ViewCompat.setBackgroundTintList(holder.colorDot, ColorStateList.valueOf(color))
+
+            ViewCompat.setBackgroundTintList(
+                holder.colorDot,
+                ColorStateList.valueOf(color)
+            )
+
             holder.card.strokeColor = color
+
             holder.card.strokeWidth = TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP,
                 2f,
                 holder.itemView.resources.displayMetrics
             ).toInt()
+
         } else {
+
+            // Si no tiene color, se usa estilo por defecto
             holder.colorDot.visibility = View.GONE
-            holder.card.strokeColor = MaterialColors.getColor(holder.card, com.google.android.material.R.attr.colorOutline)
+
+            holder.card.strokeColor = MaterialColors.getColor(
+                holder.card,
+                com.google.android.material.R.attr.colorOutline
+            )
+
             holder.card.strokeWidth = TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP,
                 1f,
@@ -82,8 +117,12 @@ class ColeccionAdapter(
             ).toInt()
         }
 
+        // --- CARGA DE IMAGEN ---
         val model = ImageUtils.toGlideModel(coleccion.imagenPath)
+
         if (model != null) {
+
+            // Carga de imagen con Glide
             Glide.with(holder.itemView)
                 .load(model)
                 .centerCrop()
@@ -91,18 +130,28 @@ class ColeccionAdapter(
                 .placeholder(R.drawable.ic_collection_default)
                 .error(R.drawable.ic_collection_default)
                 .into(holder.ivColeccion)
+
         } else {
+
+            // Imagen por defecto si no hay imagen válida
             holder.ivColeccion.setImageResource(R.drawable.ic_collection_default)
         }
     }
 
+    // Número total de elementos
     override fun getItemCount(): Int = colecciones.size
 
-    override fun getItemId(position: Int): Long = colecciones[position].id.toLong()
+    // IDs estables para optimización del RecyclerView
+    override fun getItemId(position: Int): Long =
+        colecciones[position].id.toLong()
 
+    // Actualiza la lista usando DiffUtil para animaciones eficientes
     fun updateList(newList: List<Coleccion>) {
+
         val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+
             override fun getOldListSize(): Int = colecciones.size
+
             override fun getNewListSize(): Int = newList.size
 
             override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
@@ -111,12 +160,17 @@ class ColeccionAdapter(
             override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
                 colecciones[oldItemPosition] == newList[newItemPosition]
         })
+
         colecciones = newList
+
+        // Aplica cambios calculados de forma animada
         diff.dispatchUpdatesTo(this)
     }
 
+    // Devuelve un elemento concreto por posición
     fun getItem(position: Int): Coleccion = colecciones[position]
 
+    // Fuerza actualización visual de una colección concreta por ID
     fun notifyStatsChangedFor(coleccionId: Int) {
         val index = colecciones.indexOfFirst { it.id == coleccionId }
         if (index != -1) notifyItemChanged(index)
