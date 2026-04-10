@@ -10,33 +10,55 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
+// ViewModel encargado de gestionar la papelera (elementos eliminados)
 class PapeleraViewModel(
     private val repository: PapeleraRepository
 ) : ViewModel() {
 
-    val coleccionesEliminadas: StateFlow<List<Coleccion>> = repository.coleccionesEliminadas
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    // Colecciones eliminadas de forma reactiva
+    val coleccionesEliminadas: StateFlow<List<Coleccion>> =
+        repository.coleccionesEliminadas.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyList()
+        )
 
-    val itemsEliminados: StateFlow<List<Item>> = repository.itemsEliminados
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    // Items eliminados de forma reactiva
+    val itemsEliminados: StateFlow<List<Item>> =
+        repository.itemsEliminados.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyList()
+        )
 
+    // Al iniciar el ViewModel se limpian elementos antiguos automáticamente
     init {
-        viewModelScope.launch { repository.limpiarElementosAntiguos() }
+        viewModelScope.launch {
+            repository.limpiarElementosAntiguos()
+        }
     }
 
-    fun restaurarColeccion(coleccion: Coleccion) = viewModelScope.launch {
-        repository.restaurarColeccion(coleccion)
-    }
+    // Restaura una colección eliminada
+    fun restaurarColeccion(coleccion: Coleccion) =
+        viewModelScope.launch {
+            repository.restaurarColeccion(coleccion)
+        }
 
-    fun restaurarItem(item: Item) = viewModelScope.launch {
-        repository.restaurarItem(item)
-    }
+    // Restaura un item eliminado
+    fun restaurarItem(item: Item) =
+        viewModelScope.launch {
+            repository.restaurarItem(item)
+        }
 
-    fun eliminarColeccionDefinitivamente(coleccion: Coleccion) = viewModelScope.launch {
-        repository.eliminarColeccionDefinitivamente(coleccion)
-    }
+    // Elimina definitivamente una colección
+    fun eliminarColeccionDefinitivamente(coleccion: Coleccion) =
+        viewModelScope.launch {
+            repository.eliminarColeccionDefinitivamente(coleccion)
+        }
 
-    fun eliminarItemDefinitivamente(item: Item) = viewModelScope.launch {
-        repository.eliminarItemDefinitivamente(item)
-    }
+    // Elimina definitivamente un item
+    fun eliminarItemDefinitivamente(item: Item) =
+        viewModelScope.launch {
+            repository.eliminarItemDefinitivamente(item)
+        }
 }

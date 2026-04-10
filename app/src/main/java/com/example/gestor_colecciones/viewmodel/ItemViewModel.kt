@@ -12,12 +12,14 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Date
 
+// ViewModel encargado de la lógica de Items y su historial
 class ItemViewModel(
     private val itemRepository: ItemRepository,
-    private val categoriaRepository: CategoriaRepository? = null, // opcional para crear categorias
-    private val historyRepository: ItemHistoryRepository? = null
+    private val categoriaRepository: CategoriaRepository? = null, // opcional: gestión de categorías
+    private val historyRepository: ItemHistoryRepository? = null  // opcional: historial de cambios
 ) : ViewModel() {
 
+    // Lista reactiva de items
     val items: StateFlow<List<Item>> =
         itemRepository.allItems.stateIn(
             viewModelScope,
@@ -25,6 +27,7 @@ class ItemViewModel(
             emptyList()
         )
 
+    // Inserta un item y registra su creación en el historial
     fun insert(
         item: Item,
         onInserted: ((Int) -> Unit)? = null,
@@ -32,7 +35,11 @@ class ItemViewModel(
     ) {
         viewModelScope.launch {
             try {
+
+                // Inserta item en repositorio y obtiene su ID
                 val id = itemRepository.insert(item).toInt()
+
+                // Registra historial de creación si existe repositorio
                 historyRepository?.insert(
                     ItemHistory(
                         itemId = id,
@@ -41,21 +48,26 @@ class ItemViewModel(
                         descripcion = "Item creado"
                     )
                 )
+
                 onInserted?.invoke(id)
+
             } catch (e: Exception) {
                 onError?.invoke(e.message ?: "Error al crear el item")
             }
         }
     }
 
+    // Sobrecarga simple de update sin callbacks
     fun update(item: Item) {
         update(item, null, null)
     }
 
+    // Elimina un item sin callbacks
     fun delete(item: Item) {
         delete(item, null, null)
     }
 
+    // Actualiza un item y registra cambios en el historial
     fun update(
         item: Item,
         onUpdated: (() -> Unit)? = null,
@@ -63,15 +75,29 @@ class ItemViewModel(
     ) {
         viewModelScope.launch {
             try {
-                val old = historyRepository?.let { itemRepository.getItemById(item.id) }
+
+                // Obtiene estado anterior (solo si hay historial habilitado)
+                val old = historyRepository?.let {
+                    itemRepository.getItemById(item.id)
+                }
+
+                // Actualiza el item en base de datos
                 itemRepository.update(item)
 
+                // Si hay historial disponible, registra cambios
                 if (historyRepository != null) {
+
                     val now = Date()
+
                     if (old != null) {
+
+                        // Detecta cambio de estado
                         val estadoChanged = old.estado != item.estado
+
+                        // Detecta otros cambios generales
                         val otherChanged = old.copy(estado = item.estado) != item
 
+                        // Historial por cambio de estado
                         if (estadoChanged) {
                             historyRepository.insert(
                                 ItemHistory(
@@ -83,7 +109,9 @@ class ItemViewModel(
                             )
                         }
 
+                        // Historial por edición de campos
                         if (otherChanged) {
+
                             val fields = buildList {
                                 if (old.titulo != item.titulo) add("Titulo")
                                 if (old.valor != item.valor) add("Valor")
@@ -93,16 +121,23 @@ class ItemViewModel(
                                 if (old.calificacion != item.calificacion) add("Calificacion")
                                 if (old.favorito != item.favorito) add("Favorito")
                             }
+
                             historyRepository.insert(
                                 ItemHistory(
                                     itemId = item.id,
                                     tipo = "EDITED",
                                     fecha = now,
-                                    descripcion = if (fields.isEmpty()) "Item actualizado" else "Editado: ${fields.joinToString()}"
+                                    descripcion =
+                                        if (fields.isEmpty())
+                                            "Item actualizado"
+                                        else
+                                            "Editado: ${fields.joinToString()}"
                                 )
                             )
                         }
+
                     } else {
+                        // Caso sin referencia previa
                         historyRepository.insert(
                             ItemHistory(
                                 itemId = item.id,
@@ -113,13 +148,16 @@ class ItemViewModel(
                         )
                     }
                 }
+
                 onUpdated?.invoke()
+
             } catch (e: Exception) {
                 onError?.invoke(e.message ?: "Error al actualizar el item")
             }
         }
     }
 
+    // Elimina un item
     fun delete(
         item: Item,
         onDeleted: (() -> Unit)? = null,
@@ -135,20 +173,33 @@ class ItemViewModel(
         }
     }
 
-    fun getItemsByCollection(collectionId: Int) = itemRepository.getItemsByCollection(collectionId)
+    // Obtiene items por colección (Flow directo)
+    fun getItemsByCollection(collectionId: Int) =
+        itemRepository.getItemsByCollection(collectionId)
 
-    fun getItemsByCategoria(categoriaId: Int) = itemRepository.getItemsByCategoria(categoriaId)
+    // Obtiene items por categoría
+    fun getItemsByCategoria(categoriaId: Int) =
+        itemRepository.getItemsByCategoria(categoriaId)
 
-    fun getItemsByCollectionFlow(collectionId: Int) = itemRepository.getItemsByCollectionFlow(collectionId)
+    // Flow específico por colección
+    fun getItemsByCollectionFlow(collectionId: Int) =
+        itemRepository.getItemsByCollectionFlow(collectionId)
 
-    fun searchItems(search: String) = itemRepository.searchItemsByTitle(search)
+    // Búsqueda por título
+    fun searchItems(search: String) =
+        itemRepository.searchItemsByTitle(search)
 
-    suspend fun getTotalItems() = itemRepository.getTotalItems()
+    // Estadísticas
+    suspend fun getTotalItems() =
+        itemRepository.getTotalItems()
 
-    suspend fun getTotalValor() = itemRepository.getTotalValor()
+    suspend fun getTotalValor() =
+        itemRepository.getTotalValor()
 
-    suspend fun getItemById(id: Int) = itemRepository.getItemById(id)
+    suspend fun getItemById(id: Int) =
+        itemRepository.getItemById(id)
 
+    // Inserta una nueva categoría si el repositorio existe
     suspend fun insertCategoria(nombre: String): Categoria? {
         return if (categoriaRepository != null && nombre.isNotBlank()) {
             val categoria = Categoria(nombre = nombre)
@@ -157,6 +208,7 @@ class ItemViewModel(
         } else null
     }
 
+    // Obtiene todas las categorías (o lista vacía si no hay repo)
     suspend fun getAllCategorias(): List<Categoria> {
         return categoriaRepository?.allCategoriasOnce() ?: emptyList()
     }

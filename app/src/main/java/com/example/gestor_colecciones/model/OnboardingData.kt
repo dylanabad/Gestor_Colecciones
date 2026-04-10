@@ -1,14 +1,32 @@
 package com.example.gestor_colecciones.model
 
+/*
+ * OnboardingData.kt
+ *
+ * Contiene la definición de las páginas que se muestran en el flujo de
+ * onboarding inicial de la aplicación. Cada página se representa con la
+ * data class `OnboardingPage` que incluye un emoji, título, descripción,
+ * texto de detalle y un color de fondo (hex).
+ *
+ * El objeto `OnboardingData` expone la lista `PAGES` que es consumida por el
+ * `OnboardingAdapter`/`OnboardingFragment` para renderizar las pantallas.
+ *
+ * Nota: Solo se añaden comentarios explicativos en español; no se modifica la lógica.
+ */
+
+// Representa una página del onboarding con campos utilizados por la UI
 data class OnboardingPage(
     val emoji: String,
     val titulo: String,
     val descripcion: String,
     val detalle: String,
+    // Color de fondo en formato hex (p. ej. "#6C63FF")
     val colorFondo: String
 )
 
+// Contenedor con las páginas de ejemplo mostradas en el onboarding
 object OnboardingData {
+    // Lista de páginas en el orden en que se mostrarán
     val PAGES = listOf(
         OnboardingPage(
             emoji = "📦",

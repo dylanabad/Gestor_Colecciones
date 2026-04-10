@@ -1,5 +1,15 @@
 package com.example.gestor_colecciones.fragment
 
+/*
+ * OnboardingFragment.kt
+ *
+ * Fragmento que muestra una serie de pantallas de bienvenida (onboarding)
+ * usando ViewPager2. Gestiona los puntos (dots), botones Siguiente/Skip y
+ * marca en SharedPreferences cuando el onboarding se ha completado.
+ *
+ * Nota: Solo se añaden comentarios explicativos en español; no se modifica la lógica.
+ */
+
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -15,13 +25,17 @@ import com.example.gestor_colecciones.adapters.OnboardingAdapter
 import com.example.gestor_colecciones.databinding.FragmentOnboardingBinding
 import com.example.gestor_colecciones.model.OnboardingData
 
+// Fragment que gestiona el flujo de onboarding (pantallas de bienvenida)
 class OnboardingFragment : Fragment() {
 
+    // ViewBinding para acceder a las vistas del layout; se inicializa en onCreateView
+    // y se limpia en onDestroyView para evitar fugas de memoria.
     private var _binding: FragmentOnboardingBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Configura pequeñas transiciones visuales para la entrada/salida del fragmento
         enterTransition = MaterialFadeThrough().apply { duration = 300 }
         exitTransition = MaterialFadeThrough().apply { duration = 300 }
     }
@@ -30,6 +44,7 @@ class OnboardingFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // Inflar la vista con ViewBinding y devolver la raíz
         _binding = FragmentOnboardingBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -64,6 +79,9 @@ class OnboardingFragment : Fragment() {
         }
     }
 
+    // Inicializa el indicador de puntos (dots) que muestra la página actual
+
+    // Crea y actualiza los puntos indicadores (dots) debajo del ViewPager
     private fun setupDots(total: Int, selected: Int) {
         binding.layoutDots.removeAllViews()
         val context = requireContext()
@@ -84,6 +102,7 @@ class OnboardingFragment : Fragment() {
     }
 
     private fun updateButtons(position: Int, total: Int) {
+        // Actualiza texto y visibilidad de botones según la página (última página cambia el texto)
         if (position == total - 1) {
             binding.btnNext.text = "¡Empezar!"
             binding.btnSkip.visibility = View.GONE
@@ -94,9 +113,11 @@ class OnboardingFragment : Fragment() {
     }
 
     private fun finishOnboarding() {
+        // Marcar en SharedPreferences que el onboarding se completó
         requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
             .edit().putBoolean("onboarding_completed", true).apply()
 
+        // Reemplazar el fragment actual por la lista de colecciones (inicio de la app)
         parentFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
             .replace(R.id.fragment_container, ColeccionesFragment())
@@ -104,10 +125,12 @@ class OnboardingFragment : Fragment() {
     }
 
     private fun Int.dpToPx(): Int =
+        // Convierte dp a px usando la densidad de pantalla
         (this * resources.displayMetrics.density).toInt()
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Limpiar binding para evitar fugas de memoria
         _binding = null
     }
 }

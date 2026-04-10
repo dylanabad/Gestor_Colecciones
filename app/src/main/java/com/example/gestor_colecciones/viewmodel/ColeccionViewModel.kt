@@ -9,8 +9,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class ColeccionViewModel(private val repository: ColeccionRepository) : ViewModel() {
+// ViewModel encargado de gestionar colecciones en la UI
+class ColeccionViewModel(
+    private val repository: ColeccionRepository
+) : ViewModel() {
 
+    // Lista reactiva de colecciones expuesta a la UI
     val colecciones: StateFlow<List<Coleccion>> =
         repository.allColecciones.stateIn(
             viewModelScope,
@@ -18,17 +22,28 @@ class ColeccionViewModel(private val repository: ColeccionRepository) : ViewMode
             emptyList()
         )
 
+    // Inserta una nueva colección
     fun insert(coleccion: Coleccion) {
-        viewModelScope.launch { repository.insert(coleccion) }
+        viewModelScope.launch {
+            repository.insert(coleccion)
+        }
     }
 
+    // Actualiza una colección existente
     fun update(coleccion: Coleccion) {
-        viewModelScope.launch { repository.update(coleccion) }
+        viewModelScope.launch {
+            repository.update(coleccion)
+        }
     }
 
+    // Elimina una colección
     fun delete(coleccion: Coleccion) {
-        viewModelScope.launch { repository.delete(coleccion) }
+        viewModelScope.launch {
+            repository.delete(coleccion)
+        }
     }
+
+    // Obtiene una colección por su ID y devuelve el resultado mediante callback
     fun getColeccionById(id: Int, onResult: (Coleccion?) -> Unit) {
         viewModelScope.launch {
             val coleccion = repository.getById(id)

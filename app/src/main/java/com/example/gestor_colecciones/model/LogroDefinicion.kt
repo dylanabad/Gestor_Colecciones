@@ -1,5 +1,19 @@
 ﻿package com.example.gestor_colecciones.model
 
+/*
+ * LogroDefinicion.kt
+ *
+ * Define los logros disponibles en la aplicación. Cada logro tiene una clave
+ * única (`key`), un título legible, una descripción y un icono (emoji) que se
+ * muestra en la UI. El objeto `LogroDefinicion` expone la lista `TODOS` con
+ * todas las definiciones y una función helper `getInfo` para recuperar
+ * información de un logro por su clave.
+ *
+ * Nota: Solo se han añadido comentarios explicativos en español; no se modifica
+ * la lógica ni los valores de los logros.
+ */
+
+// Información básica de un logro: clave, título, descripción y emoji
 data class LogroInfo(
     val key: String,
     val titulo: String,
@@ -7,7 +21,9 @@ data class LogroInfo(
     val icono: String   // emoji para mostrar en UI
 )
 
+// Contenedor de las definiciones de logros disponibles en la app
 object LogroDefinicion {
+    // Lista estática con todos los logros; está organizada por categorías comentadas
     val TODOS = listOf(
         // Colecciones
         LogroInfo("PRIMERA_COLECCION",     "Primera colección",        "Crea tu primera colección",                 "🗂️"),
@@ -32,5 +48,6 @@ object LogroDefinicion {
         LogroInfo("PRESTAMOS_RECIBIDOS_5", "Confiable",                "Recibe 5 préstamos",                           "🤗")
     )
 
+    // Helper para obtener la definición de un logro por su clave
     fun getInfo(key: String): LogroInfo? = TODOS.find { it.key == key }
 }

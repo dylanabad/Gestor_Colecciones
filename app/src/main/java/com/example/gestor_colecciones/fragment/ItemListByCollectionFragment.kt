@@ -1,5 +1,17 @@
 package com.example.gestor_colecciones.fragment
 
+/*
+ * ItemListByCollectionFragment.kt
+ *
+ * Fragmento que muestra una lista de items pertenecientes a una colección.
+ * Contiene: gestión de vistas, adaptador de RecyclerView, filtrado/ordenación,
+ * creación/edición de items, manejo de imágenes (galería/cámara), generación de
+ * una "tarjeta" con los items principales y operaciones sobre categorías.
+ *
+ * Nota: Solo se han añadido comentarios explicativos al código; no se ha modificado
+ * ninguna lógica ni comportamiento.
+ */
+
 import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
@@ -56,29 +68,48 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.*
 
+// Fragment principal que muestra items filtrados por colección.
+// Gestiona UI, eventos de usuario y operaciones de negocio delegadas al ViewModel y repositorios.
 class ItemListByCollectionFragment : Fragment() {
 
+    // ID de la colección mostrada en este fragmento
     private var collectionId: Int = 0
+
+    // Binding de vistas (ViewBinding) — se gestiona en onCreateView/onDestroyView
     private var _binding: FragmentItemListBinding? = null
     private val binding get() = _binding!!
 
+    // ViewModel y adaptador para la lista de items
     private lateinit var viewModel: ItemViewModel
     private lateinit var adapter: ItemAdapter
+
+    // Mapa de categorías (id -> nombre) cargado desde la BBDD
     private var categoriasMap: MutableMap<Int, String> = mutableMapOf()
+
+    // Lista completa de items (sin filtrar) y estado de búsqueda/filtrado
     private var fullItemList: List<Item> = emptyList()
     private var searchQuery: String = ""
     private var filterSortState: ItemFilterSortState = ItemFilterSortState()
+
+    // Mapa auxiliar que contiene para cada item los ids de sus tags (usado en filtros)
     private var tagIdsByItemId: Map<Int, Set<Int>> = emptyMap()
 
+    // Repositorios usados para acceder a datos (Room / red / etc.)
     private lateinit var categoriaRepo: CategoriaRepository
     private lateinit var itemRepo: ItemRepository
     private lateinit var coleccionRepo: ColeccionRepository
     private lateinit var tagRepo: TagRepository
     private lateinit var historyRepo: ItemHistoryRepository
 
+    // --- Manejo de imágenes para items ---------------------------------
+    // Uri seleccionada actualmente (galería o cámara)
     private var selectedItemImageUri: Uri? = null
+    // Referencia a la ImageView que muestra la previsualización temporal
     private var currentItemImageView: ImageView? = null
+    // Uri temporal creada cuando se toma foto con cámara y se guarda en galería
     private var cameraItemImageUri: Uri? = null
+
+    // Lanzador para seleccionar imagen desde la galería
     private val pickItemImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
@@ -88,6 +119,7 @@ class ItemListByCollectionFragment : Fragment() {
         }
     }
 
+    // Lanzador para tomar una foto y guardar directamente en la Uri proporcionada
     private val takeItemImageLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { success ->
@@ -98,10 +130,12 @@ class ItemListByCollectionFragment : Fragment() {
                 finalizePendingImage(it)
             }
         } else {
+            // Si falla, mostramos un preview como alternativa
             takeItemImagePreviewLauncher.launch(null)
         }
     }
 
+    // Lanzador que devuelve un Bitmap de preview si no se pudo guardar la foto
     private val takeItemImagePreviewLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
@@ -118,6 +152,7 @@ class ItemListByCollectionFragment : Fragment() {
         }
     }
 
+    // Lanzador para solicitar permisos (cámara y, si aplica, escritura en almacenamiento)
     private val cameraItemPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { grants ->
@@ -134,6 +169,8 @@ class ItemListByCollectionFragment : Fragment() {
         }
     }
 
+    // Ciclo de vida: inicialización del fragmento
+    // Se recupera el ID de la colección y se configuran transiciones compartidas
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         collectionId = arguments?.getInt(ARG_COLLECTION_ID) ?: 0
@@ -143,6 +180,7 @@ class ItemListByCollectionFragment : Fragment() {
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false).apply { duration = 220 }
     }
 
+    // Inflar la vista y preparar el binding
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -151,6 +189,8 @@ class ItemListByCollectionFragment : Fragment() {
         return binding.root
     }
 
+    // Configuración de la UI una vez creada la vista: inicializa repositorios, ViewModel,
+    // adaptador, listeners y recoge datos iniciales (categorías, items, etc.).
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -298,12 +338,16 @@ class ItemListByCollectionFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        // Refrescar información dependiente del lifecycle cada vez que el fragmento vuelve a primer plano
         viewLifecycleOwner.lifecycleScope.launch {
             refreshTagsMaps()
             applyFiltersAndSort()
         }
     }
 
+    // Actualiza los mapas de tags por item y los nombres usados por el adaptador.
+    // Se consulta el repositorio de tags de forma puntual (once) y se transforma
+    // la información para uso en filtros y en la UI.
     private suspend fun refreshTagsMaps() {
         val ids = fullItemList.map { it.id }
         val infos = tagRepo.getTagInfoForItemsOnce(ids)
@@ -312,6 +356,8 @@ class ItemListByCollectionFragment : Fragment() {
         adapter.tagsByItemId = namesMap
     }
 
+    // Abre el BottomSheet para seleccionar filtros y ordenación. Construye las listas
+    // (categorías, estados, tags) y pasa el estado actual para inicializar la UI.
     private fun openFilterSort() {
         viewLifecycleOwner.lifecycleScope.launch {
             val sortedCategorias = categoriasMap.entries.sortedBy { it.value.lowercase(Locale.getDefault()) }
@@ -329,6 +375,7 @@ class ItemListByCollectionFragment : Fragment() {
         }
     }
 
+    // Aplica la búsqueda, filtros y ordenación al listado completo y actualiza el adaptador.
     private fun applyFiltersAndSort() {
         val query = searchQuery.trim().lowercase(Locale.getDefault())
         var list = fullItemList
@@ -346,6 +393,7 @@ class ItemListByCollectionFragment : Fragment() {
         adapter.updateList(list.sortedWith(comparator))
     }
 
+    // Actualiza el estado (habilitado/visibilidad) del FAB según existan categorías
     private fun updateFabState() {
         binding.fabAddItem.isEnabled = categoriasMap.isNotEmpty()
         binding.fabAddItem.alpha = if (categoriasMap.isNotEmpty()) 1f else 0.5f
@@ -353,12 +401,14 @@ class ItemListByCollectionFragment : Fragment() {
     }
 
     private fun showSnackbar(message: String) {
+        // Helper corto para mostrar mensajes tipo Snackbar con anclaje al FAB
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
             .setAnchorView(binding.fabAddItem)
             .show()
     }
 
     private fun showItemImageSourceDialog() {
+        // Muestra un diálogo para seleccionar la fuente de la imagen (galería o cámara)
         val options = arrayOf("Galeria", "Camara")
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Seleccionar imagen")
@@ -396,11 +446,13 @@ class ItemListByCollectionFragment : Fragment() {
     }
 
     private fun openCameraForItem() {
+        // Abre la cámara creando una uri en la galería donde se guardará la foto
         val uri = createGalleryImageUri("item")
         cameraItemImageUri = uri
         takeItemImageLauncher.launch(uri)
     }
 
+    // Crea una Uri en la galería / MediaStore para guardar una imagen nueva
     private fun createGalleryImageUri(prefix: String): Uri {
         val fileName = "${prefix}_${System.currentTimeMillis()}.jpg"
         val resolver = requireContext().contentResolver
@@ -421,6 +473,7 @@ class ItemListByCollectionFragment : Fragment() {
             ?: throw IllegalStateException("No se pudo crear la imagen en la galeria")
     }
 
+    // Marca como no pendiente una imagen creada en MediaStore (API Q+)
     private fun finalizePendingImage(uri: Uri) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val resolver = requireContext().contentResolver
@@ -431,6 +484,7 @@ class ItemListByCollectionFragment : Fragment() {
         }
     }
 
+    // Guarda un Bitmap en la galería y devuelve la Uri resultante
     private fun saveBitmapToGallery(bitmap: Bitmap, prefix: String): Uri? {
         val fileName = "${prefix}_${System.currentTimeMillis()}.jpg"
         val resolver = requireContext().contentResolver
@@ -458,6 +512,7 @@ class ItemListByCollectionFragment : Fragment() {
     // ── Tarjeta ───────────────────────────────────────────────────────────────
 
     private fun generarTarjeta() {
+        // Genera una imagen (tarjeta) con los items más relevantes de la colección
         viewLifecycleOwner.lifecycleScope.launch {
             val coleccion = coleccionRepo.getById(collectionId) ?: return@launch
             val topItems = fullItemList.sortedByDescending { it.valor }.take(4)
@@ -474,6 +529,7 @@ class ItemListByCollectionFragment : Fragment() {
     }
 
     private fun compartirTarjeta(file: File) {
+        // Comparte la imagen usando un FileProvider para exponer la Uri temporalmente
         val uri = FileProvider.getUriForFile(
             requireContext(),
             "${requireContext().packageName}.fileprovider",
@@ -488,6 +544,7 @@ class ItemListByCollectionFragment : Fragment() {
     }
 
     private fun guardarTarjetaEnGaleria(file: File) {
+        // Guarda la tarjeta generada en la galería del dispositivo (MediaStore o FS según API)
         try {
             val fileName = "tarjeta_${System.currentTimeMillis()}.png"
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -519,6 +576,7 @@ class ItemListByCollectionFragment : Fragment() {
     // ── Crear item ────────────────────────────────────────────────────────────
 
     private fun showCreateItemDialog() {
+        // Preparar diálogo para creación de un nuevo item: campos, preview de imagen y validaciones
         selectedItemImageUri = null
         val categoriasList = categoriasMap.entries.toList()
         if (categoriasList.isEmpty()) return
@@ -605,8 +663,8 @@ class ItemListByCollectionFragment : Fragment() {
     }
 
     // ── Editar item ───────────────────────────────────────────────────────────
-
     private fun showEditItemDialog(item: Item) {
+        // Preparar diálogo para editar un item existente, cargar valores y permitir cambiar imagen
         selectedItemImageUri = null
         val categoriasList = categoriasMap.entries.toList()
         if (categoriasList.isEmpty()) return
@@ -691,6 +749,7 @@ class ItemListByCollectionFragment : Fragment() {
     // ── Categorías ────────────────────────────────────────────────────────────
 
     private fun showCreateCategoriaDialog() {
+        // Muestra un diálogo para gestionar (crear/editar/eliminar) categorías
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_categoria, null)
         val lvCategorias = view.findViewById<ListView>(R.id.lvCategorias)
         val etCategoriaNombre = view.findViewById<EditText>(R.id.etCategoriaNombre)
@@ -743,6 +802,7 @@ class ItemListByCollectionFragment : Fragment() {
     }
 
     private suspend fun uploadImage(uri: Uri): String? {
+        // Sube una imagen a la API remota y devuelve la URL resultante (o null en fallo)
         return try {
             val api = ApiProvider.getApi(requireContext())
             val part = UploadUtils.createImagePart(requireContext(), uri)
@@ -754,6 +814,7 @@ class ItemListByCollectionFragment : Fragment() {
     }
 
     private fun copyImageToInternalStorage(uri: Uri, filename: String): String {
+        // Copia el contenido referenciado por la Uri al almacenamiento interno de la app
         val inputStream = requireContext().contentResolver.openInputStream(uri)
         val file = File(requireContext().filesDir, filename)
         inputStream.use { input -> FileOutputStream(file).use { output -> input?.copyTo(output) } }
@@ -769,6 +830,7 @@ class ItemListByCollectionFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Limpiar referencia al binding para evitar fugas de memoria
         _binding = null
     }
 }

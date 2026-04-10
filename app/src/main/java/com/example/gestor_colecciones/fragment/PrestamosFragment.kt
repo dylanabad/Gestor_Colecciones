@@ -1,5 +1,16 @@
 package com.example.gestor_colecciones.fragment
 
+/*
+ * PrestamosFragment.kt
+ *
+ * Fragmento responsable de gestionar préstamos: muestra listas de préstamos
+ * prestados y recibidos, permite crear nuevos préstamos, registrar devoluciones
+ * y eliminar préstamos. También maneja notificaciones locales cuando se reciben
+ * nuevos préstamos.
+ *
+ * Nota: Solo se añaden comentarios explicativos en español; no se modifica la lógica.
+ */
+
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -48,10 +59,12 @@ import java.util.TimeZone
 
 class PrestamosFragment : Fragment() {
 
+    // ViewModel y adaptadores para las dos vistas (prestados / recibidos)
     private lateinit var viewModel: PrestamoViewModel
     private lateinit var adapterPrestados: PrestamoAdapter
     private lateinit var adapterRecibidos: PrestamoAdapter
 
+    // Referencias a vistas del layout (se inicializan en onViewCreated)
     private lateinit var tabLayout: TabLayout
     private lateinit var rvPrestados: RecyclerView
     private lateinit var rvRecibidos: RecyclerView
@@ -61,11 +74,15 @@ class PrestamosFragment : Fragment() {
     private lateinit var emptyPrestados: View
     private lateinit var emptyRecibidos: View
 
+    // Estado para evitar sobrescribir el set inicial de IDs recibidos
     private var recibidosLoadedOnce = false
+    // SharedPreferences local para llevar el control de IDs ya notificados
     private val prefs by lazy {
         requireContext().getSharedPreferences("prestamos_prefs", Context.MODE_PRIVATE)
     }
 
+    // Lanzador para solicitar el permiso de notificaciones en Android 13+
+    // Si el permiso se concede, ejecuta la notificación pendiente (si existe)
     private val notifPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -74,6 +91,7 @@ class PrestamosFragment : Fragment() {
         }
         pendingNotification = null
     }
+    // Función pendiente que envía la notificación (se guarda mientras se pide permiso)
     private var pendingNotification: (() -> Unit)? = null
 
     override fun onCreateView(
@@ -83,12 +101,13 @@ class PrestamosFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        // Inicializar repositorio y ViewModel
         val repo = PrestamoRepository(ApiProvider.getApi(requireContext()))
         viewModel = ViewModelProvider(
             this, PrestamoViewModelFactory(repo)
         )[PrestamoViewModel::class.java]
 
+        // Referencias a las vistas del layout
         tabLayout = view.findViewById(R.id.tabLayoutPrestamos)
         rvPrestados = view.findViewById(R.id.rvPrestados)
         rvRecibidos = view.findViewById(R.id.rvRecibidos)
@@ -98,6 +117,7 @@ class PrestamosFragment : Fragment() {
         emptyPrestados = view.findViewById(R.id.emptyPrestados)
         emptyRecibidos = view.findViewById(R.id.emptyRecibidos)
 
+        // Crear adaptadores para las dos listas (prestados y recibidos)
         val currentUsername = AuthStore(requireContext()).getUsername()
         adapterPrestados = PrestamoAdapter(
             emptyList(),
@@ -114,11 +134,13 @@ class PrestamosFragment : Fragment() {
             currentUsername = currentUsername
         )
 
+        // Configurar RecyclerViews
         rvPrestados.layoutManager = LinearLayoutManager(requireContext())
         rvPrestados.adapter = adapterPrestados
         rvRecibidos.layoutManager = LinearLayoutManager(requireContext())
         rvRecibidos.adapter = adapterRecibidos
 
+        // Listener de pestañas: cambia la vista visible y carga los datos según la pestaña
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 when (tab?.position) {
@@ -138,11 +160,13 @@ class PrestamosFragment : Fragment() {
             override fun onTabReselected(tab: TabLayout.Tab?) {}
         })
 
+        // FAB para crear un nuevo préstamo
         fabNuevoPrestamo.setOnClickListener {
             viewModel.cargarUsuarios()
             showCrearPrestamoDialog()
         }
 
+        // Observar flujos del ViewModel y actualizar adaptadores/UI
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.prestados.collectLatest { lista ->
                 adapterPrestados.updateList(lista)
@@ -158,6 +182,7 @@ class PrestamosFragment : Fragment() {
             }
         }
 
+        // Estado global del ViewModel: errores o mensajes de éxito
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.state.collectLatest { state ->
                 when (state) {
@@ -168,6 +193,7 @@ class PrestamosFragment : Fragment() {
                     is PrestamoState.Error -> {
                         Snackbar.make(view, state.message, Snackbar.LENGTH_LONG).show()
                         val msg = state.message
+                        // Si hay problema de autenticación, limpiar credenciales y volver al login
                         if (msg.contains("No autenticado", ignoreCase = true) || msg.contains("autenticad", ignoreCase = true)) {
                             AuthStore(requireContext()).clear()
                             parentFragmentManager.beginTransaction()
@@ -182,11 +208,13 @@ class PrestamosFragment : Fragment() {
             }
         }
 
+        // Cargar inicialmente ambas listas
         viewModel.cargarPrestados()
         viewModel.cargarRecibidos()
     }
 
     private fun confirmarDevolucion(prestamo: PrestamoDto) {
+        // Mostrar diálogo para confirmar la devolución de un préstamo
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Registrar devolucion")
             .setMessage("Confirmas que \"${prestamo.itemTitulo}\" ha sido devuelto por ${prestamo.prestatarioUsername}?")
@@ -196,6 +224,7 @@ class PrestamosFragment : Fragment() {
     }
 
     private fun confirmarEliminacion(prestamo: PrestamoDto) {
+        // Mostrar diálogo de confirmación para eliminar un préstamo
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Eliminar prestamo")
             .setMessage("Deseas eliminar el prestamo de \"${prestamo.itemTitulo}\"?")
@@ -205,6 +234,8 @@ class PrestamosFragment : Fragment() {
     }
 
     private fun showCrearPrestamoDialog() {
+        // Muestra un diálogo para crear un nuevo préstamo: selector de item, usuario,
+        // fecha de devolución y notas. Gestiona la lógica de pickers y validaciones
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_crear_prestamo, null)
         val spinnerItem = dialogView.findViewById<Spinner>(R.id.spinnerItem)
@@ -213,10 +244,12 @@ class PrestamosFragment : Fragment() {
         val tilFechaDevolucion = dialogView.findViewById<TextInputLayout>(R.id.tilFechaDevolucion)
         val etNotas = dialogView.findViewById<EditText>(R.id.etNotas)
 
+        // Variables locales que se rellenan asíncronamente desde repositorios
         var usuariosLista: List<UsuarioDto> = emptyList()
         var itemsLista: List<Item> = emptyList()
         var fechaSeleccionada: String? = null
 
+        // Abre un DatePicker para seleccionar la fecha de devolución prevista
         fun openDatePicker() {
             val picker = MaterialDatePicker.Builder.datePicker()
                 .setTitleText("Selecciona fecha")
@@ -231,9 +264,11 @@ class PrestamosFragment : Fragment() {
             picker.show(parentFragmentManager, "datePickerPrestamo")
         }
 
+        // Asociar el picker al TextInputLayout y al EditText
         tilFechaDevolucion.setEndIconOnClickListener { openDatePicker() }
         etFechaDevolucion.setOnClickListener { openDatePicker() }
 
+        // Rellenar el spinner de usuarios desde el flujo de usuarios del ViewModel
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.usuarios.collectLatest { usuarios ->
                 usuariosLista = usuarios
@@ -245,6 +280,7 @@ class PrestamosFragment : Fragment() {
             }
         }
 
+        // Cargar lista de items desde repositorio (operación IO), y preparar labels
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val itemRepo = RepositoryProvider.itemRepository(requireContext())
@@ -259,6 +295,7 @@ class PrestamosFragment : Fragment() {
                     labels
                 )
             } catch (_: Exception) {
+                // En caso de fallo, dejar el spinner vacío
                 spinnerItem.adapter = ArrayAdapter(
                     requireContext(),
                     android.R.layout.simple_spinner_dropdown_item,
@@ -271,6 +308,7 @@ class PrestamosFragment : Fragment() {
             .setTitle("Nuevo prestamo")
             .setView(dialogView)
             .setPositiveButton("Prestar") { _, _ ->
+                // Validar selección y crear el préstamo a través del ViewModel
                 val usuarioSeleccionado = usuariosLista.getOrNull(spinnerUsuario.selectedItemPosition)
                 val itemSeleccionado = itemsLista.getOrNull(spinnerItem.selectedItemPosition)
                 val fechaDevolucion = fechaSeleccionada ?: etFechaDevolucion.text.toString().ifBlank { null }
@@ -301,23 +339,29 @@ class PrestamosFragment : Fragment() {
     }
 
     private fun handleRecibidosNotifications(lista: List<PrestamoDto>) {
+        // Gestor de notificaciones para préstamos recibidos. Compara el set actual de IDs
+        // con los almacenados en SharedPreferences para detectar nuevos préstamos.
         val currentIds = lista.map { it.movimientoId.toString() }.toSet()
         val stored = prefs.getStringSet("recibidos_ids", emptySet()) ?: emptySet()
         if (!recibidosLoadedOnce) {
+            // Primera carga: guardar el estado inicial y no notificar
             prefs.edit().putStringSet("recibidos_ids", currentIds).apply()
             recibidosLoadedOnce = true
             return
         }
 
+        // Calcular IDs nuevos y notificar si hay alguno
         val nuevos = currentIds.minus(stored)
         if (nuevos.isNotEmpty()) {
             val nuevosItems = lista.filter { nuevos.contains(it.movimientoId.toString()) }
             notifyPrestamosRecibidos(nuevosItems)
         }
+        // Actualizar el set almacenado
         prefs.edit().putStringSet("recibidos_ids", currentIds).apply()
     }
 
     private fun notifyPrestamosRecibidos(nuevos: List<PrestamoDto>) {
+        // Construye y envía una notificación local informando de nuevos préstamos recibidos.
         if (nuevos.isEmpty()) return
         val send = {
             ensureNotificationChannel()
@@ -337,10 +381,12 @@ class PrestamosFragment : Fragment() {
             NotificationManagerCompat.from(requireContext()).notify(2001, notification)
         }
 
+        // Si estamos en Android 13+, solicitar permiso POST_NOTIFICATIONS si no está concedido.
         if (android.os.Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
         ) {
+            // Guardar la acción pendiente y lanzar el request de permiso
             pendingNotification = send
             notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         } else {
@@ -349,6 +395,7 @@ class PrestamosFragment : Fragment() {
     }
 
     private fun ensureNotificationChannel() {
+        // Crear canal de notificación (necesario en Android O+)
         if (android.os.Build.VERSION.SDK_INT >= 26) {
             val channel = NotificationChannel(
                 "prestamos",

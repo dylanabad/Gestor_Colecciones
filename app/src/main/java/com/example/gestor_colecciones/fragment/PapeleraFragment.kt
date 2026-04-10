@@ -1,5 +1,16 @@
 package com.example.gestor_colecciones.fragment
 
+/*
+ * PapeleraFragment.kt
+ *
+ * Fragmento que muestra los elementos eliminados (colecciones e items) y permite
+ * restaurarlos o eliminarlos de forma permanente. Contiene lógica para alternar
+ * entre pestañas (colecciones/items), mostrar el conteo y manejar gestos de
+ * deslizamiento para acciones rápidas.
+ *
+ * Nota: Solo se añaden comentarios explicativos en español; no se modifica la lógica.
+ */
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -30,18 +41,25 @@ import java.util.concurrent.TimeUnit
 
 class PapeleraFragment : Fragment() {
 
+    // ViewBinding para acceder a las vistas del layout; se inicializa en onCreateView
+    // y se limpia en onDestroyView para evitar fugas de memoria.
     private var _binding: FragmentPapeleraBinding? = null
     private val binding get() = _binding!!
 
+    // ViewModel que expone flujos con los elementos en la papelera
     private lateinit var viewModel: PapeleraViewModel
+    // Adaptador del RecyclerView que muestra elementos de la papelera
     private lateinit var adapter: PapeleraAdapter
 
+    // Listas locales con colecciones e items eliminados (sin filtrar)
     private var coleccionesEliminadas: List<Coleccion> = emptyList()
     private var itemsEliminados: List<Item> = emptyList()
+    // Índice de la pestaña actualmente visible (0 = colecciones, 1 = items)
     private var tabActual = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Configurar transiciones suaves al mostrar/ocultar el fragmento
         enterTransition = MaterialFadeThrough().apply { duration = 220 }
         returnTransition = MaterialFadeThrough().apply { duration = 200 }
     }
@@ -56,11 +74,12 @@ class PapeleraFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        // Inicializar repositorios y ViewModel para recuperar datos de la papelera
         val db = DatabaseProvider.getDatabase(requireContext())
         val repo = RepositoryProvider.papeleraRepository(requireContext())
         viewModel = ViewModelProvider(this, PapeleraViewModelFactory(repo))[PapeleraViewModel::class.java]
 
+        // Preparar adaptador del RecyclerView con callbacks para restaurar y eliminar
         adapter = PapeleraAdapter(
             emptyList(),
             onRestaurar = { item -> restaurar(item) },
@@ -70,6 +89,7 @@ class PapeleraFragment : Fragment() {
         binding.rvPapelera.layoutManager = LinearLayoutManager(requireContext())
         binding.rvPapelera.adapter = adapter
 
+        // Manejo de swipe hacia la izquierda para eliminar definitivamente
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
@@ -78,14 +98,17 @@ class PapeleraFragment : Fragment() {
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvPapelera)
 
+        // Botón atrás
         binding.btnBack.setOnClickListener { parentFragmentManager.popBackStack() }
 
+        // Listener de las pestañas para alternar entre colecciones e items eliminados
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) { tabActual = tab.position; actualizarLista() }
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
 
+        // Observar flujos del ViewModel y actualizar listas locales cuando cambien
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.coleccionesEliminadas.collectLatest { lista ->
                 coleccionesEliminadas = lista
@@ -102,6 +125,7 @@ class PapeleraFragment : Fragment() {
     }
 
     private fun actualizarLista() {
+        // Actualiza el contador y el adaptador según la pestaña seleccionada
         val total = coleccionesEliminadas.size + itemsEliminados.size
         binding.tvContador.text = "$total elementos"
         val items = if (tabActual == 0) coleccionesEliminadas.map { it.toPapeleraItem() }
@@ -110,6 +134,7 @@ class PapeleraFragment : Fragment() {
     }
 
     private fun restaurar(papeleraItem: PapeleraItem) {
+        // Restaura la colección o item según la pestaña activa
         if (tabActual == 0) {
             val coleccion = coleccionesEliminadas.find { it.id == papeleraItem.id } ?: return
             viewModel.restaurarColeccion(coleccion)
@@ -122,6 +147,7 @@ class PapeleraFragment : Fragment() {
     }
 
     private fun confirmarEliminacionDefinitiva(papeleraItem: PapeleraItem) {
+        // Mostrar diálogo de confirmación antes de eliminar de forma permanente
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Eliminar definitivamente")
             .setMessage("\"${papeleraItem.nombre}\" se eliminará de forma permanente. ¿Continuar?")
@@ -140,6 +166,7 @@ class PapeleraFragment : Fragment() {
     }
 
     private fun diasRestantes(fechaEliminacion: Date?): Int {
+        // Calcula los días restantes hasta que el elemento sea eliminado definitivamente
         fechaEliminacion ?: return 0
         val expira = Calendar.getInstance().apply {
             time = fechaEliminacion
@@ -167,6 +194,7 @@ class PapeleraFragment : Fragment() {
     )
 
     private fun showSnackbar(message: String) {
+        // Muestra un Snackbar simple con el mensaje recibido
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
 

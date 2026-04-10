@@ -24,14 +24,27 @@ import retrofit2.http.Path
 import retrofit2.http.Part
 import retrofit2.http.Query
 
+/*
+ * ApiService
+ *
+ * Interfaz Retrofit que define los endpoints remotos usados por la app.
+ * Cada método corresponde a una llamada HTTP y utiliza DTOs (data transfer
+ * objects) en los cuerpos y respuestas. Los métodos son `suspend` para poder
+ * llamarlos desde coroutines.
+ *
+ * Las rutas están agrupadas por responsabilidad: autenticación, colecciones,
+ * items, categorías, tags, deseos, uploads, logros, usuarios y préstamos.
+ */
 interface ApiService {
 
+    // ── Autenticación ─────────────────────────────────────────────────────
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): AuthResponse
 
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): AuthResponse
 
+    // ── Colecciones ──────────────────────────────────────────────────────
     @GET("api/colecciones")
     suspend fun getColecciones(): List<ColeccionDto>
 
@@ -47,6 +60,7 @@ interface ApiService {
     @DELETE("api/colecciones/{id}/hard")
     suspend fun deleteColeccionHard(@Path("id") id: Long)
 
+    // ── Items ───────────────────────────────────────────────────────────
     @GET("api/items/coleccion/{coleccionId}")
     suspend fun getItemsByColeccion(@Path("coleccionId") coleccionId: Long): List<ItemDto>
 
@@ -66,6 +80,7 @@ interface ApiService {
     @DELETE("api/items/{id}/hard")
     suspend fun deleteItemHard(@Path("id") id: Long)
 
+    // ── Categorías ──────────────────────────────────────────────────────
     @GET("api/categorias")
     suspend fun getCategorias(): List<CategoriaDto>
 
@@ -75,6 +90,7 @@ interface ApiService {
     @DELETE("api/categorias/{id}")
     suspend fun deleteCategoria(@Path("id") id: Long)
 
+    // ── Tags ────────────────────────────────────────────────────────────
     @GET("api/tags")
     suspend fun getTags(): List<TagDto>
 
@@ -93,6 +109,7 @@ interface ApiService {
         @Body tagIds: List<Long>
     ): List<TagDto>
 
+    // ── Deseos (wishlist) ──────────────────────────────────────────────
     @GET("api/deseos")
     suspend fun getDeseos(): List<ItemDeseoDto>
 
@@ -102,21 +119,23 @@ interface ApiService {
     @DELETE("api/deseos/{id}")
     suspend fun deleteDeseo(@Path("id") id: Long)
 
+    // ── Uploads (subida de imágenes) ────────────────────────────────────
     @Multipart
     @POST("api/uploads")
     suspend fun uploadImage(@Part file: MultipartBody.Part): UploadResponse
 
+    // ── Logros ──────────────────────────────────────────────────────────
     @GET("api/logros")
     suspend fun getLogros(): List<LogroDto>
 
     @POST("api/logros/{key}/unlock")
     suspend fun unlockLogro(@Path("key") key: String): LogroDto
 
-    // ── Usuarios ──────────────────────────────────────────────────────────────
+    // ── Usuarios ────────────────────────────────────────────────────────
     @GET("api/usuarios")
     suspend fun getUsuarios(): List<UsuarioDto>
 
-    // ── Préstamos ─────────────────────────────────────────────────────────────
+    // ── Préstamos ─────────────────────────────────────────────────────
     @POST("api/prestamos")
     suspend fun crearPrestamo(@Body request: PrestamoRequest): PrestamoDto
 

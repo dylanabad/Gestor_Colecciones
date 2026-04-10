@@ -1,5 +1,14 @@
 package com.example.gestor_colecciones.fragment
 
+/*
+ * ItemListFragment.kt
+ *
+ * Fragmento que muestra la lista global de items (todas las colecciones).
+ * Provee búsqueda, filtrado/ordenación, edición de items y gestión de categorías.
+ *
+ * Nota: Solo se añaden comentarios explicativos en español, sin cambiar la lógica.
+ */
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -34,30 +43,43 @@ import com.google.android.material.transition.MaterialSharedAxis
 import kotlinx.coroutines.launch
 import java.util.*
 
+// Fragment que muestra la lista de items (vista general).
+// Maneja UI, interacción del usuario y delega operaciones a ViewModel/repositorios.
 class ItemListFragment : Fragment() {
 
+    // ViewBinding: se inicializa en onCreateView y se limpia en onDestroyView
     private var _binding: FragmentItemListBinding? = null
     private val binding get() = _binding!!
 
+    // ViewModel y adaptador para la lista de items
     private lateinit var viewModel: ItemViewModel
     private lateinit var adapter: ItemAdapter
+
+    // Map de categorías (id -> nombre) y lista completa de items (sin filtrar)
     private var categoriasMap: MutableMap<Int, String> = mutableMapOf()
     private var fullItemList: List<Item> = emptyList()
+
+    // Estado de búsqueda/filtrado/orden
     private var searchQuery: String = ""
     private var filterSortState: ItemFilterSortState = ItemFilterSortState()
+
+    // Mapa auxiliar: para cada item, IDs de tags asociados (usado en filtros)
     private var tagIdsByItemId: Map<Int, Set<Int>> = emptyMap()
 
+    // Repositorios para acceso a datos (Room / providers)
     private lateinit var itemRepo: ItemRepository
     private lateinit var categoriaRepo: CategoriaRepository
     private lateinit var tagRepo: TagRepository
     private lateinit var historyRepo: ItemHistoryRepository
 
+    // Helper para mostrar mensajes tipo Snackbar con anclaje al FAB
     private fun showSnackbar(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
             .setAnchorView(binding.fabAddItem)
             .show()
     }
 
+    // Ciclo de vida: inicialización del fragmento y configuración de transiciones compartidas
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true).apply { duration = 240 }
@@ -66,6 +88,7 @@ class ItemListFragment : Fragment() {
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false).apply { duration = 220 }
     }
 
+    // Infla la vista y prepara el binding
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -74,6 +97,8 @@ class ItemListFragment : Fragment() {
         return binding.root
     }
 
+    // Configuración de la UI una vez creada la vista: inicializa repositorios, ViewModel,
+    // adaptador, listeners y recoge datos iniciales (categorías, items, etc.).
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -99,6 +124,7 @@ class ItemListFragment : Fragment() {
             changeDuration = 160
         }
 
+        // Click corto: abrir detalle del item
         adapter.onItemClick = { item ->
             val fragment = ItemDetailFragment.newInstance(item.id)
             parentFragmentManager.beginTransaction()
@@ -108,10 +134,12 @@ class ItemListFragment : Fragment() {
                 .commit()
         }
 
+        // Click largo: editar item
         adapter.onItemLongClick = { item ->
             showEditItemDialog(item)
         }
 
+        // Escuchar resultados del BottomSheet de filtros/ordenación
         parentFragmentManager.setFragmentResultListener(
             ItemFilterSortBottomSheet.RESULT_KEY,
             viewLifecycleOwner
@@ -143,6 +171,7 @@ class ItemListFragment : Fragment() {
             categoriasMap.putAll(categorias.associate { it.id to it.nombre })
             updateFabState()
 
+            // Colección de items desde el ViewModel (Flow)
             viewModel.items.collect { items ->
                 fullItemList = items
                 refreshTagsMaps()
@@ -150,7 +179,7 @@ class ItemListFragment : Fragment() {
             }
         }
 
-        // --- FAB para crear item ---
+        // --- FAB para crear item (en la vista global muestra un mensaje)
         binding.fabAddItem.setOnClickListener {
             showSnackbar("Crea items desde dentro de una coleccion")
         }
@@ -175,12 +204,16 @@ class ItemListFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        // Refrescar información dependiente del lifecycle al volver a primer plano
         viewLifecycleOwner.lifecycleScope.launch {
             refreshTagsMaps()
             applyFiltersAndSort()
         }
     }
 
+    // Actualiza los mapas de tags por item y los nombres usados por el adaptador.
+    // Se consulta el repositorio de tags de forma puntual (once) y se transforma
+    // la información para uso en filtros y en la UI.
     private suspend fun refreshTagsMaps() {
         val ids = fullItemList.map { it.id }
         val infos = tagRepo.getTagInfoForItemsOnce(ids)
@@ -189,6 +222,8 @@ class ItemListFragment : Fragment() {
         adapter.tagsByItemId = namesMap
     }
 
+    // Abre el BottomSheet para seleccionar filtros y ordenación. Construye las listas
+    // (categorías, estados, tags) y pasa el estado actual para inicializar la UI.
     private fun openFilterSort() {
         viewLifecycleOwner.lifecycleScope.launch {
             val sortedCategorias = categoriasMap.entries
@@ -213,6 +248,7 @@ class ItemListFragment : Fragment() {
         }
     }
 
+    // Aplica la búsqueda, filtros y ordenación al listado completo y actualiza el adaptador.
     private fun applyFiltersAndSort() {
         val query = searchQuery.trim().lowercase(Locale.getDefault())
         var list = fullItemList
@@ -250,6 +286,7 @@ class ItemListFragment : Fragment() {
     }
 
     // --- Actualiza estado del FAB de items ---
+    // Ajusta habilitación/alpha y pasa el mapa de categorías al adaptador
     private fun updateFabState() {
         binding.fabAddItem.isEnabled = true
         binding.fabAddItem.alpha = 0.7f
@@ -257,6 +294,8 @@ class ItemListFragment : Fragment() {
     }
 
     // --- EDITAR ITEM ---
+    // --- EDITAR ITEM ---
+    // Muestra un diálogo para editar los campos de un item existente
     private fun showEditItemDialog(item: Item) {
         val categoriasList = categoriasMap.entries.toList()
         if (categoriasList.isEmpty()) return
@@ -342,6 +381,8 @@ class ItemListFragment : Fragment() {
     }
 
     // --- CREAR CATEGORIA ---
+    // --- CREAR CATEGORIA ---
+    // Muestra un diálogo para crear/editar/eliminar categorías
     private fun showCreateCategoriaDialog() {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_categoria, null)
         val lvCategorias = view.findViewById<ListView>(R.id.lvCategorias)
@@ -416,6 +457,7 @@ class ItemListFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Limpiar referencia al binding para evitar fugas de memoria
         _binding = null
     }
 }
