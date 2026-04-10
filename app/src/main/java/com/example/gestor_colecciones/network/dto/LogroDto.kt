@@ -3,12 +3,14 @@ package com.example.gestor_colecciones.network.dto
 import com.example.gestor_colecciones.entities.Logro
 import com.example.gestor_colecciones.network.DateMapper
 
+// DTO que representa un logro en la comunicación con la API
 data class LogroDto(
-    val key: String,
-    val desbloqueado: Boolean = false,
-    val fechaDesbloqueo: String? = null
+    val key: String,                     // Identificador único del logro
+    val desbloqueado: Boolean = false,   // Indica si el logro está desbloqueado
+    val fechaDesbloqueo: String? = null  // Fecha en la que se desbloqueó (formato String API)
 )
 
+// Convierte DTO recibido desde la API a entidad local
 fun LogroDto.toEntity(): Logro {
     return Logro(
         key = key,

@@ -4,28 +4,30 @@ import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.network.DateMapper
 import java.util.Date
 
+// DTO que representa un item en la comunicación con la API
 data class ItemDto(
-    val id: Long? = null,
-    val titulo: String,
-    val valor: Double? = 0.0,
-    val fechaAdquisicion: String? = null,
-    val imagenPath: String? = null,
-    val estado: String? = null,
-    val descripcion: String? = null,
-    val calificacion: Float? = 0f,
-    val eliminado: Boolean? = false,
-    val fechaEliminacion: String? = null,
-    val prestado: Boolean? = false,
-    val favorito: Boolean? = false,
-    val categoria: CategoriaDto? = null
+    val id: Long? = null,                      // Identificador opcional del item
+    val titulo: String,                        // Título del item
+    val valor: Double? = 0.0,                  // Valor económico del item
+    val fechaAdquisicion: String? = null,      // Fecha de adquisición en formato String (API)
+    val imagenPath: String? = null,            // Ruta de la imagen asociada
+    val estado: String? = null,                // Estado del item (nuevo, usado, etc.)
+    val descripcion: String? = null,           // Descripción opcional
+    val calificacion: Float? = 0f,            // Valoración del item
+    val eliminado: Boolean? = false,           // Flag de eliminación lógica
+    val fechaEliminacion: String? = null,      // Fecha de eliminación en formato String
+    val prestado: Boolean? = false,            // Indica si el item está prestado
+    val favorito: Boolean? = false,            // Indica si está marcado como favorito
+    val categoria: CategoriaDto? = null        // Categoría asociada al item
 )
 
+// Convierte DTO recibido desde la API a entidad local
 fun ItemDto.toEntity(collectionId: Int): Item {
     return Item(
-        id = id?.toInt() ?: 0,
+        id = id?.toInt() ?: 0, // Si no hay id, se asigna 0
         titulo = titulo,
         categoriaId = categoria?.id?.toInt() ?: 0,
-        collectionId = collectionId,
+        collectionId = collectionId, // Se pasa explícitamente la colección
         fechaAdquisicion = DateMapper.parse(fechaAdquisicion) ?: Date(),
         valor = valor ?: 0.0,
         imagenPath = imagenPath,
@@ -39,9 +41,10 @@ fun ItemDto.toEntity(collectionId: Int): Item {
     )
 }
 
+// Convierte entidad local a DTO para enviar a la API
 fun Item.toDto(): ItemDto {
     return ItemDto(
-        id = id.takeIf { it > 0 }?.toLong(),
+        id = id.takeIf { it > 0 }?.toLong(), // Solo envía id si es válido
         titulo = titulo,
         valor = valor,
         fechaAdquisicion = DateMapper.format(fechaAdquisicion),
