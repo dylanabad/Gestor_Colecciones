@@ -6,21 +6,57 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_welcome">
 
-    <!-- Número decorativo de fondo -->
+    <!-- ═══════════════════════════════════════════
+         ZONA SUPERIOR — Logo + Badge
+    ════════════════════════════════════════════ -->
+
+    <!-- Ícono de app en círculo premium -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardLogo"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="56dp"
+        android:alpha="0"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="?attr/colorPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:src="@android:drawable/btn_star"
+            app:tint="?attr/colorOnPrimary"
+            android:contentDescription="Logo" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Badge "v2.0" o "NUEVO" -->
     <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/tvDecorative"
+        android:id="@+id/tvBadge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="∞"
-        android:textSize="320sp"
-        android:textColor="#0DFFFFFF"
-        android:fontFamily="sans-serif-thin"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/tvTagline"
-        android:layout_marginEnd="-60dp" />
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:text="  COLECT · 2025  "
+        android:textSize="10sp"
+        android:letterSpacing="0.25"
+        android:textStyle="bold"
+        android:textColor="?attr/colorPrimary"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:alpha="0"
+        android:background="@drawable/bg_badge"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cardLogo" />
 
-    <!-- Bloque superior — texto principal -->
+    <!-- ═══════════════════════════════════════════
+         TITULAR PRINCIPAL
+    ════════════════════════════════════════════ -->
+
     <LinearLayout
         android:id="@+id/layoutTop"
         android:layout_width="0dp"
@@ -32,259 +68,401 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/tvTagline"
-        android:layout_marginBottom="12dp">
+        android:layout_marginBottom="20dp">
 
+        <!-- "TU" — peso ligero para contraste -->
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TU"
-            android:textSize="52sp"
+            android:textSize="58sp"
             android:textStyle="bold"
-            android:letterSpacing="0.15"
+            android:letterSpacing="0.08"
+            android:lineSpacingMultiplier="0.9"
             android:maxLines="1"
             android:autoSizeTextType="uniform"
-            android:autoSizeMinTextSize="28sp"
-            android:autoSizeMaxTextSize="52sp"
-            android:textColor="?attr/colorOnBackground" />
+            android:autoSizeMinTextSize="32sp"
+            android:autoSizeMaxTextSize="58sp"
+            android:textColor="?attr/colorOnBackground"
+            android:alpha="0.92" />
 
+        <!-- "COLECCIÓN" — acento de color principal -->
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="COLECCIÓN"
-            android:textSize="52sp"
+            android:textSize="58sp"
             android:textStyle="bold"
-            android:letterSpacing="0.15"
+            android:letterSpacing="0.08"
+            android:lineSpacingMultiplier="0.9"
             android:maxLines="1"
             android:autoSizeTextType="uniform"
-            android:autoSizeMinTextSize="28sp"
-            android:autoSizeMaxTextSize="52sp"
+            android:autoSizeMinTextSize="32sp"
+            android:autoSizeMaxTextSize="58sp"
             android:textColor="?attr/colorPrimary" />
 
-        <!-- Separador fino -->
-        <View
-            android:layout_width="40dp"
-            android:layout_height="3dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginBottom="6dp"
-            android:background="?attr/colorPrimary"
-            android:alpha="0.4" />
+        <!-- Separador decorativo refinado -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp">
 
+            <View
+                android:layout_width="48dp"
+                android:layout_height="2dp"
+                android:background="?attr/colorPrimary" />
+
+            <View
+                android:layout_width="6dp"
+                android:layout_height="6dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
+                android:background="?attr/colorPrimary"
+                android:backgroundTint="?attr/colorPrimary" />
+
+            <View
+                android:layout_width="24dp"
+                android:layout_height="2dp"
+                android:background="?attr/colorPrimary"
+                android:alpha="0.4" />
+
+        </LinearLayout>
+
+        <!-- "TU MUNDO." — cierre impactante -->
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TU MUNDO."
-            android:textSize="52sp"
+            android:textSize="58sp"
             android:textStyle="bold"
-            android:letterSpacing="0.15"
+            android:letterSpacing="0.08"
+            android:lineSpacingMultiplier="0.9"
             android:maxLines="1"
             android:autoSizeTextType="uniform"
-            android:autoSizeMinTextSize="28sp"
-            android:autoSizeMaxTextSize="52sp"
-            android:textColor="?attr/colorOnBackground" />
+            android:autoSizeMinTextSize="32sp"
+            android:autoSizeMaxTextSize="58sp"
+            android:textColor="?attr/colorOnBackground"
+            android:alpha="0.92" />
 
     </LinearLayout>
 
-    <!-- Tagline -->
+    <!-- Tagline con mayor respiro visual -->
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tvTagline"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:paddingStart="32dp"
-        android:paddingEnd="32dp"
+        android:paddingEnd="64dp"
         android:text="Organiza, valora y explora todo lo que coleccionas."
-        android:textAppearance="?attr/textAppearanceBodyLarge"
+        android:textSize="16sp"
+        android:lineSpacingMultiplier="1.5"
         android:textColor="?attr/colorOnSurfaceVariant"
         android:alpha="0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/layoutFeatures"
-        android:layout_marginBottom="32dp" />
+        android:layout_marginBottom="28dp" />
 
-    <!-- Features -->
-    <LinearLayout
+    <!-- ═══════════════════════════════════════════
+         FEATURES — Card contenedor unificado
+    ════════════════════════════════════════════ -->
+
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/layoutFeatures"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="32dp"
-        android:paddingEnd="32dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
         android:alpha="0"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="?attr/colorSurfaceVariant"
+        app:strokeWidth="1dp"
+        app:strokeColor="?attr/colorOutlineVariant"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/layoutBottom"
-        android:layout_marginBottom="32dp">
+        android:layout_marginBottom="28dp">
 
-        <!-- Feature 1 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="20dp"
+            android:paddingBottom="8dp">
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="?attr/colorPrimaryContainer">
+            <!-- ─── Feature 1: Galería visual ─── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="16dp">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    app:cardCornerRadius="15dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="?attr/colorPrimaryContainer">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="11dp"
+                        android:src="@android:drawable/ic_menu_gallery"
+                        app:tint="?attr/colorOnPrimaryContainer"
+                        android:contentDescription="Galería" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="16dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Galería visual"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.01"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Imágenes para cada colección e ítem"
+                        android:textSize="12sp"
+                        android:lineSpacingMultiplier="1.3"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                </LinearLayout>
+
+                <!-- Flecha sutil -->
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@android:drawable/ic_media_next"
+                    app:tint="?attr/colorOutline"
+                    android:contentDescription="" />
+
+            </LinearLayout>
+
+            <!-- Divisor fino entre features -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="62dp"
+                android:background="?attr/colorOutlineVariant"
+                android:alpha="0.5" />
+
+            <!-- ─── Feature 2: Estadísticas ─── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    app:cardCornerRadius="15dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="?attr/colorSecondaryContainer">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="11dp"
+                        android:src="@android:drawable/ic_menu_sort_by_size"
+                        app:tint="?attr/colorOnSecondaryContainer"
+                        android:contentDescription="Estadísticas" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="16dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Estadísticas y valor"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.01"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Gráficas y valor total de tu colección"
+                        android:textSize="12sp"
+                        android:lineSpacingMultiplier="1.3"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                </LinearLayout>
 
                 <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="10dp"
-                    android:src="@android:drawable/ic_menu_gallery"
-                    app:tint="?attr/colorOnPrimaryContainer"
-                    android:contentDescription="Imágenes" />
-            </com.google.android.material.card.MaterialCardView>
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@android:drawable/ic_media_next"
+                    app:tint="?attr/colorOutline"
+                    android:contentDescription="" />
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginStart="14dp">
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Galería visual"
-                    android:textAppearance="?attr/textAppearanceTitleSmall" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Imágenes para cada colección e item"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
-        </LinearLayout>
 
-        <!-- Feature 2 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            <!-- Divisor fino -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="62dp"
+                android:background="?attr/colorOutlineVariant"
+                android:alpha="0.5" />
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="?attr/colorSecondaryContainer">
+            <!-- ─── Feature 3: Logros ─── -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="46dp"
+                    android:layout_height="46dp"
+                    app:cardCornerRadius="15dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="?attr/colorTertiaryContainer">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="11dp"
+                        android:src="@android:drawable/btn_star"
+                        app:tint="?attr/colorOnTertiaryContainer"
+                        android:contentDescription="Logros" />
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="16dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Logros y deseos"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.01"
+                        android:textColor="?attr/colorOnSurface" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Desbloquea logros y gestiona tu lista de deseos"
+                        android:textSize="12sp"
+                        android:lineSpacingMultiplier="1.3"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
+
+                </LinearLayout>
 
                 <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="10dp"
-                    android:src="@android:drawable/ic_menu_sort_by_size"
-                    app:tint="?attr/colorOnSecondaryContainer"
-                    android:contentDescription="Estadísticas" />
-            </com.google.android.material.card.MaterialCardView>
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@android:drawable/ic_media_next"
+                    app:tint="?attr/colorOutline"
+                    android:contentDescription="" />
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginStart="14dp">
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Estadísticas y valor"
-                    android:textAppearance="?attr/textAppearanceTitleSmall" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Gráficas y valor total de tu colección"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
+
         </LinearLayout>
 
-        <!-- Feature 3 -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+    </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                app:cardCornerRadius="14dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="?attr/colorPrimaryContainer">
+    <!-- ═══════════════════════════════════════════
+         BLOQUE INFERIOR — CTA
+    ════════════════════════════════════════════ -->
 
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="10dp"
-                    android:src="@android:drawable/btn_star"
-                    app:tint="?attr/colorOnPrimaryContainer"
-                    android:contentDescription="Logros" />
-            </com.google.android.material.card.MaterialCardView>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:layout_marginStart="14dp">
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Logros y deseos"
-                    android:textAppearance="?attr/textAppearanceTitleSmall" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Desbloquea logros y gestiona tu lista de deseos"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-            </LinearLayout>
-        </LinearLayout>
-
-    </LinearLayout>
-
-    <!-- Bloque inferior — botón -->
     <LinearLayout
         android:id="@+id/layoutBottom"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="32dp"
-        android:paddingEnd="32dp"
-        android:paddingBottom="48dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="44dp"
         android:alpha="0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
+        <!-- Botón primario — ancho completo, prominente -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnEnter"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="Comenzar"
-            android:textSize="16sp"
-            android:letterSpacing="0.05"
-            app:cornerRadius="16dp" />
+            android:text="Comenzar ahora"
+            android:textSize="15sp"
+            android:letterSpacing="0.04"
+            android:textStyle="bold"
+            app:cornerRadius="18dp"
+            app:elevation="2dp"
+            app:iconGravity="end"
+            app:icon="@android:drawable/ic_media_next"
+            app:iconTint="?attr/colorOnPrimary"
+            app:iconPadding="8dp" />
 
+        <!-- Hint de interacción -->
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Mantén pulsado un item para editarlo o eliminarlo."
-            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:layout_marginTop="16dp"
+            android:text="💡  Mantén pulsado un ítem para editarlo o eliminarlo"
+            android:textSize="12sp"
+            android:lineSpacingMultiplier="1.4"
             android:textColor="?attr/colorOnSurfaceVariant"
-            android:gravity="center" />
+            android:gravity="center"
+            android:alpha="0.75" />
 
     </LinearLayout>
+
+    <!-- Elemento decorativo de fondo — más sutil -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tvDecorative"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="∞"
+        android:textSize="380sp"
+        android:textColor="#07FFFFFF"
+        android:fontFamily="sans-serif-thin"
+        android:importantForAccessibility="no"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/tvTagline"
+        android:layout_marginEnd="-80dp"
+        android:layout_marginTop="-40dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
