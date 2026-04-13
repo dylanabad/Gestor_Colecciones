@@ -33,8 +33,10 @@ class ColeccionRepository(
         // Guarda cambios en la API
         val saved = api.saveColeccion(coleccion.toDto())
 
-        // Inserta/actualiza en local la versión devuelta por el servidor
-        coleccionDao.insert(saved.toEntity())
+        // Actualiza en local la versión devuelta por el servidor
+        // Usamos update() en lugar de insert() para evitar que OnConflictStrategy.REPLACE
+        // dispare un DELETE que borre los items en cascada.
+        coleccionDao.update(saved.toEntity())
     }
 
     // Elimina una colección en la API y marca como eliminada en local
