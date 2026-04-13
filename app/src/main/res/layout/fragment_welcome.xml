@@ -28,8 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="16dp"
-            android:src="@android:drawable/btn_star"
-            app:tint="?attr/colorOnPrimary"
+            android:src="@drawable/ic_logo_collection"
             android:contentDescription="Logo" />
 
     </com.google.android.material.card.MaterialCardView>
@@ -432,8 +431,10 @@
             app:elevation="2dp"
             app:iconGravity="end"
             app:icon="@android:drawable/ic_media_next"
-            app:iconTint="?attr/colorOnPrimary"
-            app:iconPadding="8dp" />
+            app:iconTint="#FFFFFF"
+            app:iconPadding="8dp"
+            app:backgroundTint="#11365e"
+            android:textColor="#FFFFFF" />
 
         <!-- Hint de interacción -->
         <com.google.android.material.textview.MaterialTextView
