@@ -7,7 +7,6 @@ package com.example.gestor_colecciones.fragment
  * Consulta datos de exportación (colecciones e items) mediante un ViewModel y
  * renderiza un resumen numérico y un BarChart usando MPAndroidChart.
  *
- * Nota: Solo se añaden comentarios explicativos en español; no se modifica la lógica.
  */
 
 import android.graphics.Color

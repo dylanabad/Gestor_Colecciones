@@ -7,7 +7,6 @@ package com.example.gestor_colecciones.fragment
  * usando ViewPager2. Gestiona los puntos (dots), botones Siguiente/Skip y
  * marca en SharedPreferences cuando el onboarding se ha completado.
  *
- * Nota: Solo se añaden comentarios explicativos en español; no se modifica la lógica.
  */
 
 import android.content.Context

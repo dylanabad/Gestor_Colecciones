@@ -8,7 +8,6 @@ package com.example.gestor_colecciones.fragment
  * y eliminar préstamos. También maneja notificaciones locales cuando se reciben
  * nuevos préstamos.
  *
- * Nota: Solo se añaden comentarios explicativos en español; no se modifica la lógica.
  */
 
 import android.Manifest

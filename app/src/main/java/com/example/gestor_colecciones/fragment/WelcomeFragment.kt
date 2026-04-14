@@ -8,7 +8,6 @@ package com.example.gestor_colecciones.fragment
  * datos iniciales y navega al fragmento correspondiente (login, onboarding o
  * pantalla principal). También anima la entrada de elementos de la UI.
  *
- * Nota: Solo se añaden comentarios explicativos en español; no se modifica la lógica.
  */
 
 import android.content.Context

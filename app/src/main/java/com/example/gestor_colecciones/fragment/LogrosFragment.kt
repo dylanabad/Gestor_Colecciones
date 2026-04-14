@@ -5,8 +5,7 @@ package com.example.gestor_colecciones.fragment
  *
  * Fragmento que muestra la lista de logros del usuario. Consulta el repositorio
  * de logros y el estado mediante un ViewModel, muestra el conteo de logros
- * desbloqueados y permite volver atrás. Sólo se añaden comentarios explicativos
- * en español; no se modifica la lógica.
+ * desbloqueados y permite volver atrás.
  */
 
 import android.os.Bundle

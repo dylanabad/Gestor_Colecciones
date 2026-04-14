@@ -6,7 +6,6 @@ package com.example.gestor_colecciones.fragment
  * Fragmento que muestra la lista global de items (todas las colecciones).
  * Provee búsqueda, filtrado/ordenación, edición de items y gestión de categorías.
  *
- * Nota: Solo se añaden comentarios explicativos en español, sin cambiar la lógica.
  */
 
 import android.os.Bundle

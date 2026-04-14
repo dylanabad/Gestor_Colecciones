@@ -8,7 +8,6 @@ package com.example.gestor_colecciones.fragment
  * entre pestañas (colecciones/items), mostrar el conteo y manejar gestos de
  * deslizamiento para acciones rápidas.
  *
- * Nota: Solo se añaden comentarios explicativos en español; no se modifica la lógica.
  */
 
 import android.os.Bundle

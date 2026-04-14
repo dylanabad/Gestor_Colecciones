@@ -7,9 +7,6 @@ package com.example.gestor_colecciones.fragment
  * Contiene: gestión de vistas, adaptador de RecyclerView, filtrado/ordenación,
  * creación/edición de items, manejo de imágenes (galería/cámara), generación de
  * una "tarjeta" con los items principales y operaciones sobre categorías.
- *
- * Nota: Solo se han añadido comentarios explicativos al código; no se ha modificado
- * ninguna lógica ni comportamiento.
  */
 
 import android.content.ContentValues
