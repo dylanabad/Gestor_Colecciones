@@ -13,7 +13,9 @@ data class ItemDeseoDto(
     val enlace: String? = null,            // Enlace externo relacionado al item
     val conseguido: Boolean? = false,      // Indica si ya se ha conseguido
     val fechaCreacion: String? = null,     // Fecha de creación en formato String (API)
-    val fechaConseguido: String? = null    // Fecha en la que se consiguió el item
+    val fechaConseguido: String? = null,   // Fecha en la que se consiguió el item
+    val eliminado: Boolean? = false,
+    val fechaEliminacion: String? = null
 )
 
 // Convierte DTO recibido desde la API a entidad local
@@ -27,7 +29,9 @@ fun ItemDeseoDto.toEntity(): ItemDeseo {
         enlace = enlace,
         conseguido = conseguido ?: false,
         fechaCreacion = DateMapper.parse(fechaCreacion) ?: java.util.Date(),
-        fechaConseguido = DateMapper.parse(fechaConseguido)
+        fechaConseguido = DateMapper.parse(fechaConseguido),
+        eliminado = eliminado ?: false,
+        fechaEliminacion = DateMapper.parse(fechaEliminacion)
     )
 }
 
@@ -42,6 +46,8 @@ fun ItemDeseo.toDto(): ItemDeseoDto {
         enlace = enlace,
         conseguido = conseguido,
         fechaCreacion = DateMapper.format(fechaCreacion),
-        fechaConseguido = DateMapper.format(fechaConseguido)
+        fechaConseguido = DateMapper.format(fechaConseguido),
+        eliminado = eliminado,
+        fechaEliminacion = DateMapper.format(fechaEliminacion)
     )
 }

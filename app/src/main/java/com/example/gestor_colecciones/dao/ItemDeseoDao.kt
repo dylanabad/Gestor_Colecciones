@@ -31,7 +31,7 @@ interface ItemDeseoDao {
     // Obtiene los deseos no conseguidos ordenados por prioridad y fecha de creación
     @Query("""
         SELECT * FROM ItemDeseo 
-        WHERE conseguido = 0 
+        WHERE conseguido = 0 AND eliminado = 0
         ORDER BY prioridad ASC, fechaCreacion DESC
     """)
     fun getPendientes(): Flow<List<ItemDeseo>>
@@ -43,7 +43,7 @@ interface ItemDeseoDao {
     // Obtiene los deseos ya conseguidos ordenados por fecha de consecución
     @Query("""
         SELECT * FROM ItemDeseo 
-        WHERE conseguido = 1 
+        WHERE conseguido = 1 AND eliminado = 0
         ORDER BY fechaConseguido DESC
     """)
     fun getConseguidos(): Flow<List<ItemDeseo>>
@@ -55,11 +55,19 @@ interface ItemDeseoDao {
     // Obtiene todos los deseos ordenados por estado, prioridad y fecha
     @Query("""
         SELECT * FROM ItemDeseo 
+        WHERE eliminado = 0
         ORDER BY conseguido ASC, prioridad ASC, fechaCreacion DESC
     """)
     fun getAll(): Flow<List<ItemDeseo>>
 
     // Cuenta los deseos pendientes
-    @Query("SELECT COUNT(*) FROM ItemDeseo WHERE conseguido = 0")
+    @Query("SELECT COUNT(*) FROM ItemDeseo WHERE conseguido = 0 AND eliminado = 0")
     fun countPendientes(): Flow<Int>
+
+    // ── Papelera ───────────────────────────────────────────────────────
+    @Query("SELECT * FROM ItemDeseo WHERE eliminado = 1 ORDER BY fechaEliminacion DESC")
+    fun getDeseosEliminados(): Flow<List<ItemDeseo>>
+
+    @Query("DELETE FROM ItemDeseo WHERE eliminado = 1 AND fechaEliminacion < :fecha")
+    suspend fun limpiarDeseosAntiguos(fecha: Long)
 }

@@ -2,9 +2,11 @@ package com.example.gestor_colecciones.repository
 
 import com.example.gestor_colecciones.dao.ColeccionDao
 import com.example.gestor_colecciones.dao.ItemDao
+import com.example.gestor_colecciones.dao.ItemDeseoDao
 import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.network.ApiService
+import com.example.gestor_colecciones.entities.ItemDeseo
 import com.example.gestor_colecciones.network.dto.toDto
 import kotlinx.coroutines.flow.Flow
 import java.util.Calendar
@@ -14,6 +16,7 @@ import java.util.Date
 class PapeleraRepository(
     private val coleccionDao: ColeccionDao, // Acceso a colecciones en BD local
     private val itemDao: ItemDao,           // Acceso a items en BD local
+    private val deseoDao: ItemDeseoDao,     // Acceso a deseos en BD local
     private val api: ApiService             // Acceso a API remota
 ) {
 
@@ -24,6 +27,10 @@ class PapeleraRepository(
     // Flujo con items marcados como eliminados (papelera)
     val itemsEliminados: Flow<List<Item>> =
         itemDao.getItemsEliminados()
+
+    // Flujo con deseos marcados como eliminados (papelera)
+    val deseosEliminados: Flow<List<ItemDeseo>> =
+        deseoDao.getDeseosEliminados()
 
     // Mueve una colección a la papelera (soft delete)
     suspend fun moverColeccionAPapelera(coleccion: Coleccion) {
@@ -124,6 +131,30 @@ class PapeleraRepository(
         itemDao.delete(item)
     }
 
+    // Restaura un deseo desde la papelera
+    suspend fun restaurarDeseo(deseo: ItemDeseo) {
+
+        api.saveDeseo(
+            deseo.copy(
+                eliminado = false,
+                fechaEliminacion = null
+            ).toDto()
+        )
+
+        deseoDao.update(
+            deseo.copy(
+                eliminado = false,
+                fechaEliminacion = null
+            )
+        )
+    }
+
+    // Elimina un deseo de forma permanente
+    suspend fun eliminarDeseoDefinitivamente(deseo: ItemDeseo) {
+        api.deleteDeseoHard(deseo.id.toLong())
+        deseoDao.delete(deseo)
+    }
+
     // Limpia elementos antiguos de la papelera (más de 30 días)
     suspend fun limpiarElementosAntiguos() {
 
@@ -137,5 +168,8 @@ class PapeleraRepository(
 
         // Limpia items antiguos
         itemDao.limpiarItemsAntiguos(hace30Dias)
+
+        // Limpia deseos antiguos
+        deseoDao.limpiarDeseosAntiguos(hace30Dias)
     }
 }

@@ -81,8 +81,10 @@ class SyncRepository(
 
             // Sincroniza lista de deseos
             val deseos = api.getDeseos().map { it.toEntity() }
-            if (deseos.isNotEmpty()) {
-                db.itemDeseoDao().insertAll(deseos)
+            val deseosEliminados = api.getDeseosEliminados().map { it.toEntity() }
+            val allDeseos = deseos + deseosEliminados
+            if (allDeseos.isNotEmpty()) {
+                db.itemDeseoDao().insertAll(allDeseos)
             }
         }
     }

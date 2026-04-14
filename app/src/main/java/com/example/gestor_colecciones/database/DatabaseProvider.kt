@@ -124,11 +124,21 @@ object DatabaseProvider {
         }
     }
 
-    // Migración 9 → 10: favorito en items
     private val MIGRATION_9_10 = object : Migration(9, 10) {
         override fun migrate(db: SupportSQLiteDatabase) {
             try {
                 db.execSQL("ALTER TABLE `Item` ADD COLUMN `favorito` INTEGER NOT NULL DEFAULT 0")
+            } catch (_: Exception) {}
+        }
+    }
+
+    private val MIGRATION_10_11 = object : Migration(10, 11) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            try {
+                db.execSQL("ALTER TABLE `ItemDeseo` ADD COLUMN `eliminado` INTEGER NOT NULL DEFAULT 0")
+            } catch (_: Exception) {}
+            try {
+                db.execSQL("ALTER TABLE `ItemDeseo` ADD COLUMN `fechaEliminacion` INTEGER")
             } catch (_: Exception) {}
         }
     }
@@ -148,7 +158,8 @@ object DatabaseProvider {
                     MIGRATION_6_7,
                     MIGRATION_7_8,
                     MIGRATION_8_9,
-                    MIGRATION_9_10
+                    MIGRATION_9_10,
+                    MIGRATION_10_11
                 )
                 .fallbackToDestructiveMigration()
                 .build()

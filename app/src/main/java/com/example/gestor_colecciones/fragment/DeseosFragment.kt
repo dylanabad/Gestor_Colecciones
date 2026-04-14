@@ -88,7 +88,16 @@ class DeseosFragment : Fragment() {
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val item = adapter.getItem(viewHolder.adapterPosition)
                 viewModel.delete(item)
-                showSnackbar("\"${item.titulo}\" eliminado")
+                Snackbar.make(binding.root, "\"${item.titulo}\" movido a la papelera", Snackbar.LENGTH_LONG)
+                    .setAnchorView(binding.fabAddDeseo)
+                    .setAction("Ver papelera") {
+                        parentFragmentManager.beginTransaction()
+                            .setReorderingAllowed(true)
+                            .replace(R.id.fragment_container, PapeleraFragment.newInstance(2))
+                            .addToBackStack(null)
+                            .commit()
+                    }
+                    .show()
             }
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvDeseos)

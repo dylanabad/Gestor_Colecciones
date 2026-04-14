@@ -31,6 +31,7 @@ import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentPapeleraBinding
 import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.entities.Item
+import com.example.gestor_colecciones.entities.ItemDeseo
 import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.viewmodel.PapeleraViewModel
 import com.example.gestor_colecciones.viewmodel.PapeleraViewModelFactory
@@ -40,6 +41,16 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 class PapeleraFragment : Fragment() {
+
+    companion object {
+        private const val ARG_INITIAL_TAB = "initial_tab"
+
+        fun newInstance(initialTab: Int = 0): PapeleraFragment {
+            return PapeleraFragment().apply {
+                arguments = Bundle().apply { putInt(ARG_INITIAL_TAB, initialTab) }
+            }
+        }
+    }
 
     // ViewBinding para acceder a las vistas del layout; se inicializa en onCreateView
     // y se limpia en onDestroyView para evitar fugas de memoria.
@@ -54,7 +65,8 @@ class PapeleraFragment : Fragment() {
     // Listas locales con colecciones e items eliminados (sin filtrar)
     private var coleccionesEliminadas: List<Coleccion> = emptyList()
     private var itemsEliminados: List<Item> = emptyList()
-    // Índice de la pestaña actualmente visible (0 = colecciones, 1 = items)
+    private var deseosEliminados: List<ItemDeseo> = emptyList()
+    // Índice de la pestaña actualmente visible (0 = colecciones, 1 = items, 2 = deseos)
     private var tabActual = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -108,6 +120,11 @@ class PapeleraFragment : Fragment() {
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
 
+        // Selecciona pestaña inicial (si se pasó por argumentos)
+        val requestedTab = arguments?.getInt(ARG_INITIAL_TAB) ?: 0
+        val safeTab = requestedTab.coerceIn(0, (binding.tabLayout.tabCount - 1).coerceAtLeast(0))
+        binding.tabLayout.getTabAt(safeTab)?.select()
+
         // Observar flujos del ViewModel y actualizar listas locales cuando cambien
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.coleccionesEliminadas.collectLatest { lista ->
@@ -122,27 +139,45 @@ class PapeleraFragment : Fragment() {
                 actualizarLista()
             }
         }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.deseosEliminados.collectLatest { lista ->
+                deseosEliminados = lista
+                actualizarLista()
+            }
+        }
     }
 
     private fun actualizarLista() {
         // Actualiza el contador y el adaptador según la pestaña seleccionada
-        val total = coleccionesEliminadas.size + itemsEliminados.size
+        val total = coleccionesEliminadas.size + itemsEliminados.size + deseosEliminados.size
         binding.tvContador.text = "$total elementos"
-        val items = if (tabActual == 0) coleccionesEliminadas.map { it.toPapeleraItem() }
-        else itemsEliminados.map { it.toPapeleraItem() }
+        val items = when (tabActual) {
+            0 -> coleccionesEliminadas.map { it.toPapeleraItem() }
+            1 -> itemsEliminados.map { it.toPapeleraItem() }
+            else -> deseosEliminados.map { it.toPapeleraItem() }
+        }
         adapter.updateList(items)
     }
 
     private fun restaurar(papeleraItem: PapeleraItem) {
-        // Restaura la colección o item según la pestaña activa
-        if (tabActual == 0) {
-            val coleccion = coleccionesEliminadas.find { it.id == papeleraItem.id } ?: return
-            viewModel.restaurarColeccion(coleccion)
-            showSnackbar("\"${coleccion.nombre}\" restaurada ✅")
-        } else {
-            val item = itemsEliminados.find { it.id == papeleraItem.id } ?: return
-            viewModel.restaurarItem(item)
-            showSnackbar("\"${item.titulo}\" restaurado ✅")
+        // Restaura la colección, item o deseo según la pestaña activa
+        when (tabActual) {
+            0 -> {
+                val coleccion = coleccionesEliminadas.find { it.id == papeleraItem.id } ?: return
+                viewModel.restaurarColeccion(coleccion)
+                showSnackbar("\"${coleccion.nombre}\" restaurada ✅")
+            }
+            1 -> {
+                val item = itemsEliminados.find { it.id == papeleraItem.id } ?: return
+                viewModel.restaurarItem(item)
+                showSnackbar("\"${item.titulo}\" restaurado ✅")
+            }
+            else -> {
+                val deseo = deseosEliminados.find { it.id == papeleraItem.id } ?: return
+                viewModel.restaurarDeseo(deseo)
+                showSnackbar("\"${deseo.titulo}\" restaurado ✅")
+            }
         }
     }
 
@@ -152,12 +187,19 @@ class PapeleraFragment : Fragment() {
             .setTitle("Eliminar definitivamente")
             .setMessage("\"${papeleraItem.nombre}\" se eliminará de forma permanente. ¿Continuar?")
             .setPositiveButton("Eliminar") { _, _ ->
-                if (tabActual == 0) {
-                    val coleccion = coleccionesEliminadas.find { it.id == papeleraItem.id } ?: return@setPositiveButton
-                    viewModel.eliminarColeccionDefinitivamente(coleccion)
-                } else {
-                    val item = itemsEliminados.find { it.id == papeleraItem.id } ?: return@setPositiveButton
-                    viewModel.eliminarItemDefinitivamente(item)
+                when (tabActual) {
+                    0 -> {
+                        val coleccion = coleccionesEliminadas.find { it.id == papeleraItem.id } ?: return@setPositiveButton
+                        viewModel.eliminarColeccionDefinitivamente(coleccion)
+                    }
+                    1 -> {
+                        val item = itemsEliminados.find { it.id == papeleraItem.id } ?: return@setPositiveButton
+                        viewModel.eliminarItemDefinitivamente(item)
+                    }
+                    else -> {
+                        val deseo = deseosEliminados.find { it.id == papeleraItem.id } ?: return@setPositiveButton
+                        viewModel.eliminarDeseoDefinitivamente(deseo)
+                    }
                 }
                 showSnackbar("Eliminado permanentemente")
             }
@@ -189,6 +231,19 @@ class PapeleraFragment : Fragment() {
         icono = "🗂",
         nombre = titulo,
         meta = "Estado: $estado  ·  Valor: ${"%.2f".format(valor)} €",
+        fechaEliminacion = fechaEliminacion ?: Date(),
+        diasRestantes = diasRestantes(fechaEliminacion)
+    )
+
+    private fun ItemDeseo.toPapeleraItem() = PapeleraItem(
+        id = id,
+        icono = "🎯",
+        nombre = titulo,
+        meta = if (precioObjetivo > 0) {
+            "Deseo  ·  Precio: ${"%.2f".format(precioObjetivo)} €"
+        } else {
+            "Deseo  ·  Sin precio"
+        },
         fechaEliminacion = fechaEliminacion ?: Date(),
         diasRestantes = diasRestantes(fechaEliminacion)
     )

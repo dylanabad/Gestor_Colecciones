@@ -34,5 +34,9 @@ data class ItemDeseo(
     val fechaCreacion: Date = Date(),
 
     // Fecha en la que se consiguió el item (si aplica)
-    val fechaConseguido: Date? = null
+    val fechaConseguido: Date? = null,
+
+    // Papelera (soft delete)
+    val eliminado: Boolean = false,
+    val fechaEliminacion: Date? = null
 )

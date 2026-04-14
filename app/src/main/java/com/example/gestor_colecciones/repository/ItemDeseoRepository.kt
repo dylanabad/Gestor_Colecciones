@@ -44,10 +44,19 @@ class ItemDeseoRepository(
     // Elimina un item de deseo tanto en la API como en local
     suspend fun delete(item: ItemDeseo) {
 
-        // Solo intenta eliminar en la API si el item ya existe en servidor
+        // Soft delete: a papelera (backend + local)
         if (item.id > 0) api.deleteDeseo(item.id.toLong())
+        dao.update(
+            item.copy(
+                eliminado = true,
+                fechaEliminacion = Date()
+            )
+        )
+    }
 
-        // Elimina de la base de datos local
+    // Eliminación definitiva (solo se usa desde Papelera)
+    suspend fun deleteHard(item: ItemDeseo) {
+        if (item.id > 0) api.deleteDeseoHard(item.id.toLong())
         dao.delete(item)
     }
 

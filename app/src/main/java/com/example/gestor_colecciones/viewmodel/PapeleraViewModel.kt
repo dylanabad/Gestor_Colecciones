@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.entities.Item
+import com.example.gestor_colecciones.entities.ItemDeseo
 import com.example.gestor_colecciones.repository.PapeleraRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +27,14 @@ class PapeleraViewModel(
     // Items eliminados de forma reactiva
     val itemsEliminados: StateFlow<List<Item>> =
         repository.itemsEliminados.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyList()
+        )
+
+    // Deseos eliminados de forma reactiva
+    val deseosEliminados: StateFlow<List<ItemDeseo>> =
+        repository.deseosEliminados.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             emptyList()
@@ -60,5 +69,15 @@ class PapeleraViewModel(
     fun eliminarItemDefinitivamente(item: Item) =
         viewModelScope.launch {
             repository.eliminarItemDefinitivamente(item)
+        }
+
+    fun restaurarDeseo(deseo: ItemDeseo) =
+        viewModelScope.launch {
+            repository.restaurarDeseo(deseo)
+        }
+
+    fun eliminarDeseoDefinitivamente(deseo: ItemDeseo) =
+        viewModelScope.launch {
+            repository.eliminarDeseoDefinitivamente(deseo)
         }
 }

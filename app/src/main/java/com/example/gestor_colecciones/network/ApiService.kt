@@ -119,6 +119,12 @@ interface ApiService {
     @DELETE("api/deseos/{id}")
     suspend fun deleteDeseo(@Path("id") id: Long)
 
+    @GET("api/deseos/eliminados")
+    suspend fun getDeseosEliminados(): List<ItemDeseoDto>
+
+    @DELETE("api/deseos/{id}/hard")
+    suspend fun deleteDeseoHard(@Path("id") id: Long)
+
     // ── Uploads (subida de imágenes) ────────────────────────────────────
     @Multipart
     @POST("api/uploads")

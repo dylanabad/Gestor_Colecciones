@@ -40,6 +40,7 @@ object RepositoryProvider {
         return PapeleraRepository(
             db.coleccionDao(),
             db.itemDao(),
+            db.itemDeseoDao(),
             ApiProvider.getApi(context)
         )
     }
