@@ -77,7 +77,13 @@ class ColeccionAdapter(
         holder.tvDescripcion.text = coleccion.descripcion ?: "Sin descripción"
 
         // Estadísticas asociadas (si existen)
-        holder.tvStats.text = coleccionStats[coleccion.id] ?: ""
+        val stats = coleccionStats[coleccion.id].orEmpty()
+        if (stats.isBlank()) {
+            holder.tvStats.visibility = View.GONE
+        } else {
+            holder.tvStats.visibility = View.VISIBLE
+            holder.tvStats.text = stats
+        }
 
         // --- GESTIÓN DE COLOR DE COLECCIÓN ---
         val color = coleccion.color

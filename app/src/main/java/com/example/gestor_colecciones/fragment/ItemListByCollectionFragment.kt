@@ -389,7 +389,10 @@ class ItemListByCollectionFragment : Fragment() {
             ItemSortField.VALUE -> compareBy<Item> { it.valor }
             ItemSortField.DATE -> compareBy<Item> { it.fechaAdquisicion.time }
         }
-        val comparator = (if (filterSortState.ascending) baseComparator else baseComparator.reversed()).thenBy { it.id }
+        val primaryComparator = if (filterSortState.ascending) baseComparator else baseComparator.reversed()
+        val comparator = compareByDescending<Item> { it.favorito }
+            .then(primaryComparator)
+            .thenBy { it.id }
         adapter.updateList(list.sortedWith(comparator))
     }
 
@@ -834,5 +837,4 @@ class ItemListByCollectionFragment : Fragment() {
         _binding = null
     }
 }
-
 

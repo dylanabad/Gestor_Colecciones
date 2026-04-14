@@ -5,11 +5,12 @@
     android:id="@+id/cardColeccion"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
+    android:layout_margin="10dp"
     android:clickable="true"
     android:focusable="true"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="2dp"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="3dp"
     app:cardUseCompatPadding="true"
     app:strokeColor="?attr/colorOutline"
     app:strokeWidth="1dp">
@@ -22,8 +23,8 @@
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivColeccion"
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:contentDescription="Imagen colección"
+            android:layout_height="150dp"
+            android:contentDescription="Imagen coleccion"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_collection_default"
             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Gestor_Colecciones.TopRounded" />
@@ -32,7 +33,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="14dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -42,9 +43,9 @@
 
                 <View
                     android:id="@+id/viewColeccionColor"
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:layout_marginEnd="10dp"
                     android:background="@drawable/bg_color_dot"
                     android:visibility="gone" />
 
@@ -53,14 +54,16 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textAppearance="?attr/textAppearanceTitleMedium" />
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textAppearance="?attr/textAppearanceTitleLarge" />
             </LinearLayout>
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tvDescripcionColeccion"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="4dp"
                 android:ellipsize="end"
                 android:maxLines="2"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
@@ -68,10 +71,15 @@
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tvStatsColeccion"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="0 items · 0€"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_stats_pill"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:text="0 items - 0"
                 android:textAppearance="?attr/textAppearanceLabelMedium"
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
