@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.gestor_colecciones.databinding.ActivityItemDetailBinding
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.entities.Item
+import com.example.gestor_colecciones.util.ThemeManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,6 +20,7 @@ class ItemDetailActivity : AppCompatActivity() {
     private val scope = CoroutineScope(Dispatchers.Main)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.apply(this)
         super.onCreate(savedInstanceState)
 
         // Inicialización del binding

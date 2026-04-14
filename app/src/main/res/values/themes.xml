@@ -31,6 +31,28 @@
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.Gestor_Colecciones.MaterialAlertDialog</item>
     </style>
 
+    <!-- Theme variants (user-selectable) -->
+    <style name="Theme.Gestor_Colecciones.Purple" parent="Theme.Gestor_Colecciones">
+        <item name="colorPrimary">@color/theme_purple_primary</item>
+        <item name="colorOnPrimary">@color/theme_purple_on_primary</item>
+        <item name="colorPrimaryContainer">@color/theme_purple_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/theme_purple_on_primary_container</item>
+    </style>
+
+    <style name="Theme.Gestor_Colecciones.Green" parent="Theme.Gestor_Colecciones">
+        <item name="colorPrimary">@color/theme_green_primary</item>
+        <item name="colorOnPrimary">@color/theme_green_on_primary</item>
+        <item name="colorPrimaryContainer">@color/theme_green_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/theme_green_on_primary_container</item>
+    </style>
+
+    <style name="Theme.Gestor_Colecciones.Orange" parent="Theme.Gestor_Colecciones">
+        <item name="colorPrimary">@color/theme_orange_primary</item>
+        <item name="colorOnPrimary">@color/theme_orange_on_primary</item>
+        <item name="colorPrimaryContainer">@color/theme_orange_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/theme_orange_on_primary_container</item>
+    </style>
+
     <style name="ThemeOverlay.Gestor_Colecciones.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Gestor_Colecciones.Medium</item>
     </style>

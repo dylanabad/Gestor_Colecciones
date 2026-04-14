@@ -31,4 +31,20 @@
     <color name="app_outline">#FF757780</color>
     <color name="colorEstadoActivo">#4CAF50</color>
     <color name="colorEstadoDevuelto">#9E9E9E</color>
+
+    <!-- User-selectable palettes (light) -->
+    <color name="theme_purple_primary">#FF6D4CFF</color>
+    <color name="theme_purple_on_primary">#FFFFFFFF</color>
+    <color name="theme_purple_primary_container">#FFE7DEFF</color>
+    <color name="theme_purple_on_primary_container">#FF21005D</color>
+
+    <color name="theme_green_primary">#FF2E7D32</color>
+    <color name="theme_green_on_primary">#FFFFFFFF</color>
+    <color name="theme_green_primary_container">#FFC8E6C9</color>
+    <color name="theme_green_on_primary_container">#FF07210A</color>
+
+    <color name="theme_orange_primary">#FFFF6D00</color>
+    <color name="theme_orange_on_primary">#FFFFFFFF</color>
+    <color name="theme_orange_primary_container">#FFFFDCC7</color>
+    <color name="theme_orange_on_primary_container">#FF3A1500</color>
 </resources>

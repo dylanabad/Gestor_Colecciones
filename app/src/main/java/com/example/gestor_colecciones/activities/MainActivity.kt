@@ -16,6 +16,7 @@ import com.example.gestor_colecciones.widget.ColeccionesWidgetProvider
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import androidx.lifecycle.lifecycleScope
+import com.example.gestor_colecciones.util.ThemeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
@@ -27,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var konfettiView: KonfettiView
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeManager.apply(this)
         super.onCreate(savedInstanceState)
 
         // Permite que la app ocupe toda la pantalla (edge-to-edge)

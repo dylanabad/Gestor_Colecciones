@@ -59,6 +59,9 @@ import java.io.File
 import java.util.Date
 import com.example.gestor_colecciones.activities.MainActivity
 import androidx.fragment.app.FragmentManager
+import com.example.gestor_colecciones.util.ThemeMode
+import com.example.gestor_colecciones.util.ThemePalette
+import com.example.gestor_colecciones.util.ThemePrefs
 
 /**
  * Fragment principal de la app.
@@ -352,6 +355,10 @@ class ColeccionesFragment : Fragment() {
                 .commit()
         }
 
+        binding.btnSettings.setOnClickListener {
+            showThemeMenu()
+        }
+
         // Cierre de sesión: limpia AuthStore y borra toda la base de datos local
         binding.btnLogout.setOnClickListener { button ->
             MaterialAlertDialogBuilder(requireContext())
@@ -418,6 +425,70 @@ class ColeccionesFragment : Fragment() {
                 return true
             }
         })
+    }
+
+    private fun showThemeMenu() {
+        val opciones = arrayOf(
+            "Color del tema",
+            "Modo claro/oscuro"
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Temas")
+            .setItems(opciones) { _, which ->
+                when (which) {
+                    0 -> showPaletteDialog()
+                    1 -> showModeDialog()
+                }
+            }
+            .setNegativeButton("Cerrar", null)
+            .show()
+    }
+
+    private fun showPaletteDialog() {
+        val palettes = ThemePalette.entries.toTypedArray()
+        val names = palettes.map { it.displayName }.toTypedArray()
+        val current = ThemePrefs.getPalette(requireContext())
+        val checked = palettes.indexOfFirst { it == current }.coerceAtLeast(0)
+
+        var selected = current
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Color del tema")
+            .setSingleChoiceItems(names, checked) { _, which ->
+                selected = palettes[which]
+            }
+            .setPositiveButton("Aplicar") { _, _ ->
+                if (selected != current) {
+                    ThemePrefs.setPalette(requireContext(), selected)
+                    requireActivity().recreate()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun showModeDialog() {
+        val modes = ThemeMode.entries.toTypedArray()
+        val names = modes.map { it.displayName }.toTypedArray()
+        val current = ThemePrefs.getMode(requireContext())
+        val checked = modes.indexOfFirst { it == current }.coerceAtLeast(0)
+
+        var selected = current
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Modo")
+            .setSingleChoiceItems(names, checked) { _, which ->
+                selected = modes[which]
+            }
+            .setPositiveButton("Aplicar") { _, _ ->
+                if (selected != current) {
+                    ThemePrefs.setMode(requireContext(), selected)
+                    requireActivity().recreate()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     // ── Exportación ───────────────────────────────────────────────────────────
