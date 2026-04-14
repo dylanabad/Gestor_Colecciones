@@ -113,6 +113,9 @@ class PapeleraFragment : Fragment() {
         // Botón atrás
         binding.btnBack.setOnClickListener { parentFragmentManager.popBackStack() }
 
+        // Vaciar la pestaña actual
+        binding.btnVaciar.setOnClickListener { confirmarVaciadoPestaniaActual() }
+
         // Listener de las pestañas para alternar entre colecciones e items eliminados
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) { tabActual = tab.position; actualizarLista() }
@@ -146,18 +149,36 @@ class PapeleraFragment : Fragment() {
                 actualizarLista()
             }
         }
+
+        // Eventos del ViewModel (mensajes de vaciado, errores, etc.)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.uiEvents.collectLatest { msg ->
+                showSnackbar(msg)
+            }
+        }
+
+        // Estado de vaciado para deshabilitar el botÃ³n mientras se ejecuta
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.vaciando.collectLatest { vaciando ->
+                binding.btnVaciar.isEnabled = !vaciando && getCountPestaniaActual() > 0
+                binding.btnVaciar.alpha = if (binding.btnVaciar.isEnabled) 1f else 0.45f
+            }
+        }
     }
 
     private fun actualizarLista() {
         // Actualiza el contador y el adaptador según la pestaña seleccionada
-        val total = coleccionesEliminadas.size + itemsEliminados.size + deseosEliminados.size
-        binding.tvContador.text = "$total elementos"
+        val countTab = getCountPestaniaActual()
+        binding.tvContador.text = "$countTab"
         val items = when (tabActual) {
             0 -> coleccionesEliminadas.map { it.toPapeleraItem() }
             1 -> itemsEliminados.map { it.toPapeleraItem() }
             else -> deseosEliminados.map { it.toPapeleraItem() }
         }
         adapter.updateList(items)
+
+        binding.btnVaciar.isEnabled = !viewModel.vaciando.value && countTab > 0
+        binding.btnVaciar.alpha = if (binding.btnVaciar.isEnabled) 1f else 0.45f
     }
 
     private fun restaurar(papeleraItem: PapeleraItem) {
@@ -247,6 +268,34 @@ class PapeleraFragment : Fragment() {
         fechaEliminacion = fechaEliminacion ?: Date(),
         diasRestantes = diasRestantes(fechaEliminacion)
     )
+
+    private fun getCountPestaniaActual(): Int = when (tabActual) {
+        0 -> coleccionesEliminadas.size
+        1 -> itemsEliminados.size
+        else -> deseosEliminados.size
+    }
+
+    private fun confirmarVaciadoPestaniaActual() {
+        if (getCountPestaniaActual() == 0) {
+            showSnackbar("No hay elementos para eliminar en esta pestaña")
+            return
+        }
+
+        val (titulo, mensaje) = when (tabActual) {
+            0 -> "Vaciar papelera de colecciones" to "Se eliminarán definitivamente todas las colecciones de la papelera. ¿Continuar?"
+            1 -> "Vaciar papelera de items" to "Se eliminarán definitivamente todos los items de la papelera. ¿Continuar?"
+            else -> "Vaciar papelera de deseos" to "Se eliminarán definitivamente todos los deseos de la papelera. ¿Continuar?"
+        }
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(titulo)
+            .setMessage(mensaje)
+            .setPositiveButton("Eliminar todo") { _, _ ->
+                viewModel.vaciarPestania(tabActual)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
 
     private fun showSnackbar(message: String) {
         // Muestra un Snackbar simple con el mensaje recibido

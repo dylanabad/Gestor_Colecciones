@@ -68,6 +68,10 @@ interface ItemDeseoDao {
     @Query("SELECT * FROM ItemDeseo WHERE eliminado = 1 ORDER BY fechaEliminacion DESC")
     fun getDeseosEliminados(): Flow<List<ItemDeseo>>
 
+    // VacÃ­a la papelera de deseos (eliminaciÃ³n fÃ­sica local)
+    @Query("DELETE FROM ItemDeseo WHERE eliminado = 1")
+    suspend fun deleteAllEliminados()
+
     @Query("DELETE FROM ItemDeseo WHERE eliminado = 1 AND fechaEliminacion < :fecha")
     suspend fun limpiarDeseosAntiguos(fecha: Long)
 }

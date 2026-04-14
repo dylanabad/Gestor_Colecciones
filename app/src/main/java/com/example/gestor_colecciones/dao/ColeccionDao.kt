@@ -52,6 +52,10 @@ interface ColeccionDao {
     @Query("SELECT * FROM Coleccion WHERE eliminado = 1 ORDER BY fechaEliminacion DESC")
     fun getColeccionesEliminadas(): Flow<List<Coleccion>>
 
+    // VacÃ­a la papelera de colecciones (eliminaciÃ³n fÃ­sica local)
+    @Query("DELETE FROM Coleccion WHERE eliminado = 1")
+    suspend fun deleteAllEliminadas()
+
     // Elimina definitivamente colecciones antiguas de la papelera
     @Query("DELETE FROM Coleccion WHERE eliminado = 1 AND fechaEliminacion < :fecha")
     suspend fun limpiarColeccionesAntiguas(fecha: Long)

@@ -155,6 +155,26 @@ class PapeleraRepository(
         deseoDao.delete(deseo)
     }
 
+    // Vaciar papelera: elimina definitivamente (backend + local) todos los elementos de una pestaña
+    suspend fun vaciarColeccionesEliminadas(colecciones: List<Coleccion>) {
+        // Backend: borrado físico (en bucle, porque no hay endpoint bulk)
+        colecciones.forEach { api.deleteColeccionHard(it.id.toLong()) }
+
+        // Local: si se borra una colección, borramos sus items locales para evitar huérfanos
+        colecciones.forEach { itemDao.deleteByCollectionId(it.id) }
+        coleccionDao.deleteAllEliminadas()
+    }
+
+    suspend fun vaciarItemsEliminados(items: List<Item>) {
+        items.forEach { api.deleteItemHard(it.id.toLong()) }
+        itemDao.deleteAllEliminados()
+    }
+
+    suspend fun vaciarDeseosEliminados(deseos: List<ItemDeseo>) {
+        deseos.forEach { api.deleteDeseoHard(it.id.toLong()) }
+        deseoDao.deleteAllEliminados()
+    }
+
     // Limpia elementos antiguos de la papelera (más de 30 días)
     suspend fun limpiarElementosAntiguos() {
 
