@@ -48,6 +48,9 @@ interface ApiService {
     @GET("api/colecciones")
     suspend fun getColecciones(): List<ColeccionDto>
 
+    @GET("api/colecciones/eliminadas")
+    suspend fun getColeccionesEliminadas(): List<ColeccionDto>
+
     @POST("api/colecciones")
     suspend fun saveColeccion(@Body coleccion: ColeccionDto): ColeccionDto
 
@@ -63,6 +66,9 @@ interface ApiService {
     // ── Items ───────────────────────────────────────────────────────────
     @GET("api/items/coleccion/{coleccionId}")
     suspend fun getItemsByColeccion(@Path("coleccionId") coleccionId: Long): List<ItemDto>
+
+    @GET("api/items/coleccion/{coleccionId}/eliminados")
+    suspend fun getItemsEliminadosByColeccion(@Path("coleccionId") coleccionId: Long): List<ItemDto>
 
     @POST("api/items/coleccion/{coleccionId}")
     suspend fun saveItem(

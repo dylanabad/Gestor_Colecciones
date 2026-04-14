@@ -28,21 +28,34 @@ class SyncRepository(
                 db.categoriaDao().insertAll(categorias)
             }
 
-            // Sincroniza colecciones desde el servidor
-            val colecciones = api.getColecciones().map { it.toEntity() }
-            if (colecciones.isNotEmpty()) {
-                db.coleccionDao().insertAll(colecciones)
+            // Sincroniza colecciones desde el servidor (activas + eliminadas/papelera)
+            val coleccionesActivas = api.getColecciones().map { it.toEntity() }
+            val coleccionesEliminadas = api.getColeccionesEliminadas().map { it.toEntity() }
+            val allColecciones = coleccionesActivas + coleccionesEliminadas
+
+            if (allColecciones.isNotEmpty()) {
+                db.coleccionDao().insertAll(allColecciones)
             }
 
             // Sincroniza items por colección
             val allItems = mutableListOf<com.example.gestor_colecciones.entities.Item>()
 
-            for (coleccion in colecciones) {
+            // Activos: solo de colecciones activas
+            for (coleccion in coleccionesActivas) {
 
                 val items = api.getItemsByColeccion(coleccion.id.toLong())
                     .map { it.toEntity(coleccion.id) }
 
                 allItems.addAll(items)
+            }
+
+            // Papelera: items eliminados (incluye items eliminados de colecciones activas o eliminadas)
+            for (coleccion in allColecciones) {
+
+                val itemsEliminados = api.getItemsEliminadosByColeccion(coleccion.id.toLong())
+                    .map { it.toEntity(coleccion.id) }
+
+                allItems.addAll(itemsEliminados)
             }
 
             if (allItems.isNotEmpty()) {
