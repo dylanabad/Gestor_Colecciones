@@ -74,6 +74,7 @@ class ColeccionAdapter(
 
         // Datos básicos
         holder.tvNombre.text = coleccion.nombre
+        ViewCompat.setTooltipText(holder.tvNombre, coleccion.nombre)
         holder.tvDescripcion.text = coleccion.descripcion ?: "Sin descripción"
 
         // Estadísticas asociadas (si existen)
