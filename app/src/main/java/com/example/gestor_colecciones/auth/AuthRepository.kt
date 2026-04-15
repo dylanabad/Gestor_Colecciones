@@ -3,6 +3,7 @@ package com.example.gestor_colecciones.auth
 import com.example.gestor_colecciones.network.ApiService
 import com.example.gestor_colecciones.network.dto.AuthResponse
 import com.example.gestor_colecciones.network.dto.LoginRequest
+import com.example.gestor_colecciones.network.dto.LoginStrictRequest
 import com.example.gestor_colecciones.network.dto.RegisterRequest
 import retrofit2.HttpException
 
@@ -20,6 +21,21 @@ class AuthRepository(
             )
 
             // Guarda la sesión obtenida
+            store.save(response.token, response.username, response.email)
+
+            return response
+        } catch (e: HttpException) {
+            throw RuntimeException(extractError(e))
+        }
+    }
+
+    // Login estricto con username + email + password
+    suspend fun loginStrict(username: String, email: String, password: String): AuthResponse {
+        try {
+            val response = api.loginStrict(
+                LoginStrictRequest(username = username, email = email, password = password)
+            )
+
             store.save(response.token, response.username, response.email)
 
             return response

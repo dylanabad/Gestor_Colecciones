@@ -44,6 +44,9 @@ interface ApiService {
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequest): AuthResponse
 
+    @POST("api/auth/login-strict")
+    suspend fun loginStrict(@Body request: com.example.gestor_colecciones.network.dto.LoginStrictRequest): AuthResponse
+
     // ── Colecciones ──────────────────────────────────────────────────────
     @GET("api/colecciones")
     suspend fun getColecciones(): List<ColeccionDto>

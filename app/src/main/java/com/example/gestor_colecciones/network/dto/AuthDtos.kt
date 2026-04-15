@@ -6,6 +6,13 @@ data class LoginRequest(
     val password: String   // Contraseña del usuario
 )
 
+// DTO usado para login estricto: username + email + password
+data class LoginStrictRequest(
+    val username: String,
+    val email: String,
+    val password: String
+)
+
 // DTO usado para enviar datos de registro al servidor
 data class RegisterRequest(
     val username: String,  // Nombre de usuario elegido

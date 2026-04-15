@@ -2,12 +2,14 @@ package com.example.gestor_colecciones.fragment
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.widget.Toast
 import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -63,6 +65,23 @@ class AuthFragment : Fragment() {
         binding.btnLogin.setOnClickListener { handleLogin() }
         binding.btnRegister.setOnClickListener { handleRegister() }
 
+        // Limpia errores al escribir para una experiencia más fluida
+        binding.etEmail.doAfterTextChanged {
+            binding.tilEmail.error = null
+            binding.cardError.isVisible = false
+            binding.tvError.isVisible = false
+        }
+        binding.etPassword.doAfterTextChanged {
+            binding.tilPassword.error = null
+            binding.cardError.isVisible = false
+            binding.tvError.isVisible = false
+        }
+        binding.etUsername.doAfterTextChanged {
+            binding.tilUsername.error = null
+            binding.cardError.isVisible = false
+            binding.tvError.isVisible = false
+        }
+
         // Anima la tarjeta de login al entrar en la pantalla
         animateEntry()
 
@@ -81,10 +100,12 @@ class AuthFragment : Fragment() {
                         setLoading(false)
                         binding.tvError.text = state.message
                         binding.tvError.isVisible = true
+                        binding.cardError.isVisible = true
                     }
 
                     // Autenticación correcta: sincroniza datos y navega al siguiente destino
                     is AuthState.Success -> {
+                        binding.cardError.isVisible = false
                         binding.tvError.isVisible = false
                         if (!handledSuccess) {
                             handledSuccess = true
@@ -103,22 +124,47 @@ class AuthFragment : Fragment() {
     private fun handleLogin() {
         val emailInput = binding.etEmail.text?.toString()?.trim().orEmpty()
         val usernameInput = binding.etUsername.text?.toString()?.trim().orEmpty()
-
-        // Si hay email lo usa; si no, intenta con el nombre de usuario
-        val email = if (emailInput.isNotBlank()) emailInput else usernameInput
         val password = binding.etPassword.text?.toString()?.trim().orEmpty()
 
-        if (email.isBlank() || password.isBlank()) {
-            Toast.makeText(
-                requireContext(),
-                "Email/usuario y contrasena son obligatorios",
-                Toast.LENGTH_SHORT
-            ).show()
-            return
+        // Reset visual de errores
+        binding.tilEmail.error = null
+        binding.tilPassword.error = null
+        binding.tilUsername.error = null
+        binding.cardError.isVisible = false
+        binding.tvError.isVisible = false
+
+        var ok = true
+
+        if (usernameInput.isBlank()) {
+            binding.tilUsername.error = "El usuario es obligatorio"
+            ok = false
+        } else if (usernameInput.length < 3) {
+            binding.tilUsername.error = "Mínimo 3 caracteres"
+            ok = false
+        } else if (usernameInput.contains(" ")) {
+            binding.tilUsername.error = "No uses espacios"
+            ok = false
         }
 
-        binding.tvError.isVisible = false
-        viewModel.login(email, password)
+        if (emailInput.isBlank()) {
+            binding.tilEmail.error = "El email es obligatorio"
+            ok = false
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(emailInput).matches()) {
+            binding.tilEmail.error = "Email no válido"
+            ok = false
+        }
+
+        if (password.isBlank()) {
+            binding.tilPassword.error = "La contraseña es obligatoria"
+            ok = false
+        } else if (password.length < 6) {
+            binding.tilPassword.error = "Mínimo 6 caracteres"
+            ok = false
+        }
+
+        if (!ok) return
+
+        viewModel.loginStrict(usernameInput, emailInput, password)
     }
 
     /**
@@ -130,16 +176,44 @@ class AuthFragment : Fragment() {
         val email = binding.etEmail.text?.toString()?.trim().orEmpty()
         val password = binding.etPassword.text?.toString()?.trim().orEmpty()
 
-        if (username.isBlank() || email.isBlank() || password.isBlank()) {
-            Toast.makeText(
-                requireContext(),
-                "Usuario, email y contrasena son obligatorios",
-                Toast.LENGTH_SHORT
-            ).show()
-            return
+        // Reset visual de errores
+        binding.tilEmail.error = null
+        binding.tilPassword.error = null
+        binding.tilUsername.error = null
+        binding.cardError.isVisible = false
+        binding.tvError.isVisible = false
+
+        var ok = true
+
+        if (username.isBlank()) {
+            binding.tilUsername.error = "El usuario es obligatorio"
+            ok = false
+        } else if (username.length < 3) {
+            binding.tilUsername.error = "Mínimo 3 caracteres"
+            ok = false
+        } else if (username.contains(" ")) {
+            binding.tilUsername.error = "No uses espacios"
+            ok = false
         }
 
-        binding.tvError.isVisible = false
+        if (email.isBlank()) {
+            binding.tilEmail.error = "El email es obligatorio"
+            ok = false
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            binding.tilEmail.error = "Email no válido"
+            ok = false
+        }
+
+        if (password.isBlank()) {
+            binding.tilPassword.error = "La contraseña es obligatoria"
+            ok = false
+        } else if (password.length < 6) {
+            binding.tilPassword.error = "Mínimo 6 caracteres"
+            ok = false
+        }
+
+        if (!ok) return
+
         viewModel.register(username, email, password)
     }
 
@@ -149,6 +223,7 @@ class AuthFragment : Fragment() {
      */
     private fun setLoading(loading: Boolean) {
         binding.progressBar.isVisible = loading
+        binding.tvLoading.isVisible = loading
         binding.btnLogin.isEnabled = !loading
         binding.btnRegister.isEnabled = !loading
     }

@@ -55,6 +55,19 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
+    // Inicia el proceso de login estricto (username + email + password)
+    fun loginStrict(username: String, email: String, password: String) {
+        viewModelScope.launch {
+            _state.value = AuthState.Loading
+            try {
+                val response = repository.loginStrict(username, email, password)
+                _state.value = AuthState.Success(response)
+            } catch (e: Exception) {
+                _state.value = AuthState.Error(e.message ?: "Error al iniciar sesión")
+            }
+        }
+    }
+
     // Inicia el proceso de registro
     fun register(username: String, email: String, password: String) {
         viewModelScope.launch {

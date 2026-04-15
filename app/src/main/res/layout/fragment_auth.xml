@@ -133,7 +133,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:hint="Email o usuario"
+                    android:hint="Email"
                     app:startIconDrawable="@drawable/ic_auth_mail"
                     app:startIconTint="@color/on_app_surface_variant"
                     app:boxCornerRadiusTopStart="14dp"
