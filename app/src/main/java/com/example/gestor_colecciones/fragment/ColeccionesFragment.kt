@@ -48,6 +48,11 @@ import com.example.gestor_colecciones.repository.PrestamoRepository
 import com.example.gestor_colecciones.util.ImageUtils
 import com.example.gestor_colecciones.network.UploadUtils
 import com.example.gestor_colecciones.viewmodel.*
+import androidx.appcompat.app.AppCompatActivity
+import com.example.gestor_colecciones.util.ThemeManager
+import com.example.gestor_colecciones.util.ThemePalette
+import com.example.gestor_colecciones.util.ThemeMode
+import com.example.gestor_colecciones.util.ThemePrefs
 import com.example.gestor_colecciones.network.ApiProvider
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -59,9 +64,6 @@ import java.io.File
 import java.util.Date
 import com.example.gestor_colecciones.activities.MainActivity
 import androidx.fragment.app.FragmentManager
-import com.example.gestor_colecciones.util.ThemeMode
-import com.example.gestor_colecciones.util.ThemePalette
-import com.example.gestor_colecciones.util.ThemePrefs
 
 /**
  * Fragment principal de la app.
@@ -460,8 +462,7 @@ class ColeccionesFragment : Fragment() {
             }
             .setPositiveButton("Aplicar") { _, _ ->
                 if (selected != current) {
-                    ThemePrefs.setPalette(requireContext(), selected)
-                    requireActivity().recreate()
+                    ThemeManager.updatePalette(requireActivity() as AppCompatActivity, selected)
                 }
             }
             .setNegativeButton("Cancelar", null)
@@ -483,8 +484,7 @@ class ColeccionesFragment : Fragment() {
             }
             .setPositiveButton("Aplicar") { _, _ ->
                 if (selected != current) {
-                    ThemePrefs.setMode(requireContext(), selected)
-                    requireActivity().recreate()
+                    ThemeManager.updateMode(requireActivity() as AppCompatActivity, selected)
                 }
             }
             .setNegativeButton("Cancelar", null)

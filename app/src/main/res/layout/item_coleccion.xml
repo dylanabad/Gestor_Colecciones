@@ -13,7 +13,8 @@
     app:cardCornerRadius="16dp"
     app:cardElevation="0dp"
     app:strokeWidth="1dp"
-    app:strokeColor="?attr/colorOutlineVariant">
+    app:strokeColor="?attr/colorOutlineVariant"
+    android:clipToOutline="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -26,6 +27,7 @@
             android:layout_height="100dp"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_collection_default"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Medium"
             app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Badge de Contador Minimalista (Compacto y Seguro) -->
