@@ -7,12 +7,13 @@ import com.example.gestor_colecciones.R
 enum class ThemePalette(
     val key: String,
     val displayName: String,
-    val themeResId: Int
+    val themeResId: Int,
+    val primaryColor: Int // Color para la previsualización visual
 ) {
-    BLUE("blue", "Azul", R.style.Theme_Gestor_Colecciones),
-    PURPLE("purple", "Morado", R.style.Theme_Gestor_Colecciones_Purple),
-    GREEN("green", "Verde", R.style.Theme_Gestor_Colecciones_Green),
-    ORANGE("orange", "Naranja", R.style.Theme_Gestor_Colecciones_Orange);
+    BLUE("blue", "Azul", R.style.Theme_Gestor_Colecciones, 0xFF2196F3.toInt()),
+    PURPLE("purple", "Morado", R.style.Theme_Gestor_Colecciones_Purple, 0xFF9C27B0.toInt()),
+    GREEN("green", "Verde", R.style.Theme_Gestor_Colecciones_Green, 0xFF4CAF50.toInt()),
+    ORANGE("orange", "Naranja", R.style.Theme_Gestor_Colecciones_Orange, 0xFFFF9800.toInt());
 
     companion object {
         fun fromKey(key: String?): ThemePalette {

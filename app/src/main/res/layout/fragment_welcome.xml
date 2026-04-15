@@ -431,10 +431,10 @@
             app:elevation="2dp"
             app:iconGravity="end"
             app:icon="@android:drawable/ic_media_next"
-            app:iconTint="#FFFFFF"
+            app:iconTint="?attr/colorOnPrimary"
             app:iconPadding="8dp"
-            app:backgroundTint="#11365e"
-            android:textColor="#FFFFFF" />
+            app:backgroundTint="?attr/colorPrimary"
+            android:textColor="?attr/colorOnPrimary" />
 
         <!-- Hint de interacción -->
         <com.google.android.material.textview.MaterialTextView

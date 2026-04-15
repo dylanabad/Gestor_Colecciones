@@ -430,65 +430,70 @@ class ColeccionesFragment : Fragment() {
     }
 
     private fun showThemeMenu() {
-        val opciones = arrayOf(
-            "Color del tema",
-            "Modo claro/oscuro"
-        )
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_theme_selector, null)
+        val paletteContainer = dialogView.findViewById<LinearLayout>(R.id.paletteContainer)
+        val toggleMode = dialogView.findViewById<com.google.android.material.button.MaterialButtonToggleGroup>(R.id.toggleMode)
+        
+        val dialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .setPositiveButton("Cerrar", null)
+            .create()
 
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Temas")
-            .setItems(opciones) { _, which ->
-                when (which) {
-                    0 -> showPaletteDialog()
-                    1 -> showModeDialog()
+        // 1. Configurar Selector de Paleta (Círculos)
+        val currentPalette = ThemePrefs.getPalette(requireContext())
+        ThemePalette.entries.forEach { palette ->
+            val colorView = View(requireContext()).apply {
+                val size = (48 * resources.displayMetrics.density).toInt()
+                layoutParams = LinearLayout.LayoutParams(size, size).apply {
+                    setMargins(16, 8, 16, 8)
+                }
+                
+                // Fondo circular con borde si está seleccionado
+                val shape = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL
+                    setColor(palette.primaryColor)
+                    if (palette == currentPalette) {
+                        setStroke(8, ContextCompat.getColor(context, android.R.color.white))
+                    } else {
+                        setStroke(2, 0x44000000)
+                    }
+                }
+                background = shape
+                elevation = 4f
+                
+                setOnClickListener {
+                    if (palette != ThemePrefs.getPalette(context)) {
+                        ThemeManager.updatePalette(requireActivity() as AppCompatActivity, palette)
+                        dialog.dismiss()
+                    }
                 }
             }
-            .setNegativeButton("Cerrar", null)
-            .show()
-    }
+            paletteContainer.addView(colorView)
+        }
 
-    private fun showPaletteDialog() {
-        val palettes = ThemePalette.entries.toTypedArray()
-        val names = palettes.map { it.displayName }.toTypedArray()
-        val current = ThemePrefs.getPalette(requireContext())
-        val checked = palettes.indexOfFirst { it == current }.coerceAtLeast(0)
+        // 2. Configurar Selector de Modo
+        val currentMode = ThemePrefs.getMode(requireContext())
+        when (currentMode) {
+            ThemeMode.LIGHT -> toggleMode.check(R.id.btnModeLight)
+            ThemeMode.DARK -> toggleMode.check(R.id.btnModeDark)
+            ThemeMode.SYSTEM -> toggleMode.check(R.id.btnModeSystem)
+        }
 
-        var selected = current
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Color del tema")
-            .setSingleChoiceItems(names, checked) { _, which ->
-                selected = palettes[which]
-            }
-            .setPositiveButton("Aplicar") { _, _ ->
-                if (selected != current) {
-                    ThemeManager.updatePalette(requireActivity() as AppCompatActivity, selected)
+        toggleMode.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) {
+                val newMode = when (checkedId) {
+                    R.id.btnModeLight -> ThemeMode.LIGHT
+                    R.id.btnModeDark -> ThemeMode.DARK
+                    else -> ThemeMode.SYSTEM
+                }
+                if (newMode != ThemePrefs.getMode(requireContext())) {
+                    ThemeManager.updateMode(requireActivity() as AppCompatActivity, newMode)
+                    dialog.dismiss()
                 }
             }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
+        }
 
-    private fun showModeDialog() {
-        val modes = ThemeMode.entries.toTypedArray()
-        val names = modes.map { it.displayName }.toTypedArray()
-        val current = ThemePrefs.getMode(requireContext())
-        val checked = modes.indexOfFirst { it == current }.coerceAtLeast(0)
-
-        var selected = current
-
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Modo")
-            .setSingleChoiceItems(names, checked) { _, which ->
-                selected = modes[which]
-            }
-            .setPositiveButton("Aplicar") { _, _ ->
-                if (selected != current) {
-                    ThemeManager.updateMode(requireActivity() as AppCompatActivity, selected)
-                }
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
+        dialog.show()
     }
 
     // ── Exportación ───────────────────────────────────────────────────────────
