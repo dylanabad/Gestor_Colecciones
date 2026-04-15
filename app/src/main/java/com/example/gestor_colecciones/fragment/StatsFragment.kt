@@ -23,6 +23,7 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.google.android.material.transition.MaterialFadeThrough
+import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentStatsBinding
 import com.example.gestor_colecciones.repository.ColeccionExportData
@@ -33,6 +34,9 @@ import com.example.gestor_colecciones.viewmodel.StatsViewModel
 import com.example.gestor_colecciones.viewmodel.StatsViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.util.Locale
+import com.github.mikephil.charting.animation.Easing
+import android.R.attr.colorPrimary
 
 class StatsFragment : Fragment() {
 
@@ -82,11 +86,15 @@ class StatsFragment : Fragment() {
                 when (state) {
                     is StatsState.Loading -> {
                         binding.cardChart.visibility = View.GONE
-                        binding.cardResumen.visibility = View.GONE
+                        binding.cardMainStats.visibility = View.GONE
+                        binding.layoutSubStats.visibility = View.GONE
+                        binding.tvChartTitle.visibility = View.GONE
                     }
                     is StatsState.Success -> {
                         binding.cardChart.visibility = View.VISIBLE
-                        binding.cardResumen.visibility = View.VISIBLE
+                        binding.cardMainStats.visibility = View.VISIBLE
+                        binding.layoutSubStats.visibility = View.VISIBLE
+                        binding.tvChartTitle.visibility = View.VISIBLE
                         renderStats(state.data)
                     }
                     is StatsState.Error -> {
@@ -105,59 +113,68 @@ class StatsFragment : Fragment() {
 
         binding.tvTotalColecciones.text = data.size.toString()
         binding.tvTotalItems.text = totalItems.toString()
-        binding.tvValorTotal.text = "${"%.2f".format(valorTotal)}€"
+        binding.tvValorTotal.text = String.format(Locale.getDefault(), "%.2f€", valorTotal)
 
-        // Preparar datos para el gráfico de barras: una entrada por colección con su valor total
+        // Preparar datos para el gráfico de barras
         val entries = data.mapIndexed { index, entry ->
             BarEntry(index.toFloat(), entry.items.sumOf { it.valor }.toFloat())
         }
         val labels = data.map { it.coleccion.nombre }
 
-        // Dataset del gráfico con estilo y color
-        val dataSet = BarDataSet(entries, "Valor (€)").apply {
-            val primaryColor = requireContext().getColor(
-                com.google.android.material.R.color.material_dynamic_primary40
+        val dataSet = BarDataSet(entries, "Valor").apply {
+            // Usar el color primario del tema actual de forma segura
+            color = com.google.android.material.color.MaterialColors.getColor(
+                requireContext(),
+                android.R.attr.colorPrimary,
+                Color.BLUE
             )
-            color = primaryColor
-            valueTextColor = Color.DKGRAY
-            valueTextSize = 10f
+            
+            valueTextColor = Color.GRAY
+            valueTextSize = 11f
             setDrawValues(true)
+            // Formatear valores de las barras con el símbolo €
+            valueFormatter = object : com.github.mikephil.charting.formatter.ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    return String.format(Locale.getDefault(), "%.1f€", value)
+                }
+            }
         }
 
         val barData = BarData(dataSet).apply {
-            barWidth = 0.5f
+            barWidth = 0.6f
         }
 
-        // Configurar el BarChart: ejes, comportamiento y animación
         binding.barChart.apply {
             this.data = barData
+            setExtraOffsets(0f, 0f, 0f, 15f) // Espacio para etiquetas rotadas
 
-            // Eje X — nombres de colecciones
             xAxis.apply {
                 valueFormatter = IndexAxisValueFormatter(labels)
                 position = XAxis.XAxisPosition.BOTTOM
                 granularity = 1f
                 setDrawGridLines(false)
-                labelRotationAngle = -30f
-                textSize = 10f
+                labelRotationAngle = -45f
+                textSize = 11f
+                textColor = Color.GRAY
                 setLabelCount(labels.size, false)
             }
 
-            // Eje Y izquierdo — mostrar valores y líneas de grid
             axisLeft.apply {
                 setDrawGridLines(true)
+                gridColor = Color.LTGRAY
+                gridLineWidth = 0.5f
                 axisMinimum = 0f
-                textSize = 10f
+                textSize = 11f
+                textColor = Color.GRAY
             }
 
-            // Desactivar elementos innecesarios y ajustar comportamiento
             axisRight.isEnabled = false
             legend.isEnabled = false
             description.isEnabled = false
             setFitBars(true)
+            setScaleEnabled(false)
             setTouchEnabled(true)
-            setPinchZoom(false)
-            animateY(600)
+            animateY(1000, Easing.EaseOutCubic)
             invalidate()
         }
     }
