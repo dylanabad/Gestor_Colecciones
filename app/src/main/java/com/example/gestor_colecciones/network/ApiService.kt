@@ -162,4 +162,7 @@ interface ApiService {
 
     @DELETE("api/prestamos/{id}")
     suspend fun deletePrestamo(@Path("id") id: Long)
+
+    @DELETE("api/prestamos/{id}/hard")
+    suspend fun deletePrestamoHard(@Path("id") id: Long)
 }

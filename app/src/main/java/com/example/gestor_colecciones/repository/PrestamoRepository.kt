@@ -11,6 +11,11 @@ import java.io.IOException
 // usando exclusivamente la API remota
 class PrestamoRepository(private val api: ApiService) {
 
+    private fun extractError(e: HttpException): String {
+        val body = e.response()?.errorBody()?.string()
+        return if (body.isNullOrBlank()) "HTTP ${e.code()}" else body
+    }
+
     // Obtiene la lista de usuarios desde el servidor
     suspend fun getUsuarios(): List<UsuarioDto> = try {
 
@@ -69,7 +74,8 @@ class PrestamoRepository(private val api: ApiService) {
     suspend fun deletePrestamo(id: Long) {
         try {
 
-            api.deletePrestamo(id)
+            // Eliminación definitiva para que desaparezca realmente de la base de datos
+            api.deletePrestamoHard(id)
 
         } catch (e: HttpException) {
 
@@ -79,7 +85,7 @@ class PrestamoRepository(private val api: ApiService) {
             if (e.code() == 403)
                 throw Exception("No tienes permisos para eliminar este préstamo")
 
-            throw Exception("Error del servidor al eliminar el préstamo: ${e.message}")
+            throw Exception(extractError(e))
 
         } catch (e: IOException) {
 

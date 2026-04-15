@@ -22,6 +22,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Spinner
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -53,6 +54,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
@@ -72,6 +74,9 @@ class PrestamosFragment : Fragment() {
     private lateinit var fabNuevoPrestamo: View
     private lateinit var emptyPrestados: View
     private lateinit var emptyRecibidos: View
+    private lateinit var tvCountPrestados: TextView
+    private lateinit var tvCountRecibidos: TextView
+    private lateinit var tvCountVencidos: TextView
 
     // Estado para evitar sobrescribir el set inicial de IDs recibidos
     private var recibidosLoadedOnce = false
@@ -115,6 +120,9 @@ class PrestamosFragment : Fragment() {
         fabNuevoPrestamo = view.findViewById(R.id.fabNuevoPrestamo)
         emptyPrestados = view.findViewById(R.id.emptyPrestados)
         emptyRecibidos = view.findViewById(R.id.emptyRecibidos)
+        tvCountPrestados = view.findViewById(R.id.tvCountPrestados)
+        tvCountRecibidos = view.findViewById(R.id.tvCountRecibidos)
+        tvCountVencidos = view.findViewById(R.id.tvCountVencidos)
 
         // Crear adaptadores para las dos listas (prestados y recibidos)
         val currentUsername = AuthStore(requireContext()).getUsername()
@@ -165,19 +173,26 @@ class PrestamosFragment : Fragment() {
             showCrearPrestamoDialog()
         }
 
+        var latestPrestados: List<PrestamoDto> = emptyList()
+        var latestRecibidos: List<PrestamoDto> = emptyList()
+
         // Observar flujos del ViewModel y actualizar adaptadores/UI
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.prestados.collectLatest { lista ->
+                latestPrestados = lista
                 adapterPrestados.updateList(lista)
                 emptyPrestados.visibility = if (lista.isEmpty()) View.VISIBLE else View.GONE
+                actualizarHeader(latestPrestados, latestRecibidos)
             }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.recibidos.collectLatest { lista ->
+                latestRecibidos = lista
                 adapterRecibidos.updateList(lista)
                 emptyRecibidos.visibility = if (lista.isEmpty()) View.VISIBLE else View.GONE
                 handleRecibidosNotifications(lista)
+                actualizarHeader(latestPrestados, latestRecibidos)
             }
         }
 
@@ -210,6 +225,24 @@ class PrestamosFragment : Fragment() {
         // Cargar inicialmente ambas listas
         viewModel.cargarPrestados()
         viewModel.cargarRecibidos()
+    }
+
+    private fun actualizarHeader(prestados: List<PrestamoDto>, recibidos: List<PrestamoDto>) {
+        tvCountPrestados.text = prestados.size.toString()
+        tvCountRecibidos.text = recibidos.size.toString()
+        tvCountVencidos.text = (prestados + recibidos).count { esVencido(it) }.toString()
+    }
+
+    private fun esVencido(p: PrestamoDto): Boolean {
+        if (p.estado.equals("DEVUELTO", ignoreCase = true)) return false
+        val fechaStr = p.fechaDevolucionPrevista?.take(10) ?: return false
+        return try {
+            val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val fecha = fmt.parse(fechaStr)
+            fecha != null && fecha.before(Date())
+        } catch (_: Exception) {
+            false
+        }
     }
 
     private fun confirmarDevolucion(prestamo: PrestamoDto) {

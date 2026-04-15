@@ -1,129 +1,186 @@
 package com.example.gestor_colecciones.adapters
 
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.color.MaterialColors
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.network.dto.PrestamoDto
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-// Adapter para mostrar préstamos en un RecyclerView (tanto prestados como recibidos)
 class PrestamoAdapter(
-    private var lista: List<PrestamoDto>,                          // Lista de préstamos a mostrar
-    private val modo: Modo,                                        // Define si es vista de prestados o recibidos
-    private val onDevolver: ((PrestamoDto) -> Unit)? = null,      // Callback para devolver un préstamo
-    private val onDelete: ((PrestamoDto) -> Unit)? = null,        // Callback para eliminar un préstamo
-    private val currentUsername: String? = null                   // Usuario actual para control de permisos
+    private var lista: List<PrestamoDto>,
+    private val modo: Modo,
+    private val onDevolver: ((PrestamoDto) -> Unit)? = null,
+    private val onDelete: ((PrestamoDto) -> Unit)? = null,
+    private val currentUsername: String? = null
 ) : RecyclerView.Adapter<PrestamoAdapter.ViewHolder>() {
 
-    // Modos posibles del adapter
     enum class Modo { PRESTADOS, RECIBIDOS }
 
-    // ViewHolder que contiene las vistas del item de préstamo
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    private enum class EstadoVisual { ACTIVO, VENCIDO, DEVUELTO }
 
-        val tvTituloItem: TextView = view.findViewById(R.id.tvTituloItem)
-        val tvUsuario: TextView = view.findViewById(R.id.tvUsuario)
-        val tvFechaPrestamo: TextView = view.findViewById(R.id.tvFechaPrestamo)
-        val tvFechaDevolucion: TextView = view.findViewById(R.id.tvFechaDevolucion)
-        val tvEstado: TextView = view.findViewById(R.id.tvEstado)
-        val tvNotas: TextView = view.findViewById(R.id.tvNotas)
-        val btnDevolver: View = view.findViewById(R.id.btnDevolver)
-        val btnEliminar: View = view.findViewById(R.id.btnEliminar)
+    private data class EstiloEstado(
+        val accentColor: Int,
+        val badgeBgColor: Int,
+        val badgeTextColor: Int,
+        val label: String
+    )
+
+    companion object {
+        private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     }
 
-    // Inflado del layout del item de préstamo
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    // ── ViewHolder ────────────────────────────────────────────────────────────
 
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val viewAccent: View             = view.findViewById(R.id.viewAccent)
+        val tvTituloItem: TextView       = view.findViewById(R.id.tvTituloItem)
+        val tvEstado: TextView           = view.findViewById(R.id.tvEstado)
+        val tvAvatar: TextView           = view.findViewById(R.id.tvAvatar)
+        val tvUsuario: TextView          = view.findViewById(R.id.tvUsuario)
+        val tvFechaPrestamo: TextView    = view.findViewById(R.id.tvFechaPrestamo)
+        val tvFechaDevolucion: TextView  = view.findViewById(R.id.tvFechaDevolucion)
+        val tvNotas: TextView            = view.findViewById(R.id.tvNotas)
+        val btnDevolver: View            = view.findViewById(R.id.btnDevolver)
+        val btnEliminar: View            = view.findViewById(R.id.btnEliminar)
+
+        fun bind(p: PrestamoDto) {
+            bindTitulo(p)
+            bindUsuario(p)
+            bindFechas(p)
+            bindEstado(p)
+            bindNotas(p)
+            bindBotones(p)
+        }
+
+        private fun bindTitulo(p: PrestamoDto) {
+            tvTituloItem.text = p.itemTitulo
+        }
+
+        private fun bindUsuario(p: PrestamoDto) {
+            val nombre = if (modo == Modo.PRESTADOS) p.prestatarioUsername
+            else p.propietarioUsername
+            tvUsuario.text = if (modo == Modo.PRESTADOS) "Prestado a: $nombre"
+            else "Prestado por: $nombre"
+            tvAvatar.text = nombre
+                .split(" ", "_")
+                .take(2)
+                .joinToString("") { it.first().uppercase() }
+        }
+
+        private fun bindFechas(p: PrestamoDto) {
+            tvFechaPrestamo.text = p.fechaPrestamo.take(10)
+            tvFechaDevolucion.text = p.fechaDevolucionPrevista?.take(10) ?: "Sin fecha"
+        }
+
+        private fun bindEstado(p: PrestamoDto) {
+            val estilo = estiloPara(itemView, resolverEstado(p))
+            viewAccent.setBackgroundColor(estilo.accentColor)
+            tvEstado.text = estilo.label
+            tvEstado.setTextColor(estilo.badgeTextColor)
+            tvEstado.backgroundTintList =
+                ColorStateList.valueOf(estilo.badgeBgColor)
+        }
+
+        private fun bindNotas(p: PrestamoDto) {
+            val hayNotas = !p.notas.isNullOrBlank()
+            tvNotas.visibility = if (hayNotas) View.VISIBLE else View.GONE
+            if (hayNotas) tvNotas.text = p.notas
+        }
+
+        private fun bindBotones(p: PrestamoDto) {
+            val mostrarDevolver = modo == Modo.PRESTADOS && p.estado == "ACTIVO"
+            btnDevolver.visibility = if (mostrarDevolver) View.VISIBLE else View.GONE
+            btnDevolver.setOnClickListener { onDevolver?.invoke(p) }
+
+            val puedeEliminar = currentUsername != null && when (modo) {
+                Modo.PRESTADOS -> currentUsername == p.propietarioUsername
+                Modo.RECIBIDOS -> currentUsername == p.prestatarioUsername
+            }
+            btnEliminar.visibility = if (puedeEliminar) View.VISIBLE else View.GONE
+            btnEliminar.setOnClickListener { onDelete?.invoke(p) }
+        }
+    }
+
+    // ── Ciclo de vida del Adapter ─────────────────────────────────────────────
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_prestamo, parent, false)
-
         return ViewHolder(view)
     }
 
-    // Vinculación de datos con la vista
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.bind(lista[position])
+    }
 
-        val prestamo = lista[position]
+    override fun getItemCount() = lista.size
 
-        // --- INFORMACIÓN PRINCIPAL ---
-        holder.tvTituloItem.text = prestamo.itemTitulo
+    // Actualiza la lista usando DiffUtil para animar solo los cambios reales
+    fun updateList(nuevaLista: List<PrestamoDto>) {
+        val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize() = lista.size
+            override fun getNewListSize() = nuevaLista.size
+            override fun areItemsTheSame(oldPos: Int, newPos: Int) =
+                lista[oldPos].movimientoId == nuevaLista[newPos].movimientoId
+            override fun areContentsTheSame(oldPos: Int, newPos: Int) =
+                lista[oldPos] == nuevaLista[newPos]
+        })
+        lista = nuevaLista
+        diff.dispatchUpdatesTo(this)
+    }
 
-        // Texto del usuario depende del modo (prestado o recibido)
-        holder.tvUsuario.text = when (modo) {
-            Modo.PRESTADOS -> "Prestado a: ${prestamo.prestatarioUsername}"
-            Modo.RECIBIDOS -> "Prestado por: ${prestamo.propietarioUsername}"
-        }
+    // ── Helpers privados ──────────────────────────────────────────────────────
 
-        // Fecha de préstamo (recorta a formato YYYY-MM-DD)
-        holder.tvFechaPrestamo.text =
-            "Fecha: ${prestamo.fechaPrestamo.take(10)}"
-
-        // Fecha de devolución prevista (si existe)
-        holder.tvFechaDevolucion.text =
-            prestamo.fechaDevolucionPrevista
-                ?.let { "Devolucion prevista: ${it.take(10)}" }
-                ?: "Sin fecha de devolucion"
-
-        // Estado del préstamo (ACTIVO / DEVUELTO)
-        holder.tvEstado.text = prestamo.estado
-
-        // Color del estado según condición
-        holder.tvEstado.setTextColor(
-            ContextCompat.getColor(
-                holder.itemView.context,
-                if (prestamo.estado == "ACTIVO")
-                    R.color.colorEstadoActivo
-                else
-                    R.color.colorEstadoDevuelto
-            )
-        )
-
-        // --- NOTAS ---
-        holder.tvNotas.text = prestamo.notas ?: ""
-
-        holder.tvNotas.visibility =
-            if (prestamo.notas.isNullOrBlank()) View.GONE else View.VISIBLE
-
-        // --- BOTÓN DEVOLVER ---
-        holder.btnDevolver.visibility =
-            if (modo == Modo.PRESTADOS && prestamo.estado == "ACTIVO")
-                View.VISIBLE
-            else
-                View.GONE
-
-        holder.btnDevolver.setOnClickListener {
-            onDevolver?.invoke(prestamo)
-        }
-
-        // --- BOTÓN ELIMINAR ---
-        val puedeEliminar = when (modo) {
-
-            Modo.PRESTADOS ->
-                currentUsername != null &&
-                        prestamo.propietarioUsername == currentUsername
-
-            Modo.RECIBIDOS ->
-                currentUsername != null &&
-                        prestamo.prestatarioUsername == currentUsername
-        }
-
-        holder.btnEliminar.visibility =
-            if (puedeEliminar) View.VISIBLE else View.GONE
-
-        holder.btnEliminar.setOnClickListener {
-            onDelete?.invoke(prestamo)
+    private fun resolverEstado(p: PrestamoDto): EstadoVisual {
+        if (p.estado == "DEVUELTO") return EstadoVisual.DEVUELTO
+        val fechaStr = p.fechaDevolucionPrevista?.take(10) ?: return EstadoVisual.ACTIVO
+        return try {
+            val fechaDev = DATE_FORMAT.parse(fechaStr)
+            if (fechaDev != null && fechaDev.before(Date())) EstadoVisual.VENCIDO
+            else EstadoVisual.ACTIVO
+        } catch (_: Exception) {
+            EstadoVisual.ACTIVO
         }
     }
 
-    // Número total de elementos
-    override fun getItemCount() = lista.size
+    private fun estiloPara(view: View, estado: EstadoVisual): EstiloEstado {
+        // Colores basados en tema para que los distintos temas no queden "lavados"
+        fun c(attr: Int, fallback: Int): Int = MaterialColors.getColor(view, attr, fallback)
 
-    // Actualiza la lista completa
-    fun updateList(nuevaLista: List<PrestamoDto>) {
-        lista = nuevaLista
-        notifyDataSetChanged()
+        val accentActivo = c(androidx.appcompat.R.attr.colorPrimary, 0xFF1D9E75.toInt())
+        val badgeActivo = c(com.google.android.material.R.attr.colorPrimaryContainer, accentActivo)
+        val badgeActivoText = c(com.google.android.material.R.attr.colorOnPrimaryContainer,
+            c(com.google.android.material.R.attr.colorOnPrimary, 0xFFFFFFFF.toInt())
+        )
+
+        val accentVencido = c(androidx.appcompat.R.attr.colorError, 0xFFEF9F27.toInt())
+        val badgeVencido = c(com.google.android.material.R.attr.colorErrorContainer, accentVencido)
+        val badgeVencidoText = c(com.google.android.material.R.attr.colorOnErrorContainer,
+            c(com.google.android.material.R.attr.colorOnError, 0xFFFFFFFF.toInt())
+        )
+
+        val accentDevuelto = c(com.google.android.material.R.attr.colorOutline,
+            c(com.google.android.material.R.attr.colorOnSurfaceVariant, 0xFF888780.toInt())
+        )
+        val badgeDevuelto = c(com.google.android.material.R.attr.colorSurfaceVariant,
+            c(com.google.android.material.R.attr.colorSurface, 0xFFF1EFE8.toInt())
+        )
+        val badgeDevueltoText = c(com.google.android.material.R.attr.colorOnSurfaceVariant,
+            c(com.google.android.material.R.attr.colorOnSurface, 0xFF5F5E5A.toInt())
+        )
+
+        return when (estado) {
+            EstadoVisual.ACTIVO -> EstiloEstado(accentActivo, badgeActivo, badgeActivoText, "Activo")
+            EstadoVisual.VENCIDO -> EstiloEstado(accentVencido, badgeVencido, badgeVencidoText, "Vencido")
+            EstadoVisual.DEVUELTO -> EstiloEstado(accentDevuelto, badgeDevuelto, badgeDevueltoText, "Devuelto")
+        }
     }
 }
