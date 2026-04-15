@@ -91,7 +91,15 @@ class LogrosFragment : Fragment() {
                 adapter.updateList(lista)
                 val desbloqueados = lista.count { it.desbloqueado }
                 val total = LogroDefinicion.TODOS.size
+                
+                // Actualizar contador de texto
                 binding.tvContador.text = "$desbloqueados/$total"
+                
+                // Actualizar barra de progreso (0-100)
+                if (total > 0) {
+                    val porcentaje = (desbloqueados * 100) / total
+                    binding.progressLogros.setProgress(porcentaje, true)
+                }
             }
         }
 
