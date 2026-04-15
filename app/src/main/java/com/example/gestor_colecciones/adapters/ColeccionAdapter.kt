@@ -75,12 +75,21 @@ class ColeccionAdapter(
         // Datos básicos
         holder.tvNombre.text = coleccion.nombre
         ViewCompat.setTooltipText(holder.tvNombre, coleccion.nombre)
-        holder.tvDescripcion.text = coleccion.descripcion ?: "Sin descripción"
+        
+        if (coleccion.descripcion.isNullOrBlank()) {
+            holder.tvDescripcion.visibility = View.GONE
+        } else {
+            holder.tvDescripcion.visibility = View.VISIBLE
+            holder.tvDescripcion.text = coleccion.descripcion
+        }
 
         // Estadísticas asociadas (si existen)
         val stats = coleccionStats[coleccion.id].orEmpty()
         if (stats.isBlank()) {
             holder.tvStats.visibility = View.GONE
+            // Opcional: Si quieres mostrar "0" en lugar de ocultarlo:
+            // holder.tvStats.visibility = View.VISIBLE
+            // holder.tvStats.text = "0"
         } else {
             holder.tvStats.visibility = View.VISIBLE
             holder.tvStats.text = stats
@@ -100,10 +109,9 @@ class ColeccionAdapter(
             )
 
             holder.card.strokeColor = color
-
             holder.card.strokeWidth = TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP,
-                2f,
+                2.5f, // Borde más acentuado
                 holder.itemView.resources.displayMetrics
             ).toInt()
 
@@ -114,7 +122,7 @@ class ColeccionAdapter(
 
             holder.card.strokeColor = MaterialColors.getColor(
                 holder.card,
-                com.google.android.material.R.attr.colorOutline
+                com.google.android.material.R.attr.colorOutlineVariant
             )
 
             holder.card.strokeWidth = TypedValue.applyDimension(

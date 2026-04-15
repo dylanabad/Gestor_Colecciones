@@ -1,223 +1,245 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/app_background"
-    android:padding="16dp">
+    android:background="@color/app_background">
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardHeader"
-        android:layout_width="0dp"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="?attr/colorSurfaceVariant"
-        app:cardCornerRadius="20dp"
-        app:cardElevation="1dp"
-        app:strokeWidth="1dp"
-        app:strokeColor="?attr/colorOutlineVariant"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:background="@android:color/transparent"
+        app:elevation="0dp">
 
-        <LinearLayout
+        <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:titleEnabled="false">
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:paddingBottom="12dp">
 
-                <View
-                    android:layout_width="6dp"
-                    android:layout_height="26dp"
-                    android:layout_marginEnd="10dp"
-                    android:background="@drawable/bg_header_accent" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/tvColeccionesTitle"
-                    android:layout_width="0dp"
+                <!-- Header -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layoutHeaderInfo"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Colecciones"
-                    android:textAppearance="?attr/textAppearanceHeadlineMedium"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:paddingHorizontal="20dp"
+                    android:paddingTop="24dp"
+                    android:paddingBottom="12dp"
+                    app:layout_constraintTop_toTopOf="parent">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSettings"
-                    style="@style/Widget.Material3.Button.IconButton"
-                    android:layout_width="wrap_content"
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvWelcome"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tus bibliotecas"
+                        android:textAppearance="?attr/textAppearanceLabelLarge"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/tvColeccionesTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Colecciones"
+                        android:textAppearance="?attr/textAppearanceHeadlineLarge"
+                        android:textStyle="bold"
+                        android:textColor="?attr/colorOnSurface"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/tvWelcome" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnSettings"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="?attr/colorOutlineVariant"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/tvWelcome"
+                        app:layout_constraintBottom_toBottomOf="@id/tvColeccionesTitle">
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_palette_24"
+                            app:tint="?attr/colorOnSurface" />
+                    </com.google.android.material.card.MaterialCardView>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <!-- Search Bar -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardSearchColecciones"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:contentDescription="Ajustes"
-                    app:icon="@drawable/ic_tune_24"
-                    app:iconTint="?attr/colorOnSurfaceVariant" />
+                    android:layout_marginHorizontal="20dp"
+                    app:cardCornerRadius="14dp"
+                    app:cardElevation="1dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="?attr/colorOutlineVariant"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:layout_constraintTop_toBottomOf="@id/layoutHeaderInfo">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnLogout"
-                    style="@style/Widget.Material3.Button.IconButton"
-                    android:layout_width="wrap_content"
+                    <androidx.appcompat.widget.SearchView
+                        android:id="@+id/searchColecciones"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@android:color/transparent"
+                        android:iconifiedByDefault="false"
+                        app:searchIcon="@android:drawable/ic_menu_search"
+                        app:queryHint="Buscar..."
+                        app:queryBackground="@android:color/transparent" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Menú de Navegación Tematizado -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:contentDescription="Cerrar sesion"
-                    app:icon="@android:drawable/ic_lock_power_off"
-                    app:iconTint="?attr/colorError" />
-            </LinearLayout>
+                    android:layout_marginTop="12dp"
+                    android:scrollbars="none"
+                    app:layout_constraintTop_toBottomOf="@id/cardSearchColecciones">
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvColeccionesSubtitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Organiza y explora tus colecciones"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
+                    <LinearLayout
+                        android:id="@+id/chipGroupShortcuts"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="20dp"
+                        android:paddingBottom="4dp">
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardSearchColecciones"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        app:cardCornerRadius="28dp"
-        app:cardElevation="0dp"
-        app:strokeWidth="1dp"
-        app:strokeColor="?attr/colorOutlineVariant"
-        app:layout_constraintTop_toBottomOf="@id/cardHeader"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnBusqueda"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:text="Buscar"
+                            app:icon="@android:drawable/ic_menu_search"
+                            app:backgroundTint="?attr/colorPrimaryContainer"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            app:iconTint="?attr/colorOnPrimaryContainer" />
 
-        <androidx.appcompat.widget.SearchView
-            android:id="@+id/searchColecciones"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/transparent"
-            android:iconifiedByDefault="false"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:queryHint="Buscar coleccion..." />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnStats"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:text="Stats"
+                            app:icon="@android:drawable/ic_menu_info_details"
+                            app:backgroundTint="?attr/colorPrimaryContainer"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            app:iconTint="?attr/colorOnPrimaryContainer" />
 
-    </com.google.android.material.card.MaterialCardView>
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnDeseos"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:text="Deseos"
+                            app:icon="@android:drawable/ic_menu_agenda"
+                            app:backgroundTint="?attr/colorPrimaryContainer"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            app:iconTint="?attr/colorOnPrimaryContainer" />
 
-    <HorizontalScrollView
-        android:id="@+id/scrollBotones"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:scrollbars="none"
-        app:layout_constraintTop_toBottomOf="@id/cardSearchColecciones"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnLogros"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:text="Logros"
+                            app:icon="@android:drawable/btn_star"
+                            app:backgroundTint="?attr/colorPrimaryContainer"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            app:iconTint="?attr/colorOnPrimaryContainer" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingEnd="12dp">
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnPrestamos"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:text="Préstamos"
+                            app:icon="@android:drawable/ic_menu_send"
+                            app:backgroundTint="?attr/colorPrimaryContainer"
+                            android:textColor="?attr/colorOnPrimaryContainer"
+                            app:iconTint="?attr/colorOnPrimaryContainer" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnBusqueda"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
-                android:minHeight="36dp"
-                android:text="Buscar"
-                app:icon="@android:drawable/ic_menu_search" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnPapelera"
+                            style="@style/Widget.Material3.Button.TonalButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Papelera"
+                            app:icon="@android:drawable/ic_menu_delete"
+                            app:backgroundTint="?attr/colorErrorContainer"
+                            android:textColor="?attr/colorOnErrorContainer"
+                            app:iconTint="?attr/colorOnErrorContainer" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDeseos"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
-                android:minHeight="36dp"
-                android:text="Deseos"
-                app:icon="@android:drawable/ic_menu_agenda" />
+                    </LinearLayout>
+                </HorizontalScrollView>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnStats"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
-                android:minHeight="36dp"
-                android:text="Stats"
-                app:icon="@android:drawable/ic_menu_info_details" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnLogros"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
-                android:minHeight="36dp"
-                android:text="Logros"
-                app:icon="@android:drawable/btn_star" />
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnPrestamos"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
-                android:minHeight="36dp"
-                android:text="Prestamos"
-                app:icon="@android:drawable/ic_menu_send" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnPapelera"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:minHeight="36dp"
-                android:text="Papelera"
-                app:icon="@android:drawable/ic_menu_delete" />
-
-        </LinearLayout>
-
-    </HorizontalScrollView>
-
+    <!-- Grid de 3 columnas -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvColecciones"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        android:layoutAnimation="@anim/layout_stagger"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingBottom="96dp"
-        app:layout_constraintTop_toBottomOf="@id/scrollBotones"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:paddingHorizontal="12dp"
+        android:paddingBottom="100dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:listitem="@layout/item_coleccion" />
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fabAddColeccion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:text="Nueva"
+        android:textColor="?attr/colorOnPrimary"
+        app:icon="@android:drawable/ic_input_add"
+        app:iconTint="?attr/colorOnPrimary"
+        app:backgroundTint="?attr/colorPrimary" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabExport"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:contentDescription="Exportar colecciones"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="84dp"
+        android:layout_gravity="bottom|end"
         android:src="@android:drawable/ic_menu_share"
-        app:backgroundTint="?attr/colorSecondaryContainer"
-        app:tint="?attr/colorOnSecondaryContainer"
-        app:fabSize="mini"
-        app:layout_constraintBottom_toTopOf="@id/fabAddColeccion"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:backgroundTint="?attr/colorSurface"
+        app:tint="?attr/colorOnSurface"
+        app:fabSize="mini" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAddColeccion"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:contentDescription="Crear coleccion"
-        android:src="@android:drawable/ic_input_add"
-        app:backgroundTint="?attr/colorPrimary"
-        app:tint="?attr/colorOnPrimary"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnLogout"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="12dp"
+        android:layout_gravity="top|end"
+        android:visibility="gone"
+        app:icon="@android:drawable/ic_lock_power_off"
+        app:iconTint="?attr/colorError" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

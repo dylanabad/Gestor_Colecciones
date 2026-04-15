@@ -240,8 +240,8 @@ class ColeccionesFragment : Fragment() {
             coleccionStats = statsMap
         )
 
-        // Cuadrícula de 2 columnas
-        binding.rvColecciones.layoutManager = GridLayoutManager(requireContext(), 2)
+        // Cuadrícula de 3 columnas para mayor densidad visual
+        binding.rvColecciones.layoutManager = GridLayoutManager(requireContext(), 3)
         binding.rvColecciones.adapter = adapter
 
         // Animaciones suaves; se desactivan las de cambio para evitar parpadeos al actualizar stats
@@ -253,8 +253,8 @@ class ColeccionesFragment : Fragment() {
             changeDuration = 160
         }
 
-        // Espaciado uniforme entre celdas del grid
-        binding.rvColecciones.addItemDecoration(GridSpacingItemDecoration(2, 16, true))
+        // Espaciado uniforme entre celdas del grid (3 columnas, 12dp de espacio)
+        binding.rvColecciones.addItemDecoration(GridSpacingItemDecoration(3, 12, true))
 
         // Swipe a la izquierda → mover colección a la papelera
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
