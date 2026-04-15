@@ -2,90 +2,145 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginBottom="12dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="0dp"
+    app:cardElevation="1dp"
     app:strokeWidth="1dp"
-    app:strokeColor="?attr/colorOutline">
+    app:strokeColor="?attr/colorOutline"
+    android:backgroundTint="?attr/colorSurface"
+    app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Gestor_Colecciones.AllRounded">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="12dp">
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <!-- Badge de Prioridad Compacto -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cvPrioridad"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            app:cardBackgroundColor="?attr/colorPrimaryContainer"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <!-- Indicador de prioridad -->
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tvPrioridad"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="20sp"
-                android:layout_marginEnd="10dp" />
+                android:paddingHorizontal="6dp"
+                android:paddingVertical="2dp"
+                android:textAppearance="?attr/textAppearanceLabelSmall"
+                android:textColor="?attr/colorOnPrimaryContainer"
+                android:textStyle="bold"
+                tools:text="🔥 ALTA" />
+        </com.google.android.material.card.MaterialCardView>
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+        <!-- Contenedor de Precio / Presupuesto -->
+        <LinearLayout
+            android:id="@+id/llPrecio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/tvTitulo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceTitleSmall" />
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/tvDescripcion"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textAppearance="?attr/textAppearanceBodySmall"
-                    android:visibility="gone" />
-
-            </LinearLayout>
-
-            <!-- Precio objetivo -->
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tvPrecio"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceTitleSmall"
-                android:textColor="?attr/colorPrimary" />
+                android:includeFontPadding="false"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorPrimary"
+                android:textStyle="bold"
+                tools:text="45.00€" />
 
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="0.7"
+                android:text="OBJETIVO"
+                android:textSize="10sp"
+                android:textAppearance="?attr/textAppearanceLabelSmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:ignore="SmallSp" />
         </LinearLayout>
 
-        <!-- Enlace y acciones -->
-        <LinearLayout
+        <!-- Título -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvTitulo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textAppearance="?attr/textAppearanceTitleSmall"
+            android:textColor="?attr/colorOnSurface"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cvPrioridad"
+            tools:text="Nombre del Objeto" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvDescripcion"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTitulo"
+            tools:text="Descripción corta y concisa del item deseado." />
+
+        <!-- Separador sutil -->
+        <com.google.android.material.divider.MaterialDivider
+            android:id="@+id/divider"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="10dp"
-            android:gravity="end">
+            android:layout_marginTop="8dp"
+            app:dividerColor="?attr/colorOutline"
+            android:alpha="0.2"
+            app:layout_constraintTop_toBottomOf="@id/tvDescripcion" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnEnlace"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Ver enlace"
-                android:visibility="gone" />
+        <!-- Footer compacto -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEnlace"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:minHeight="36dp"
+            android:text="Enlace"
+            android:textSize="12sp"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:icon="@drawable/ic_link"
+            app:iconSize="14dp"
+            app:iconTint="?attr/colorOnSurfaceVariant"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/divider"
+            tools:visibility="visible" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnConseguido"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="¡Conseguido!" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConseguido"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:minHeight="36dp"
+            android:text="¡Conseguido!"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/divider" />
 
-        </LinearLayout>
-
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

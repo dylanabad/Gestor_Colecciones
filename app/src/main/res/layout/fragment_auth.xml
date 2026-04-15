@@ -109,7 +109,6 @@
                     android:hint="Usuario"
                     app:startIconDrawable="@drawable/ic_auth_user"
                     app:startIconTint="@color/on_app_surface_variant"
-                    app:helperText="Solo para registro"
                     app:helperTextEnabled="true"
                     app:boxCornerRadiusTopStart="14dp"
                     app:boxCornerRadiusTopEnd="14dp"
