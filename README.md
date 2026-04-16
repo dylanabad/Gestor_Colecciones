@@ -1,110 +1,68 @@
-# 📦  — Gestor de Colecciones Personales
+# CollectHub 📦✨
 
-> Organiza, analiza y da vida a tus colecciones desde un solo lugar.
-
----
-
-## 📋 Descripción del problema
-
-Muchas personas poseen colecciones personales (libros, videojuegos, cómics, figuras, películas, etc.) pero no disponen de una herramienta digital organizada que les permita gestionarlas correctamente.
-
-El control suele realizarse de forma manual, mediante notas, hojas de cálculo o simplemente de memoria, lo que acaba causando problemas como:
-
-- 🗂️ Desorganización y pérdida de información
-- 🔁 Duplicación de elementos
-- 💰 Dificultad para conocer el valor total de la colección
-- 📤 Falta de seguimiento de préstamos o movimientos
-- 📊 Imposibilidad de obtener estadísticas o análisis de la colección
-
-Por tanto, existe la necesidad de desarrollar una aplicación que permita gestionar colecciones de manera **estructurada, visual y eficiente**, incorporando funcionalidades avanzadas como estadísticas, historial y exportación de datos.
+**CollectHub** es una aplicación Android de gestión de colecciones diseñada con una estética **premium** y moderna, utilizando los principios de **Material Design 3**. Es la herramienta definitiva para coleccionistas que buscan organizar sus tesoros, gestionar préstamos y seguir su progreso con un sistema de logros exclusivo.
 
 ---
 
-## 🎯 Objetivos del proyecto
+## 🌟 Características Principales
 
-| # | Objetivo |
-|---|----------|
-| 1 | Permitir crear y gestionar diferentes colecciones |
-| 2 | Implementar un sistema **CRUD** completo para los ítems |
-| 3 | Incorporar filtros y búsqueda avanzada |
-| 4 | Registrar historial de movimientos de los elementos |
-| 5 | Generar estadísticas visuales de la colección |
-| 6 | Permitir exportar los datos a formatos externos (**CSV / PDF**) |
-| 7 | Diseñar una interfaz intuitiva y clara |
+### 💎 Experiencia Premium (Material 3)
+- **Interfaz Moderna:** Uso extensivo de `Material3`, incluyendo `SearchBar`, `MaterialCardView` con radios de curvatura optimizados y `NavigationRail`/`BottomNavigationView`.
+- **Temas Dinámicos:** Personalización visual con múltiples variantes de color (Púrpura, Verde, Naranja) y soporte completo para **Modo Oscuro**.
+- **Diálogos Estandarizados:** Todos los diálogos de la aplicación cuentan con bordes redondeados de **28dp**, siguiendo la línea estética más actual.
 
----
+### 📊 Gestión Avanzada
+- **Organización por Colecciones:** Crea, edita y organiza tus ítems dentro de categorías personalizadas.
+- **Detalle Exhaustivo:** Registra valor, descripción, estado de conservación y calificación de cada pieza.
+- **Préstamos Inteligentes:** Controla a quién has prestado tus ítems con una interfaz clara que incluye badges de estado y avatares.
+- **Búsqueda Global:** Encuentra cualquier objeto rápidamente con el nuevo motor de búsqueda integrado.
 
-## ✨ Funcionalidades principales
+### 🏆 Sistema de Logros "Elite"
+- **Progreso Gamificado:** Visualiza tus hitos como coleccionista. Los logros bloqueados aparecen con una estética sutil (opacidad 0.6f) y se desbloquean con colores vibrantes a medida que completas desafíos.
 
-- **Gestión de colecciones** — Crea colecciones personalizadas de cualquier tipo de ítem.
-- **CRUD de ítems** — Añade, edita, consulta y elimina elementos de forma sencilla.
-- **Búsqueda y filtros** — Encuentra cualquier ítem rápidamente con filtros avanzados.
-- **Historial de movimientos** — Registra préstamos, devoluciones y cambios de estado.
-- **Estadísticas visuales** — Visualiza el estado de tu colección con gráficos y métricas.
-- **Exportación de datos** — Exporta tu colección a CSV o PDF con un solo clic.
+### 📂 Papelera y Seguridad
+- **Recuperación:** Los ítems eliminados van a una papelera de reciclaje donde pueden ser restaurados o eliminados definitivamente.
+- **Historial:** Seguimiento de los cambios importantes en tus colecciones.
 
 ---
 
-## 🚀 Instalación y uso
+## 🛠️ Tecnologías Utilizadas
 
-```bash
-# Clona el repositorio
-git clone https://github.com/tu-usuario/collecthub.git
-
-# Entra en el directorio
-cd collecthub
-
-# Instala las dependencias
-npm install
-
-# Inicia la aplicación
-npm run dev
-```
+- **Kotlin:** Lenguaje principal de desarrollo.
+- **Architecture Components:** ViewModel, LiveData y Flow para una gestión de estado robusta.
+- **Room Database:** Persistencia de datos local eficiente.
+- **Material Components:** Implementación completa de Material Design 3.
+- **Glide:** Carga de imágenes optimizada y fluida.
+- **Coroutines:** Manejo de tareas en segundo plano de forma asíncrona.
 
 ---
 
-## 🛠️ Tecnologías utilizadas
-
-
-
-- **Frontend:** Kotlin
-- **Backend:** Spring Boot
-- **Base de datos:** MariaDB y Room
+## 📸 Capturas de Pantalla
+*(Próximamente)*
 
 ---
 
-## 📁 Estructura del proyecto
+## 🚀 Instalación y Desarrollo
 
-```
-collecthub/
-├── src/
-│   ├── components/       # Componentes de la interfaz
-│   ├── pages/            # Vistas principales
-│   ├── services/         # Lógica de negocio y API
-│   ├── models/           # Modelos de datos
-│   └── utils/            # Utilidades (exportación, filtros, etc.)
-├── public/
-├── tests/
-└── README.md
-```
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/dylanabad/Gestor_Colecciones.git
+   ```
+2. Abre el proyecto en **Android Studio (Jellyfish o superior)**.
+3. Sincroniza el proyecto con Gradle.
+4. Ejecuta la aplicación en un emulador o dispositivo físico con Android 8.0 (API 26) o superior.
 
 ---
 
-## 🤝 Contribuciones
-
-Las contribuciones son bienvenidas. Si deseas colaborar:
-
-1. Haz un fork del repositorio
-2. Crea una rama para tu funcionalidad (`git checkout -b feature/nueva-funcionalidad`)
-3. Realiza tus cambios y haz commit (`git commit -m 'feat: añade nueva funcionalidad'`)
-4. Sube los cambios (`git push origin feature/nueva-funcionalidad`)
-5. Abre un Pull Request
+## 🎨 Guía de Estilo Visual
+- **Diálogos:** Radio de 28dp (`ShapeAppearance.Gestor_Colecciones.Dialog`).
+- **Cards de Lista:** 24dp - 28dp.
+- **Cards de Progreso:** 32dp.
+- **InputFields:** Estilo `OutlinedBox` con iconos descriptivos.
 
 ---
 
+## 📄 Licencia
+Este proyecto es de uso personal y educativo.
 
 ---
-
-<div align="center">
-  Hecho con ❤️ para los coleccionistas de todo el mundo.
-</div>
