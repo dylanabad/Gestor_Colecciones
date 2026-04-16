@@ -50,21 +50,22 @@ class ItemDetailActivity : AppCompatActivity() {
 
             // Si el ítem existe, se rellenan los campos de la UI
             item?.let {
-
-                // Título del ítem
                 binding.tvTitleDetail.text = it.titulo
+                
+                // Cargar nombre de categoría si es posible, o el ID
+                binding.chipCategory.text = "Categoría ${it.categoriaId}"
 
-                // Categoría del ítem (actualmente se muestra el ID, no el nombre)
-                binding.tvCategoryDetail.text = it.categoriaId.toString()
+                binding.tvValorDetail.text = String.format("%.2f€", it.valor)
+                binding.tvDescripcionDetail.text = it.descripcion?.takeIf { d -> d.isNotBlank() } ?: "Sin descripción disponible."
 
-                // Valor del ítem formateado
-                binding.tvValorDetail.text = "Valor: \$${it.valor}"
-
-                // Descripción del ítem (si es null, se muestra vacío)
-                binding.tvDescripcionDetail.text = it.descripcion ?: ""
-
-                // Imagen del ítem (comentado, depende de si tienes ruta de imagen)
-                // binding.ivItemDetail.setImageURI(Uri.parse(it.imagenPath))
+                it.imagenPath?.let { path ->
+                    com.bumptech.glide.Glide.with(this@ItemDetailActivity)
+                        .load(com.example.gestor_colecciones.util.ImageUtils.toGlideModel(path))
+                        .placeholder(com.example.gestor_colecciones.R.mipmap.ic_launcher)
+                        .into(binding.ivItemDetail)
+                }
+                
+                binding.toolbar.setNavigationOnClickListener { finish() }
             }
         }
     }

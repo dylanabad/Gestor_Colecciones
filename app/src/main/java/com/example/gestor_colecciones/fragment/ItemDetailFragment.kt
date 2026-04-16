@@ -76,17 +76,22 @@ class ItemDetailFragment : Fragment() {
         // Vistas
         val tvTitulo = view.findViewById<TextView>(R.id.tvTitulo)
         val tvValor = view.findViewById<TextView>(R.id.tvValor)
-        val tvEstado = view.findViewById<TextView>(R.id.tvEstado)
+        val tvEstado = view.findViewById<com.google.android.material.chip.Chip>(R.id.tvEstado)
         val tvDescripcion = view.findViewById<TextView>(R.id.tvDescripcion)
-        val tvCategoria = view.findViewById<TextView>(R.id.tvCategoria)
+        val tvCategoria = view.findViewById<com.google.android.material.chip.Chip>(R.id.tvCategoria)
         val tvCalificacion = view.findViewById<TextView>(R.id.tvCalificacion)
         val ivImagen = view.findViewById<ImageView>(R.id.ivImagen)
         val rbRating = view.findViewById<RatingBar>(R.id.rbItemRating)
-        val btnFavorito = view.findViewById<ImageButton>(R.id.btnFavorito)
+        val btnFavorito = view.findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.btnFavorito)
         val chipGroupTags = view.findViewById<ChipGroup>(R.id.chipGroupTags)
         val btnEditTags = view.findViewById<View>(R.id.btnEditTags)
         val tvHistoryEmpty = view.findViewById<TextView>(R.id.tvHistoryEmpty)
         val llItemHistory = view.findViewById<LinearLayout>(R.id.llItemHistory)
+        val toolbar = view.findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
+
+        toolbar.setNavigationOnClickListener {
+            requireActivity().onBackPressedDispatcher.onBackPressed()
+        }
 
         var currentItem: Item? = null
         btnFavorito.isEnabled = false
@@ -96,8 +101,6 @@ class ItemDetailFragment : Fragment() {
             btnFavorito.setImageResource(
                 if (isFavorito) R.drawable.ic_favorite else R.drawable.ic_favorite_border
             )
-            btnFavorito.contentDescription =
-                if (isFavorito) "Quitar de favoritos" else "Marcar como favorito"
         }
 
         // Toggle favorito
@@ -272,30 +275,37 @@ class ItemDetailFragment : Fragment() {
             }
         }
 
-        // Render historial
+        // Render historial (Timeline Style)
         fun renderHistory(list: List<ItemHistory>) {
             llItemHistory.removeAllViews()
             tvHistoryEmpty.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
             if (list.isEmpty()) return
 
             val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-            list.take(30).forEach { entry ->
+            val historyList = list.sortedByDescending { it.fecha }.take(10)
+
+            historyList.forEachIndexed { index, entry ->
+                val row = layoutInflater.inflate(R.layout.item_history_row, llItemHistory, false)
+                val tvDate = row.findViewById<TextView>(R.id.tvHistoryDate)
+                val tvAction = row.findViewById<TextView>(R.id.tvHistoryAction)
+                val line = row.findViewById<View>(R.id.line)
+
+                tvDate.text = sdf.format(entry.fecha)
+                
                 val tipo = when (entry.tipo) {
-                    "CREATED" -> "Creado"
-                    "EDITED" -> "Editado"
+                    "CREATED" -> "Item creado"
+                    "EDITED" -> "Información actualizada"
                     "STATUS_CHANGED" -> "Estado cambiado"
                     else -> entry.tipo
                 }
-                val base = "${sdf.format(entry.fecha)} · $tipo"
-                val text = entry.descripcion?.takeIf { it.isNotBlank() }?.let { "$base · $it" } ?: base
+                tvAction.text = entry.descripcion?.takeIf { it.isNotBlank() } ?: tipo
 
-                llItemHistory.addView(
-                    MaterialTextView(requireContext()).apply {
-                        setTextAppearance(android.R.style.TextAppearance_Material_Body1)
-                        this.text = text
-                        setPadding(0, 0, 0, 0)
-                    }
-                )
+                // Ocultar la línea en el último elemento
+                if (index == historyList.size - 1) {
+                    line.visibility = View.INVISIBLE
+                }
+
+                llItemHistory.addView(row)
             }
         }
 
@@ -312,9 +322,9 @@ class ItemDetailFragment : Fragment() {
             item?.let {
                 currentItem = it
                 tvTitulo.text = it.titulo
-                tvValor.text = "Valor: ${it.valor}"
-                tvEstado.text = "Estado: ${it.estado}"
-                tvDescripcion.text = "Descripcion: ${it.descripcion ?: "N/A"}"
+                tvValor.text = String.format(Locale.getDefault(), "%.2f€", it.valor)
+                tvEstado.text = it.estado
+                tvDescripcion.text = it.descripcion ?: "Sin descripción disponible."
 
                 val rating = it.calificacion.coerceIn(0f, 5f)
                 rbRating.rating = rating
@@ -322,10 +332,6 @@ class ItemDetailFragment : Fragment() {
 
                 renderFavorito(it.favorito)
                 btnFavorito.isEnabled = true
-
-                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                view.findViewById<TextView>(R.id.tvFecha).text =
-                    "Fecha: ${sdf.format(it.fechaAdquisicion)}"
 
                 val model = com.example.gestor_colecciones.util.ImageUtils.toGlideModel(it.imagenPath)
                 if (model != null) {
@@ -344,7 +350,14 @@ class ItemDetailFragment : Fragment() {
                 val categoria = categoriaDao.getAllCategoriasOnce()
                     .find { cat -> cat.id == it.categoriaId }
 
-                tvCategoria.text = "Categoria: ${categoria?.nombre ?: "Sin categoria"}"
+                tvCategoria.text = categoria?.nombre ?: "Sin categoría"
+
+                // Animación de entrada para el contenido
+                val animation = android.view.animation.AnimationUtils.loadAnimation(requireContext(), R.anim.item_fade_up)
+                view.findViewById<View>(R.id.tvTitulo).startAnimation(animation)
+                view.findViewById<View>(R.id.tvValor).startAnimation(animation)
+                view.findViewById<View>(R.id.tvEstado).startAnimation(animation)
+                tvCategoria.startAnimation(animation)
             }
         }
     }
