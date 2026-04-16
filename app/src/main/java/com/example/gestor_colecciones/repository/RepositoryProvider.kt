@@ -80,4 +80,12 @@ object RepositoryProvider {
             ApiProvider.getApi(context)
         )
     }
+
+    // Crea instancia del repositorio de préstamos
+    fun prestamoRepository(context: Context): PrestamoRepository {
+        return PrestamoRepository(
+            ApiProvider.getApi(context),
+            DatabaseProvider.getItemDao(context)
+        )
+    }
 }

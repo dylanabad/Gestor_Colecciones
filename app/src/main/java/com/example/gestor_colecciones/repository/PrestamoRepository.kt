@@ -1,5 +1,6 @@
 package com.example.gestor_colecciones.repository
 
+import com.example.gestor_colecciones.dao.ItemDao
 import com.example.gestor_colecciones.network.ApiService
 import com.example.gestor_colecciones.network.dto.PrestamoDto
 import com.example.gestor_colecciones.network.dto.PrestamoRequest
@@ -9,7 +10,10 @@ import java.io.IOException
 
 // Repositorio encargado de gestionar operaciones relacionadas con préstamos
 // usando exclusivamente la API remota
-class PrestamoRepository(private val api: ApiService) {
+class PrestamoRepository(
+    private val api: ApiService,
+    private val itemDao: ItemDao
+) {
 
     private fun extractError(e: HttpException): String {
         val body = e.response()?.errorBody()?.string()
@@ -39,7 +43,10 @@ class PrestamoRepository(private val api: ApiService) {
     // Crea un nuevo préstamo en el servidor
     suspend fun crearPrestamo(request: PrestamoRequest): PrestamoDto = try {
 
-        api.crearPrestamo(request)
+        val result = api.crearPrestamo(request)
+        // Marcamos como prestado localmente
+        itemDao.updatePrestadoStatus(request.itemId.toInt(), true)
+        result
 
     } catch (e: HttpException) {
 
@@ -56,7 +63,10 @@ class PrestamoRepository(private val api: ApiService) {
     // Marca un préstamo como devuelto
     suspend fun devolverPrestamo(id: Long): PrestamoDto = try {
 
-        api.devolverPrestamo(id)
+        val result = api.devolverPrestamo(id)
+        // Actualizamos localmente el estado del item si tenemos el ID
+        itemDao.updatePrestadoStatus(result.itemId.toInt(), false)
+        result
 
     } catch (e: HttpException) {
 

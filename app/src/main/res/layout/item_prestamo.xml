@@ -57,27 +57,43 @@
             tools:text="Activo" />
 
         <!-- Info Usuario -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/cardAvatar"
+        <FrameLayout
+            android:id="@+id/containerAvatar"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginTop="8dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="?attr/colorPrimaryContainer"
             app:layout_constraintStart_toStartOf="@id/tvTituloItem"
             app:layout_constraintTop_toBottomOf="@id/tvTituloItem">
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/tvAvatar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:textAppearance="?attr/textAppearanceLabelSmall"
-                android:textColor="?attr/colorOnPrimaryContainer"
-                android:textStyle="bold"
-                tools:text="JD" />
-        </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardAvatar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="?attr/colorPrimaryContainer">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tvAvatar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:textAppearance="?attr/textAppearanceLabelSmall"
+                    android:textColor="?attr/colorOnPrimaryContainer"
+                    android:textStyle="bold"
+                    tools:text="JD" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivAvatar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+                tools:visibility="visible"
+                tools:src="@android:drawable/ic_menu_gallery" />
+        </FrameLayout>
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tvUsuario"
@@ -86,10 +102,10 @@
             android:layout_marginStart="8dp"
             android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?attr/colorOnSurfaceVariant"
-            app:layout_constraintBottom_toBottomOf="@id/cardAvatar"
+            app:layout_constraintBottom_toBottomOf="@id/containerAvatar"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/cardAvatar"
-            app:layout_constraintTop_toTopOf="@id/cardAvatar"
+            app:layout_constraintStart_toEndOf="@id/containerAvatar"
+            app:layout_constraintTop_toTopOf="@id/containerAvatar"
             tools:text="John Doe" />
 
         <androidx.constraintlayout.widget.Barrier
@@ -97,7 +113,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:barrierDirection="bottom"
-            app:constraint_referenced_ids="cardAvatar,tvUsuario" />
+            app:constraint_referenced_ids="containerAvatar,tvUsuario" />
 
         <!-- Fechas -->
         <LinearLayout

@@ -219,7 +219,7 @@ class ColeccionesFragment : Fragment() {
             DatabaseProvider.getDatabase(requireContext()).logroDao(),
             ApiProvider.getApi(requireContext())
         )
-        val prestamoRepo = PrestamoRepository(ApiProvider.getApi(requireContext()))
+        val prestamoRepo = RepositoryProvider.prestamoRepository(requireContext())
         val logroManager = LogroManager(logroRepo, repo, itemRepo, prestamoRepo)
         logroViewModel = ViewModelProvider(
             this, LogroViewModelFactory(logroRepo, logroManager)

@@ -730,7 +730,8 @@ class ItemListByCollectionFragment : Fragment() {
                             categoriaId = categoriaId,
                             imagenPath = imagePath,
                             estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { item.estado },
-                            calificacion = rbCalificacion.rating
+                            calificacion = rbCalificacion.rating,
+                            prestado = item.prestado // Mantenemos el estado de prestado
                         ),
                         onUpdated = { showSnackbar("Item \"$titulo\" actualizado") },
                         onError = { msg -> showSnackbar(msg) }

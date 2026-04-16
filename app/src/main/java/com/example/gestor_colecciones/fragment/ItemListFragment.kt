@@ -369,7 +369,8 @@ class ItemListFragment : Fragment() {
                     descripcion = descripcion,
                     categoriaId = categoriaId,
                     estado = estado,
-                    calificacion = rbCalificacion.rating
+                    calificacion = rbCalificacion.rating,
+                    prestado = item.prestado
                 )
 
                 viewModel.update(

@@ -95,7 +95,8 @@ class ItemAdapter(
         val item = items[position]
 
         // --- DATOS BÁSICOS ---
-        holder.title.text = item.titulo
+        val suffix = if (item.prestado) " (Prestado)" else ""
+        holder.title.text = "${item.titulo}$suffix"
         holder.value.text = "Valor: ${item.valor} €"
         holder.categoria.text = categoriasMap[item.categoriaId] ?: "Sin categoría"
         holder.estado.text = "Estado: ${item.estado}"

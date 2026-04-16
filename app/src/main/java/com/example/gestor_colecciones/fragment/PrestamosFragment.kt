@@ -36,6 +36,7 @@ import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.PrestamoAdapter
 import com.example.gestor_colecciones.auth.AuthStore
 import com.example.gestor_colecciones.entities.Item
+import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.network.ApiProvider
 import com.example.gestor_colecciones.network.dto.PrestamoDto
 import com.example.gestor_colecciones.network.dto.PrestamoRequest
@@ -106,7 +107,7 @@ class PrestamosFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // Inicializar repositorio y ViewModel
-        val repo = PrestamoRepository(ApiProvider.getApi(requireContext()))
+        val repo = RepositoryProvider.prestamoRepository(requireContext())
         viewModel = ViewModelProvider(
             this, PrestamoViewModelFactory(repo)
         )[PrestamoViewModel::class.java]

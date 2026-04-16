@@ -36,6 +36,9 @@ interface ItemDao {
     @Query("SELECT * FROM Item WHERE id = :id")
     suspend fun getItemById(id: Int): Item?
 
+    @Query("UPDATE Item SET prestado = :prestado WHERE id = :itemId")
+    suspend fun updatePrestadoStatus(itemId: Int, prestado: Boolean)
+
     // Obtiene items activos de una colección específica
     @Query("SELECT * FROM Item WHERE collectionId = :collectionId AND eliminado = 0 ORDER BY fechaAdquisicion DESC")
     fun getItemsByCollection(collectionId: Int): Flow<List<Item>>

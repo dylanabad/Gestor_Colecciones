@@ -47,6 +47,7 @@ class PrestamoAdapter(
         val tvTituloItem: TextView       = view.findViewById(R.id.tvTituloItem)
         val tvEstado: TextView           = view.findViewById(R.id.tvEstado)
         val ivAvatar: ShapeableImageView = view.findViewById(R.id.ivAvatar)
+        val cardAvatar: View             = view.findViewById(R.id.cardAvatar)
         val tvAvatar: TextView           = view.findViewById(R.id.tvAvatar)
         val tvUsuario: TextView          = view.findViewById(R.id.tvUsuario)
         val tvFechaPrestamo: TextView    = view.findViewById(R.id.tvFechaPrestamo)
@@ -71,14 +72,19 @@ class PrestamoAdapter(
         private fun bindUsuario(p: PrestamoDto) {
             val nombre = if (modo == Modo.PRESTADOS) p.prestatarioUsername else p.propietarioUsername
             val avatarPath = if (modo == Modo.PRESTADOS) p.prestatarioAvatarPath else p.propietarioAvatarPath
+            val esDevuelto = p.estado.equals("DEVUELTO", ignoreCase = true)
 
-            tvUsuario.text = if (modo == Modo.PRESTADOS) "Prestado a: $nombre"
-            else "Prestado por: $nombre"
+            tvUsuario.text = when {
+                modo == Modo.PRESTADOS && esDevuelto -> "Devuelto por: $nombre"
+                modo == Modo.PRESTADOS -> "Prestado a: $nombre"
+                modo == Modo.RECIBIDOS && esDevuelto -> "Devuelto a: $nombre"
+                else -> "Prestado por: $nombre"
+            }
 
             val model = ImageUtils.toGlideModel(avatarPath)
             if (model != null) {
                 ivAvatar.visibility = View.VISIBLE
-                tvAvatar.visibility = View.GONE
+                cardAvatar.visibility = View.GONE
                 Glide.with(itemView)
                     .load(model)
                     .circleCrop()
@@ -87,7 +93,7 @@ class PrestamoAdapter(
                     .into(ivAvatar)
             } else {
                 ivAvatar.visibility = View.GONE
-                tvAvatar.visibility = View.VISIBLE
+                cardAvatar.visibility = View.VISIBLE
                 val initials = nombre
                     .split(" ", "_")
                     .filter { it.isNotBlank() }
@@ -119,7 +125,7 @@ class PrestamoAdapter(
         }
 
         private fun bindBotones(p: PrestamoDto) {
-            val mostrarDevolver = modo == Modo.PRESTADOS && p.estado == "ACTIVO"
+            val mostrarDevolver = modo == Modo.PRESTADOS && p.estado.equals("ACTIVO", ignoreCase = true)
             btnDevolver.visibility = if (mostrarDevolver) View.VISIBLE else View.GONE
             btnDevolver.setOnClickListener { onDevolver?.invoke(p) }
 
@@ -163,7 +169,7 @@ class PrestamoAdapter(
     // ── Helpers privados ──────────────────────────────────────────────────────
 
     private fun resolverEstado(p: PrestamoDto): EstadoVisual {
-        if (p.estado == "DEVUELTO") return EstadoVisual.DEVUELTO
+        if (p.estado.equals("DEVUELTO", ignoreCase = true)) return EstadoVisual.DEVUELTO
         val fechaStr = p.fechaDevolucionPrevista?.take(10) ?: return EstadoVisual.ACTIVO
         return try {
             val fechaDev = DATE_FORMAT.parse(fechaStr)

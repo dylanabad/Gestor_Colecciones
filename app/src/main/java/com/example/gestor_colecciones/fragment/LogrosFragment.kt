@@ -67,7 +67,7 @@ class LogrosFragment : Fragment() {
         )
         val coleccionRepo = RepositoryProvider.coleccionRepository(requireContext())
         val itemRepo = RepositoryProvider.itemRepository(requireContext())
-        val prestamoRepo = PrestamoRepository(ApiProvider.getApi(requireContext()))
+        val prestamoRepo = RepositoryProvider.prestamoRepository(requireContext())
         val manager = LogroManager(logroRepo, coleccionRepo, itemRepo, prestamoRepo)
 
         // Crear ViewModel usando factory que inyecta repo y manager
