@@ -201,7 +201,7 @@ class PerfilFragment : Fragment() {
         binding.btnGuardar.isEnabled = !loading
         binding.btnCambiarFoto.isEnabled = !loading
         binding.btnQuitarFoto.isEnabled = !loading
-        binding.tvLoading.visibility = if (loading) View.VISIBLE else View.GONE
+        binding.layoutLoading.visibility = if (loading) View.VISIBLE else View.GONE
     }
 
     private fun showSnackbar(message: String) {
