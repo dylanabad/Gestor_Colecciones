@@ -11,7 +11,7 @@
         android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
+        android:background="@color/app_background"
         app:elevation="0dp">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
@@ -23,9 +23,9 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="16dp"
-                android:paddingTop="12dp"
-                android:paddingBottom="16dp">
+                android:paddingHorizontal="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="24dp">
 
                 <!-- Fila de Navegación y Título -->
                 <com.google.android.material.button.MaterialButton
@@ -37,43 +37,45 @@
                     app:iconTint="?attr/colorOnSurface"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="@id/tvTitle" />
+                    tools:ignore="ContentDescription" />
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/tvTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:text="Logros"
+                    android:text="Mis Logros"
                     android:textAppearance="?attr/textAppearanceHeadlineMedium"
                     android:textStyle="bold"
+                    android:letterSpacing="-0.02"
+                    app:layout_constraintBottom_toBottomOf="@id/btnBack"
                     app:layout_constraintStart_toEndOf="@id/btnBack"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="@id/btnBack" />
 
                 <!-- Card de Progreso Elite -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/cardProgress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
-                    app:cardCornerRadius="28dp"
-                    app:cardElevation="2dp"
-                    app:strokeWidth="0dp"
-                    app:cardBackgroundColor="?attr/colorPrimaryContainer"
-                    app:layout_constraintTop_toBottomOf="@id/tvTitle">
+                    android:layout_marginTop="24dp"
+                    app:cardCornerRadius="32dp"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="?attr/colorOutlineVariant"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:layout_constraintTop_toBottomOf="@id/btnBack">
 
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="20dp">
+                        android:padding="24dp">
 
                         <com.google.android.material.textview.MaterialTextView
                             android:id="@+id/tvProgressLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Nivel de Coleccionista"
+                            android:text="Progreso Total"
                             android:textAppearance="?attr/textAppearanceLabelLarge"
-                            android:textColor="?attr/colorOnPrimaryContainer"
+                            android:textColor="?attr/colorOnSurfaceVariant"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
@@ -81,23 +83,34 @@
                             android:id="@+id/tvContador"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textAppearance="?attr/textAppearanceTitleMedium"
-                            android:textColor="?attr/colorOnPrimaryContainer"
+                            android:textAppearance="?attr/textAppearanceTitleLarge"
+                            android:textColor="?attr/colorPrimary"
                             android:textStyle="bold"
+                            app:layout_constraintBottom_toBottomOf="@id/tvProgressLabel"
                             app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            tools:text="12/45" />
+                            app:layout_constraintTop_toTopOf="@id/tvProgressLabel"
+                            tools:text="12 / 45" />
 
                         <com.google.android.material.progressindicator.LinearProgressIndicator
                             android:id="@+id/progressLogros"
                             android:layout_width="match_parent"
-                            android:layout_height="10dp"
-                            android:layout_marginTop="16dp"
-                            app:trackCornerRadius="5dp"
+                            android:layout_height="12dp"
+                            android:layout_marginTop="20dp"
+                            app:trackCornerRadius="6dp"
                             app:indicatorColor="?attr/colorPrimary"
-                            app:trackColor="#26000000"
+                            app:trackColor="?attr/colorSurfaceVariant"
                             app:layout_constraintTop_toBottomOf="@id/tvProgressLabel"
                             tools:progress="30" />
+
+                        <com.google.android.material.textview.MaterialTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="¡Sigue coleccionando para desbloquear más!"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@id/progressLogros" />
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -106,6 +119,7 @@
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
+
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvLogros"

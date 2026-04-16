@@ -306,7 +306,7 @@ class ItemListFragment : Fragment() {
         val etValor = view.findViewById<EditText>(R.id.etValor)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
         val actvEstado = view.findViewById<AutoCompleteTextView>(R.id.actvItemEstado)
-        val spinnerCategoria = view.findViewById<Spinner>(R.id.spinnerCategoria)
+        val actvCategoria = view.findViewById<AutoCompleteTextView>(R.id.actvItemCategoria)
         val rbCalificacion = view.findViewById<RatingBar>(R.id.rbCalificacion)
         val tvCalificacionValue = view.findViewById<TextView>(R.id.tvCalificacionValue)
 
@@ -328,16 +328,16 @@ class ItemListFragment : Fragment() {
         actvEstado.setOnClickListener { actvEstado.showDropDown() }
         actvEstado.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) actvEstado.showDropDown() }
 
-        val adapterSpinner = ArrayAdapter(
+        val adapterCategorias = ArrayAdapter(
             requireContext(),
-            android.R.layout.simple_spinner_item,
+            android.R.layout.simple_list_item_1,
             categoriasList.map { it.value }
         )
-        adapterSpinner.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerCategoria.adapter = adapterSpinner
+        actvCategoria.setAdapter(adapterCategorias)
 
         val selectedIndex = categoriasList.indexOfFirst { it.key == item.categoriaId }
-        if (selectedIndex >= 0) spinnerCategoria.setSelection(selectedIndex)
+        if (selectedIndex >= 0) actvCategoria.setText(categoriasList[selectedIndex].value, false)
+        actvCategoria.setOnClickListener { actvCategoria.showDropDown() }
 
         val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle("Editar item")
@@ -357,7 +357,10 @@ class ItemListFragment : Fragment() {
 
                 val valor = etValor.text.toString().toDoubleOrNull() ?: item.valor
                 val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
-                val categoriaId = categoriasList[spinnerCategoria.selectedItemPosition].key
+                
+                val categoriaNombre = actvCategoria.text.toString()
+                val categoriaId = categoriasList.find { it.value == categoriaNombre }?.key ?: item.categoriaId
+
                 val estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { item.estado }
 
                 val actualizado = item.copy(

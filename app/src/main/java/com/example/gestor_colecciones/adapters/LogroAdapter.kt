@@ -43,27 +43,36 @@ class LogroAdapter(private var logros: List<Logro>) :
             holder.itemView.alpha = 1f
             holder.tvEstado.text = "✅"
             
-            // Obtener colorPrimary del tema de forma compatible y sin errores de compilación
-            val typedArray = context.obtainStyledAttributes(intArrayOf(android.R.attr.colorPrimary))
-            val colorPrimary = typedArray.getColor(0, Color.BLUE)
-            typedArray.recycle()
+            // Estética Premium: Fondo de icono con color de contenedor
+            val typedValue = android.util.TypedValue()
+            context.theme.resolveAttribute(com.google.android.material.R.attr.colorPrimaryContainer, typedValue, true)
+            val colorContainer = typedValue.data
+            holder.itemView.findViewById<MaterialCardView>(R.id.cardIcon).setCardBackgroundColor(colorContainer)
             
-            holder.cardLogro.strokeColor = colorPrimary
-            holder.cardLogro.strokeWidth = (2 * context.resources.displayMetrics.density).toInt()
+            // Borde primario sutil
+            context.theme.resolveAttribute(android.R.attr.colorPrimary, typedValue, true)
+            holder.cardLogro.strokeColor = typedValue.data
+            holder.cardLogro.strokeWidth = (1.5 * context.resources.displayMetrics.density).toInt()
 
             logro.fechaDesbloqueo?.let {
                 holder.tvFecha.visibility = View.VISIBLE
                 val cal = Calendar.getInstance().apply { time = it }
                 val mes = cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault())?.uppercase() ?: ""
-                holder.tvFecha.text = String.format(Locale.getDefault(), "%02d %s. %d", cal.get(Calendar.DAY_OF_MONTH), mes, cal.get(Calendar.YEAR))
+                holder.tvFecha.text = String.format(Locale.getDefault(), "%02d %s %d", cal.get(Calendar.DAY_OF_MONTH), mes, cal.get(Calendar.YEAR))
             }
         } else {
-            holder.itemView.alpha = 0.5f
+            holder.itemView.alpha = 0.6f
             holder.tvEstado.text = "🔒"
             holder.tvFecha.visibility = View.GONE
             
+            // Fondo neutro para bloqueados
+            val typedValue = android.util.TypedValue()
+            context.theme.resolveAttribute(com.google.android.material.R.attr.colorSurfaceVariant, typedValue, true)
+            holder.itemView.findViewById<MaterialCardView>(R.id.cardIcon).setCardBackgroundColor(typedValue.data)
+            
             // Borde sutil para bloqueados
-            holder.cardLogro.strokeColor = Color.LTGRAY
+            context.theme.resolveAttribute(com.google.android.material.R.attr.colorOutlineVariant, typedValue, true)
+            holder.cardLogro.strokeColor = typedValue.data
             holder.cardLogro.strokeWidth = (1 * context.resources.displayMetrics.density).toInt()
         }
     }

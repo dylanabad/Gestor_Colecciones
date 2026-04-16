@@ -2,220 +2,200 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardPrestamo"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="8dp"
-    android:layout_marginEnd="8dp"
-    android:layout_marginTop="4dp"
-    android:layout_marginBottom="4dp"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="6dp"
     app:cardElevation="0dp"
-    app:cardCornerRadius="14dp"
+    app:cardCornerRadius="24dp"
     app:cardBackgroundColor="?attr/colorSurface"
-    app:strokeWidth="0.5dp"
+    app:strokeWidth="1dp"
     app:strokeColor="?attr/colorOutlineVariant">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:padding="16dp">
 
-        <!-- Acento lateral de color (se colorea desde código según estado) -->
+        <!-- Acento de estado -->
         <View
             android:id="@+id/viewAccent"
             android:layout_width="4dp"
-            android:layout_height="match_parent"
-            android:background="#1D9E75" />
+            android:layout_height="40dp"
+            android:background="?attr/colorPrimary"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/barrierInfo" />
 
-        <!-- Contenido de la tarjeta -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvTituloItem"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="12dp">
+            android:layout_marginStart="12dp"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textStyle="bold"
+            android:textColor="?attr/colorOnSurface"
+            app:layout_constraintStart_toEndOf="@id/viewAccent"
+            app:layout_constraintEnd_toStartOf="@id/tvEstado"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Cámara Leica M3" />
 
-            <!-- Fila 1: Título + Badge de estado -->
-            <LinearLayout
-                android:layout_width="match_parent"
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvEstado"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="4dp"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            android:textStyle="bold"
+            android:textAllCaps="true"
+            android:background="@drawable/bg_badge_estado"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Activo" />
+
+        <!-- Info Usuario -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardAvatar"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginTop="8dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="?attr/colorPrimaryContainer"
+            app:layout_constraintStart_toStartOf="@id/tvTituloItem"
+            app:layout_constraintTop_toBottomOf="@id/tvTituloItem">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/tvAvatar"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:layout_gravity="center"
+                android:textAppearance="?attr/textAppearanceLabelSmall"
+                android:textColor="?attr/colorOnPrimaryContainer"
+                android:textStyle="bold"
+                tools:text="JD" />
+        </com.google.android.material.card.MaterialCardView>
 
-                <TextView
-                    android:id="@+id/tvTituloItem"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorOnSurface"
-                    android:maxLines="1"
-                    android:ellipsize="end" />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvUsuario"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:layout_constraintBottom_toBottomOf="@id/cardAvatar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/cardAvatar"
+            app:layout_constraintTop_toTopOf="@id/cardAvatar"
+            tools:text="John Doe" />
 
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/barrierInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="cardAvatar,tvUsuario" />
+
+        <!-- Fechas -->
+        <LinearLayout
+            android:id="@+id/layoutFechas"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/tvTituloItem"
+            app:layout_constraintTop_toBottomOf="@id/barrierInfo">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
                 <TextView
-                    android:id="@+id/tvEstado"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="4dp"
-                    android:background="@drawable/bg_badge_estado" />
-
-            </LinearLayout>
-
-            <!-- Fila 2: Avatar + Nombre usuario -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="8dp">
-
-                <FrameLayout
-                    android:layout_width="28dp"
-                    android:layout_height="28dp">
-
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/ivAvatar"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:contentDescription="Avatar"
-                        android:scaleType="centerCrop"
-                        android:visibility="gone"
-                        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Gestor_Colecciones.Circle" />
-
-                    <TextView
-                        android:id="@+id/tvAvatar"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:gravity="center"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="?attr/colorOnPrimaryContainer"
-                        android:background="@drawable/bg_avatar" />
-
-                </FrameLayout>
-
-                <TextView
-                    android:id="@+id/tvUsuario"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:textSize="13sp"
+                    android:text="Inicio"
+                    android:textAppearance="?attr/textAppearanceLabelSmall"
                     android:textColor="?attr/colorOnSurfaceVariant" />
-
-            </LinearLayout>
-
-            <!-- Fila 3: Fechas en chips -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="8dp"
-                android:weightSum="2">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_date_chip"
-                    android:layout_marginEnd="4dp"
-                    android:padding="7dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="PRESTADO EL"
-                        android:textSize="9sp"
-                        android:letterSpacing="0.05"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
-
-                    <TextView
-                        android:id="@+id/tvFechaPrestamo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:textSize="12sp"
-                        android:textColor="?attr/colorOnSurface" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_date_chip"
-                    android:layout_marginStart="4dp"
-                    android:padding="7dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="DEVOLVER EL"
-                        android:textSize="9sp"
-                        android:letterSpacing="0.05"
-                        android:textColor="?attr/colorOnSurfaceVariant" />
-
-                    <TextView
-                        android:id="@+id/tvFechaDevolucion"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:textSize="12sp"
-                        android:textColor="?attr/colorOnSurface" />
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- Notas (visible solo si hay contenido) -->
-            <TextView
-                android:id="@+id/tvNotas"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:padding="8dp"
-                android:textSize="12sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:background="@drawable/bg_nota"
-                android:visibility="gone" />
-
-            <!-- Acciones -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="10dp"
-                android:gravity="end">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnDevolver"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                <TextView
+                    android:id="@+id/tvFechaPrestamo"
                     android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:text="Devuelto"
-                    android:textSize="12sp"
-                    android:visibility="gone"
-                    app:cornerRadius="8dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnEliminar"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:layout_marginStart="4dp"
-                    android:text="Eliminar"
-                    android:textSize="12sp"
-                    android:textColor="?attr/colorError"
-                    app:cornerRadius="8dp" />
-
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textStyle="bold"
+                    tools:text="12 Oct 2023" />
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Devolución"
+                    android:textAppearance="?attr/textAppearanceLabelSmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+                <TextView
+                    android:id="@+id/tvFechaDevolucion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textStyle="bold"
+                    tools:text="12 Nov 2023" />
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
 
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvNotas"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:padding="12dp"
+            android:background="@drawable/bg_nota"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:fontStyle="italic"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/tvTituloItem"
+            app:layout_constraintTop_toBottomOf="@id/layoutFechas"
+            tools:text="Cuidar mucho la lente."
+            tools:visibility="visible" />
+
+        <LinearLayout
+            android:id="@+id/layoutActions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvNotas">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnEliminar"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Eliminar"
+                android:textColor="?attr/colorError" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDevolver"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Marcar Devuelto"
+                android:visibility="gone"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

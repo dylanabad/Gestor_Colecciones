@@ -5,7 +5,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.chip.Chip
 import com.example.gestor_colecciones.R
 
 // Clase sellada que representa los distintos tipos de elementos en la búsqueda
@@ -46,7 +45,6 @@ class BusquedaAdapter(
         val tvIcono: TextView = view.findViewById(R.id.tvIcono)
         val tvTitulo: TextView = view.findViewById(R.id.tvTitulo)
         val tvSubtitulo: TextView = view.findViewById(R.id.tvSubtitulo)
-        val chipTipo: Chip = view.findViewById(R.id.chipTipo)
     }
 
     // Devuelve el tipo de vista según el tipo de item
@@ -86,7 +84,6 @@ class BusquedaAdapter(
                     tvIcono.text = item.icono
                     tvTitulo.text = item.titulo
                     tvSubtitulo.text = item.subtitulo
-                    chipTipo.text = item.tipo
 
                     // Click en el item -> callback
                     itemView.setOnClickListener { onClick(item) }

@@ -9,7 +9,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.transition.MaterialFadeThrough
 import com.example.gestor_colecciones.adapters.BusquedaAdapter
 import com.example.gestor_colecciones.adapters.BusquedaItem
 import com.example.gestor_colecciones.database.DatabaseProvider
@@ -17,45 +16,25 @@ import com.example.gestor_colecciones.databinding.FragmentBusquedaBinding
 import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.repository.BusquedaRepository
-import com.example.gestor_colecciones.viewmodel.BusquedaState
 import com.example.gestor_colecciones.viewmodel.BusquedaViewModel
 import com.example.gestor_colecciones.viewmodel.BusquedaViewModelFactory
+import com.example.gestor_colecciones.viewmodel.BusquedaState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import com.example.gestor_colecciones.R
 
-/**
- * Fragment que implementa la búsqueda global de la app.
- * Busca en tiempo real entre colecciones e items, mostrando
- * los resultados agrupados por tipo con cabeceras separadoras.
- */
 class BusquedaFragment : Fragment() {
 
-    // View Binding: se anula en onDestroyView para evitar memory leaks
     private var _binding: FragmentBusquedaBinding? = null
     private val binding get() = _binding!!
 
     private lateinit var viewModel: BusquedaViewModel
     private lateinit var adapter: BusquedaAdapter
+    
+    private var lastColecciones: List<Coleccion> = emptyList()
+    private var lastItems: List<Item> = emptyList()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Transición de entrada y salida con fade
-        enterTransition = MaterialFadeThrough().apply {
-            duration = 220
-        }
-
-        returnTransition = MaterialFadeThrough().apply {
-            duration = 200
-        }
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentBusquedaBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -64,19 +43,10 @@ class BusquedaFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val db = DatabaseProvider.getDatabase(requireContext())
+        val repo = BusquedaRepository(db.coleccionDao(), db.itemDao())
 
-        // El repositorio necesita ambos DAOs para buscar en colecciones e items a la vez
-        val repo = BusquedaRepository(
-            db.coleccionDao(),
-            db.itemDao()
-        )
+        viewModel = ViewModelProvider(this, BusquedaViewModelFactory(repo))[BusquedaViewModel::class.java]
 
-        viewModel = ViewModelProvider(
-            this,
-            BusquedaViewModelFactory(repo)
-        )[BusquedaViewModel::class.java]
-
-        // Al pulsar un resultado navega a su pantalla correspondiente
         adapter = BusquedaAdapter(emptyList()) { resultado ->
             navegarAResultado(resultado)
         }
@@ -84,150 +54,148 @@ class BusquedaFragment : Fragment() {
         binding.rvResultados.layoutManager = LinearLayoutManager(requireContext())
         binding.rvResultados.adapter = adapter
 
-        // Vuelve al fragment anterior en el back stack
-        binding.btnBack.setOnClickListener {
-            parentFragmentManager.popBackStack()
+        // Configuración de Material 3 SearchBar y SearchView
+        binding.searchView.setupWithSearchBar(binding.searchBar)
+
+        binding.searchView.editText.setOnEditorActionListener { _, _, _ ->
+            viewModel.buscar(binding.searchView.text.toString())
+            false
         }
 
-        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+        // Listener para los chips de filtrado
+        binding.chipGroupFiltros.setOnCheckedStateChangeListener { _, checkedIds ->
+            actualizarResultadosConFiltro()
+        }
 
-            // No se usa: la búsqueda es en tiempo real con onQueryTextChange
-            override fun onQueryTextSubmit(query: String?) = false
-
-            // Lanza la búsqueda en el ViewModel cada vez que el texto cambia
-            override fun onQueryTextChange(newText: String?): Boolean {
-                viewModel.buscar(newText.orEmpty())
-                return true
+        // Observar cambios en el texto del SearchView (en tiempo real)
+        binding.searchView.editText.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                viewModel.buscar(s?.toString().orEmpty())
             }
+            override fun afterTextChanged(s: android.text.Editable?) {}
         })
-
-        // Abre el teclado automáticamente al entrar en la pantalla
-        binding.searchView.requestFocus()
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.state.collectLatest { state ->
-
                 when (state) {
-
-                    // El usuario aún no ha escrito nada
                     is BusquedaState.Idle -> {
-                        binding.layoutIdle.visibility = View.VISIBLE
-                        binding.layoutEmpty.visibility = View.GONE
-                        binding.rvResultados.visibility = View.GONE
+                        mostrarEstadoIdle()
                     }
-
-                    // Búsqueda en curso: oculta todo mientras se procesan los resultados
                     is BusquedaState.Loading -> {
-                        binding.layoutIdle.visibility = View.GONE
-                        binding.layoutEmpty.visibility = View.GONE
-                        binding.rvResultados.visibility = View.GONE
+                        // Opcional: mostrar un progress sutil
                     }
-
-                    // La búsqueda terminó sin encontrar resultados
-                    is BusquedaState.Empty -> {
-                        binding.layoutIdle.visibility = View.GONE
-                        binding.layoutEmpty.visibility = View.VISIBLE
-                        binding.rvResultados.visibility = View.GONE
-                    }
-
-                    // Hay resultados: construye la lista agrupada y actualiza el adapter
                     is BusquedaState.Success -> {
-                        binding.layoutIdle.visibility = View.GONE
-                        binding.layoutEmpty.visibility = View.GONE
-                        binding.rvResultados.visibility = View.VISIBLE
-
-                        adapter.updateList(
-                            buildList(
-                                state.resultado.colecciones,
-                                state.resultado.items
-                            )
-                        )
+                        lastColecciones = state.resultado.colecciones
+                        lastItems = state.resultado.items
+                        actualizarResultadosConFiltro()
+                    }
+                    is BusquedaState.Empty -> {
+                        mostrarEstadoVacio()
                     }
                 }
             }
         }
     }
 
-    /**
-     * Construye una lista plana combinando colecciones e items con cabeceras separadoras.
-     * Solo añade un grupo si tiene al menos un elemento.
-     */
-    private fun buildList(
-        colecciones: List<Coleccion>,
-        items: List<Item>
-    ): List<BusquedaItem> {
+    private fun actualizarResultadosConFiltro() {
+        val filtrarColecciones = binding.chipAll.isChecked || binding.chipColecciones.isChecked
+        val filtrarItems = binding.chipAll.isChecked || binding.chipItems.isChecked
 
-        val lista = mutableListOf<BusquedaItem>()
+        val resultados = buildList(
+            if (filtrarColecciones) lastColecciones else emptyList(),
+            if (filtrarItems) lastItems else emptyList()
+        )
 
-        if (colecciones.isNotEmpty()) {
-
-            // Cabecera del grupo con el total de colecciones encontradas
-            lista.add(
-                BusquedaItem.Header("Colecciones (${colecciones.size})")
-            )
-
-            colecciones.forEach { c ->
-                lista.add(
-                    BusquedaItem.Resultado(
-                        id = c.id,
-                        icono = "📦",
-                        titulo = c.nombre,
-                        // Muestra "Sin descripción" si está vacía o es null
-                        subtitulo = c.descripcion?.ifBlank { "Sin descripción" }
-                            ?: "Sin descripción",
-                        tipo = "Colección",
-                        esColeccion = true // Usado en navegarAResultado para decidir el destino
-                    )
-                )
-            }
+        if (resultados.isEmpty() && (lastColecciones.isNotEmpty() || lastItems.isNotEmpty())) {
+            // Caso donde hay resultados pero el filtro los oculta todos
+            mostrarEstadoVacio()
+        } else if (resultados.isEmpty()) {
+            mostrarEstadoVacio()
+        } else {
+            mostrarResultados(resultados)
         }
-
-        if (items.isNotEmpty()) {
-
-            // Cabecera del grupo con el total de items encontrados
-            lista.add(
-                BusquedaItem.Header("Items (${items.size})")
-            )
-
-            items.forEach { item ->
-                lista.add(
-                    BusquedaItem.Resultado(
-                        id = item.id,
-                        icono = "🗂",
-                        titulo = item.titulo,
-                        // Muestra estado y valor con 2 decimales separados por un punto medio
-                        subtitulo = "${item.estado}  ·  ${"%.2f".format(item.valor)} €",
-                        tipo = "Item",
-                        esColeccion = false
-                    )
-                )
-            }
-        }
-
-        return lista
     }
 
-    /**
-     * Navega al detalle del resultado pulsado.
-     * Si es colección abre su lista de items; si es item abre su detalle.
-     */
-    private fun navegarAResultado(resultado: BusquedaItem.Resultado) {
+    private fun mostrarEstadoIdle() {
+        binding.layoutIdle.visibility = View.VISIBLE
+        binding.layoutEmpty.visibility = View.GONE
+        binding.rvResultados.visibility = View.GONE
+        binding.chipGroupFiltros.visibility = View.GONE
+    }
 
+    private fun mostrarEstadoVacio() {
+        binding.layoutIdle.visibility = View.GONE
+        binding.layoutEmpty.visibility = View.VISIBLE
+        binding.rvResultados.visibility = View.GONE
+        binding.chipGroupFiltros.visibility = if (lastColecciones.isNotEmpty() || lastItems.isNotEmpty()) View.VISIBLE else View.GONE
+    }
+
+    private fun mostrarResultados(resultados: List<BusquedaItem>) {
+        binding.layoutIdle.visibility = View.GONE
+        binding.layoutEmpty.visibility = View.GONE
+        binding.rvResultados.visibility = View.VISIBLE
+        binding.chipGroupFiltros.visibility = View.VISIBLE
+        
+        adapter.updateList(resultados)
+        
+        // Animación elegante de entrada
+        val animation = android.view.animation.AnimationUtils.loadAnimation(requireContext(), R.anim.item_fade_up)
+        binding.rvResultados.startAnimation(animation)
+    }
+
+    private fun buildList(colecciones: List<Coleccion>, items: List<Item>): List<BusquedaItem> {
+        val list = mutableListOf<BusquedaItem>()
+        if (colecciones.isNotEmpty()) {
+            list.add(BusquedaItem.Header("Colecciones"))
+            colecciones.forEach {
+                list.add(BusquedaItem.Resultado(
+                    id = it.id,
+                    icono = "📁", // Icono por defecto para colecciones
+                    titulo = it.nombre,
+                    subtitulo = it.descripcion?.let { desc -> if (desc.length > 40) desc.take(40) + "..." else desc } ?: "",
+                    tipo = "Colección",
+                    esColeccion = true
+                ))
+            }
+        }
+        if (items.isNotEmpty()) {
+            list.add(BusquedaItem.Header("Items"))
+            items.forEach {
+                list.add(BusquedaItem.Resultado(
+                    id = it.id,
+                    icono = "💎", // Icono por defecto para items
+                    titulo = it.titulo,
+                    subtitulo = it.estado,
+                    tipo = it.estado,
+                    esColeccion = false
+                ))
+            }
+        }
+        return list
+    }
+
+    private fun navegarAResultado(resultado: BusquedaItem.Resultado) {
         val fragment = if (resultado.esColeccion) {
-            ItemListByCollectionFragment.newInstance(resultado.id)
+            // Pasamos el ID de la colección a ItemListFragment mediante Bundle si no tiene newInstance
+            ItemListFragment().apply {
+                arguments = Bundle().apply {
+                    putInt("coleccionId", resultado.id)
+                    putString("coleccionNombre", resultado.titulo)
+                }
+            }
         } else {
             ItemDetailFragment.newInstance(resultado.id)
         }
 
         parentFragmentManager.beginTransaction()
-            .setReorderingAllowed(true)
             .replace(R.id.fragment_container, fragment)
-            .addToBackStack(null) // Permite volver a la búsqueda pulsando atrás
+            .addToBackStack(null)
             .commit()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Limpia la referencia al binding para evitar memory leaks
+        _binding = null
     }
 }

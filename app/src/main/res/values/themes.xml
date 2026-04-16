@@ -54,11 +54,12 @@
     </style>
 
     <style name="ThemeOverlay.Gestor_Colecciones.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Gestor_Colecciones.Medium</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Gestor_Colecciones.Dialog</item>
     </style>
 
-    <style name="ShapeAppearance.Gestor_Colecciones.Medium" parent="ShapeAppearance.Material3.MediumComponent">
+    <style name="ShapeAppearance.Gestor_Colecciones.Dialog" parent="ShapeAppearance.Material3.MediumComponent">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">16dp</item>
+        <item name="cornerSize">28dp</item>
     </style>
+
 </resources>
