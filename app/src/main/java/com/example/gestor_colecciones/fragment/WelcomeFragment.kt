@@ -85,6 +85,15 @@ class WelcomeFragment : Fragment() {
             }
         }
 
+        // Botón "¿Cómo funciona? Ver guía" para consultar el onboarding manualmente
+        view.findViewById<MaterialButton>(R.id.btnOnboarding).setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .setReorderingAllowed(true)
+                .replace(R.id.fragment_container, OnboardingFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
         return view
     }
 

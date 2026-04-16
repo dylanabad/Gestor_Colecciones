@@ -34,9 +34,22 @@ import com.example.gestor_colecciones.viewmodel.StatsViewModel
 import com.example.gestor_colecciones.viewmodel.StatsViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import android.graphics.pdf.PdfDocument
+import android.content.ContentValues
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.os.Environment
+import android.provider.MediaStore
+import android.widget.Toast
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
+import android.R.attr.colorPrimary
+import android.graphics.Paint
+import android.graphics.Rect
 import java.util.Locale
 import com.github.mikephil.charting.animation.Easing
-import android.R.attr.colorPrimary
 
 class StatsFragment : Fragment() {
 
@@ -95,15 +108,152 @@ class StatsFragment : Fragment() {
                         binding.cardMainStats.visibility = View.VISIBLE
                         binding.layoutSubStats.visibility = View.VISIBLE
                         binding.tvChartTitle.visibility = View.VISIBLE
+                        binding.btnExport.visibility = View.VISIBLE
                         renderStats(state.data)
+
+                        binding.btnExport.setOnClickListener {
+                            exportStats(state.data)
+                        }
                     }
                     is StatsState.Error -> {
                         // En caso de error ocultar el chart (podría añadirse manejo de error más explícito)
                         binding.cardChart.visibility = View.GONE
+                        binding.btnExport.visibility = View.GONE
                     }
                 }
             }
         }
+    }
+
+    private fun exportStats(data: List<ColeccionExportData>) {
+        val totalItems = data.sumOf { it.items.size }
+        val valorTotal = data.sumOf { entry -> entry.items.sumOf { it.valor } }
+
+        val report = StringBuilder().apply {
+            append("📊 REPORTE DE ESTADÍSTICAS - GESTOR DE COLECCIONES\n")
+            append("==============================================\n\n")
+            append("RESUMEN GLOBAL:\n")
+            append("• Valor Total Estimado: ${String.format(Locale.getDefault(), "%.2f€", valorTotal)}\n")
+            append("• Total de Colecciones: ${data.size}\n")
+            append("• Total de Ítems: $totalItems\n\n")
+            append("DESGLOSE POR COLECCIÓN:\n")
+            append("----------------------------------------------\n")
+            
+            data.forEach { entry ->
+                val colValor = entry.items.sumOf { it.valor }
+                append("📂 ${entry.coleccion.nombre}\n")
+                append("   - Ítems: ${entry.items.size}\n")
+                append("   - Valor: ${String.format(Locale.getDefault(), "%.2f€", colValor)}\n")
+                append("----------------------------------------------\n")
+            }
+            
+            append("\nGenerado el: ${java.text.DateFormat.getDateTimeInstance().format(java.util.Date())}")
+        }.toString()
+
+        // Crear menú de opciones de exportación
+        val options = arrayOf("Compartir Informe (PDF)", "Guardar en Dispositivo (PDF)", "Compartir como Imagen", "Copiar Texto")
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Opciones de Exportación")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> shareAsPdf()
+                    1 -> savePdfToDevice()
+                    2 -> shareAsImage()
+                    3 -> copyToClipboard(report)
+                }
+            }
+            .show()
+    }
+
+    private fun captureView(): Bitmap {
+        // Capturar únicamente la tarjeta que contiene el gráfico (cardChart)
+        val view = binding.cardChart
+        
+        // Creamos el bitmap con las dimensiones exactas de la tarjeta
+        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        
+        // Forzamos un fondo blanco para que el PDF/Imagen sea profesional y legible 
+        // (evita transparencias o fondos oscuros del tema que dificulten la lectura)
+        canvas.drawColor(Color.WHITE)
+        
+        // Dibujamos solo la vista del gráfico
+        view.draw(canvas)
+
+        return bitmap
+    }
+
+    private fun shareAsPdf() {
+        val bitmap = captureView()
+        val pdfDocument = PdfDocument()
+        val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width, bitmap.height, 1).create()
+        val page = pdfDocument.startPage(pageInfo)
+        
+        page.canvas.drawBitmap(bitmap, 0f, 0f, null)
+        pdfDocument.finishPage(page)
+
+        val file = File(requireContext().cacheDir, "Estadisticas_Coleccion.pdf")
+        try {
+            pdfDocument.writeTo(FileOutputStream(file))
+            pdfDocument.close()
+            
+            val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
+            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "application/pdf"
+                putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(android.content.Intent.createChooser(intent, "Compartir PDF"))
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Error al generar PDF", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun savePdfToDevice() {
+        val bitmap = captureView()
+        val pdfDocument = PdfDocument()
+        val pageInfo = PdfDocument.PageInfo.Builder(bitmap.width, bitmap.height, 1).create()
+        val page = pdfDocument.startPage(pageInfo)
+        page.canvas.drawBitmap(bitmap, 0f, 0f, null)
+        pdfDocument.finishPage(page)
+
+        val fileName = "Estadisticas_${System.currentTimeMillis()}.pdf"
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+        }
+
+        val uri = requireContext().contentResolver.insert(MediaStore.Files.getContentUri("external"), contentValues)
+        uri?.let {
+            requireContext().contentResolver.openOutputStream(it)?.use { outputStream ->
+                pdfDocument.writeTo(outputStream)
+                Toast.makeText(requireContext(), "PDF guardado en Descargas", Toast.LENGTH_LONG).show()
+            }
+        }
+        pdfDocument.close()
+    }
+
+    private fun shareAsImage() {
+        val bitmap = captureView()
+        val file = File(requireContext().cacheDir, "Estadisticas.png")
+        FileOutputStream(file).use {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+        val uri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", file)
+        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(android.content.Intent.EXTRA_STREAM, uri)
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(android.content.Intent.createChooser(intent, "Compartir Imagen"))
+    }
+
+    private fun copyToClipboard(text: String) {
+        val clipboard = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val clip = android.content.ClipData.newPlainText("Estadísticas", text)
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(requireContext(), "Copiado al portapapeles", Toast.LENGTH_SHORT).show()
     }
 
     private fun renderStats(data: List<ColeccionExportData>) {

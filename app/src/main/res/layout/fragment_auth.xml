@@ -29,7 +29,7 @@
             android:layout_height="72dp"
             app:cardCornerRadius="22dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="#11365e">
+            app:cardBackgroundColor="?attr/colorPrimary">
 
             <ImageView
                 android:layout_width="match_parent"
@@ -49,7 +49,7 @@
             android:textSize="13sp"
             android:textStyle="bold"
             android:letterSpacing="0.12"
-            android:textColor="@color/on_app_background"
+            android:textColor="?attr/colorOnBackground"
             android:alpha="0.65"
             android:layout_marginTop="14dp"
             android:layout_marginBottom="36dp" />
@@ -66,8 +66,8 @@
             app:cardElevation="0dp"
             app:cardUseCompatPadding="false"
             app:strokeWidth="1dp"
-            app:strokeColor="@color/app_surface_variant"
-            app:cardBackgroundColor="#33FFFFFF">
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:cardBackgroundColor="?attr/colorSurfaceContainer">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -87,7 +87,7 @@
                     android:textSize="24sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.01"
-                    android:textColor="@color/on_app_background" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <!-- Subtítulo explicativo -->
                 <com.google.android.material.textview.MaterialTextView
@@ -97,7 +97,7 @@
                     android:text="Inicia sesión o regístrate para sincronizar tus datos"
                     android:textSize="13sp"
                     android:lineSpacingMultiplier="1.4"
-                    android:textColor="@color/on_app_surface_variant"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:layout_marginTop="6dp"
                     android:layout_marginBottom="28dp" />
 
@@ -108,7 +108,7 @@
                     android:layout_height="wrap_content"
                     android:hint="Usuario"
                     app:startIconDrawable="@drawable/ic_auth_user"
-                    app:startIconTint="@color/on_app_surface_variant"
+                    app:startIconTint="?attr/colorOnSurfaceVariant"
                     app:helperTextEnabled="true"
                     app:boxCornerRadiusTopStart="14dp"
                     app:boxCornerRadiusTopEnd="14dp"
@@ -134,7 +134,7 @@
                     android:layout_marginTop="14dp"
                     android:hint="Email"
                     app:startIconDrawable="@drawable/ic_auth_mail"
-                    app:startIconTint="@color/on_app_surface_variant"
+                    app:startIconTint="?attr/colorOnSurfaceVariant"
                     app:boxCornerRadiusTopStart="14dp"
                     app:boxCornerRadiusTopEnd="14dp"
                     app:boxCornerRadiusBottomStart="14dp"
@@ -159,7 +159,7 @@
                     android:layout_marginTop="14dp"
                     android:hint="Contraseña"
                     app:startIconDrawable="@drawable/ic_auth_lock"
-                    app:startIconTint="@color/on_app_surface_variant"
+                    app:startIconTint="?attr/colorOnSurfaceVariant"
                     app:endIconMode="password_toggle"
                     app:boxCornerRadiusTopStart="14dp"
                     app:boxCornerRadiusTopEnd="14dp"
@@ -232,7 +232,7 @@
                     android:textSize="12sp"
                     android:letterSpacing="0.05"
                     android:visibility="gone"
-                    android:textColor="@color/on_app_surface_variant" />
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <com.google.android.material.progressindicator.LinearProgressIndicator
                     android:id="@+id/progressBar"
@@ -243,7 +243,7 @@
                     android:indeterminate="true"
                     app:trackThickness="6dp"
                     app:trackCornerRadius="8dp"
-                    app:trackColor="#22FFFFFF"
+                    app:trackColor="?attr/colorSurfaceVariant"
                     app:indicatorColor="?attr/colorPrimary" />
 
                 <!-- ─── Botón primario: Iniciar sesión ─── -->
@@ -256,8 +256,8 @@
                     android:textSize="15sp"
                     android:textStyle="bold"
                     android:letterSpacing="0.03"
-                    app:backgroundTint="#11365e"
-                    android:textColor="#FFFFFF"
+                    app:backgroundTint="?attr/colorPrimary"
+                    android:textColor="?attr/colorOnPrimary"
                     app:cornerRadius="16dp" />
 
                 <!-- Separador "o" -->
@@ -273,7 +273,7 @@
                         android:layout_width="0dp"
                         android:layout_height="1dp"
                         android:layout_weight="1"
-                        android:background="@color/app_surface_variant" />
+                        android:background="?attr/colorOutlineVariant" />
 
                     <com.google.android.material.textview.MaterialTextView
                         android:layout_width="wrap_content"
@@ -282,14 +282,14 @@
                         android:paddingEnd="12dp"
                         android:text="o"
                         android:textSize="12sp"
-                        android:textColor="@color/on_app_surface_variant"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:alpha="0.6" />
 
                     <View
                         android:layout_width="0dp"
                         android:layout_height="1dp"
                         android:layout_weight="1"
-                        android:background="@color/app_surface_variant" />
+                        android:background="?attr/colorOutlineVariant" />
 
                 </LinearLayout>
 
@@ -303,7 +303,9 @@
                     android:letterSpacing="0.02"
                     app:cornerRadius="16dp"
                     app:strokeWidth="1dp"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                    android:textColor="?attr/colorPrimary"
+                    app:strokeColor="?attr/colorPrimary"
+                    style="@style/Widget.Material3.Button.OutlinedButton" />
 
             </LinearLayout>
 
@@ -317,7 +319,7 @@
             android:text="🔒  Tus datos viajan cifrados y nunca se comparten con terceros."
             android:textSize="11sp"
             android:lineSpacingMultiplier="1.4"
-            android:textColor="@color/on_app_background"
+            android:textColor="?attr/colorOnBackground"
             android:alpha="0.45"
             android:gravity="center" />
 

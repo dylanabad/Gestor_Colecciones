@@ -116,10 +116,10 @@ class OnboardingFragment : Fragment() {
         requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
             .edit().putBoolean("onboarding_completed", true).apply()
 
-        // Reemplazar el fragment actual por la lista de colecciones (inicio de la app)
+        // Volver al fragmento de bienvenida (desde donde el usuario podrá loguearse o entrar)
         parentFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
-            .replace(R.id.fragment_container, ColeccionesFragment())
+            .replace(R.id.fragment_container, WelcomeFragment())
             .commit()
     }
 

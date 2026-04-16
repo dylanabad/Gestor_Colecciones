@@ -436,6 +436,20 @@
             app:backgroundTint="?attr/colorPrimary"
             android:textColor="?attr/colorOnPrimary" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnOnboarding"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:text="¿Cómo funciona? Ver guía"
+            android:textSize="13sp"
+            android:textColor="?attr/colorPrimary"
+            app:icon="@android:drawable/ic_menu_help"
+            app:iconTint="?attr/colorPrimary"
+            android:alpha="0.8" />
+
         <!-- Hint de interacción -->
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="match_parent"
