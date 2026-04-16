@@ -13,6 +13,8 @@ import com.example.gestor_colecciones.network.dto.UploadResponse
 import com.example.gestor_colecciones.network.dto.PrestamoDto
 import com.example.gestor_colecciones.network.dto.PrestamoRequest
 import com.example.gestor_colecciones.network.dto.UsuarioDto
+import com.example.gestor_colecciones.network.dto.UsuarioPerfilDto
+import com.example.gestor_colecciones.network.dto.UpdatePerfilRequest
 import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -149,6 +151,12 @@ interface ApiService {
     // ── Usuarios ────────────────────────────────────────────────────────
     @GET("api/usuarios")
     suspend fun getUsuarios(): List<UsuarioDto>
+
+    @GET("api/usuarios/me")
+    suspend fun getMiPerfil(): UsuarioPerfilDto
+
+    @PUT("api/usuarios/me")
+    suspend fun updateMiPerfil(@Body request: UpdatePerfilRequest): UsuarioPerfilDto
 
     // ── Préstamos ─────────────────────────────────────────────────────
     @POST("api/prestamos")

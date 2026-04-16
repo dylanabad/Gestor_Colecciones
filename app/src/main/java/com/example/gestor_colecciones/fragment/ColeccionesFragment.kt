@@ -357,6 +357,14 @@ class ColeccionesFragment : Fragment() {
                 .commit()
         }
 
+        binding.btnProfile.setOnClickListener {
+            parentFragmentManager.beginTransaction()
+                .setReorderingAllowed(true)
+                .replace((view.parent as ViewGroup).id, PerfilFragment())
+                .addToBackStack(null)
+                .commit()
+        }
+
         binding.btnSettings.setOnClickListener {
             showThemeMenu()
         }

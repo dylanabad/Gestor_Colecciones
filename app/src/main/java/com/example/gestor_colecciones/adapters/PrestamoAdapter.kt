@@ -7,9 +7,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.google.android.material.color.MaterialColors
+import com.google.android.material.imageview.ShapeableImageView
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.network.dto.PrestamoDto
+import com.example.gestor_colecciones.util.ImageUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -43,6 +46,7 @@ class PrestamoAdapter(
         val viewAccent: View             = view.findViewById(R.id.viewAccent)
         val tvTituloItem: TextView       = view.findViewById(R.id.tvTituloItem)
         val tvEstado: TextView           = view.findViewById(R.id.tvEstado)
+        val ivAvatar: ShapeableImageView = view.findViewById(R.id.ivAvatar)
         val tvAvatar: TextView           = view.findViewById(R.id.tvAvatar)
         val tvUsuario: TextView          = view.findViewById(R.id.tvUsuario)
         val tvFechaPrestamo: TextView    = view.findViewById(R.id.tvFechaPrestamo)
@@ -65,14 +69,33 @@ class PrestamoAdapter(
         }
 
         private fun bindUsuario(p: PrestamoDto) {
-            val nombre = if (modo == Modo.PRESTADOS) p.prestatarioUsername
-            else p.propietarioUsername
+            val nombre = if (modo == Modo.PRESTADOS) p.prestatarioUsername else p.propietarioUsername
+            val avatarPath = if (modo == Modo.PRESTADOS) p.prestatarioAvatarPath else p.propietarioAvatarPath
+
             tvUsuario.text = if (modo == Modo.PRESTADOS) "Prestado a: $nombre"
             else "Prestado por: $nombre"
-            tvAvatar.text = nombre
-                .split(" ", "_")
-                .take(2)
-                .joinToString("") { it.first().uppercase() }
+
+            val model = ImageUtils.toGlideModel(avatarPath)
+            if (model != null) {
+                ivAvatar.visibility = View.VISIBLE
+                tvAvatar.visibility = View.GONE
+                Glide.with(itemView)
+                    .load(model)
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_person_24)
+                    .error(R.drawable.ic_person_24)
+                    .into(ivAvatar)
+            } else {
+                ivAvatar.visibility = View.GONE
+                tvAvatar.visibility = View.VISIBLE
+                val initials = nombre
+                    .split(" ", "_")
+                    .filter { it.isNotBlank() }
+                    .take(2)
+                    .mapNotNull { it.firstOrNull()?.uppercase() }
+                    .joinToString("")
+                tvAvatar.text = if (initials.isNotBlank()) initials else "?"
+            }
         }
 
         private fun bindFechas(p: PrestamoDto) {

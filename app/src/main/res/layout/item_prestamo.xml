@@ -74,15 +74,30 @@
                 android:gravity="center_vertical"
                 android:layout_marginTop="8dp">
 
-                <TextView
-                    android:id="@+id/tvAvatar"
+                <FrameLayout
                     android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:gravity="center"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorOnPrimaryContainer"
-                    android:background="@drawable/bg_avatar" />
+                    android:layout_height="28dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/ivAvatar"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:contentDescription="Avatar"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone"
+                        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.Gestor_Colecciones.Circle" />
+
+                    <TextView
+                        android:id="@+id/tvAvatar"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:gravity="center"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="?attr/colorOnPrimaryContainer"
+                        android:background="@drawable/bg_avatar" />
+
+                </FrameLayout>
 
                 <TextView
                     android:id="@+id/tvUsuario"
