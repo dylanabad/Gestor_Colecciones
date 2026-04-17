@@ -123,7 +123,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:src="@android:drawable/ic_input_add"
+        android:src="@drawable/ic_add_24"
         android:contentDescription="Añadir nuevo ítem"
         app:backgroundTint="?attr/colorPrimary"
         app:tint="?attr/colorOnPrimary" />
@@ -136,9 +136,9 @@
         android:layout_marginBottom="84dp"
         android:layout_gravity="bottom|end"
         android:contentDescription="Generar tarjeta"
-        android:src="@android:drawable/ic_menu_share"
-        app:backgroundTint="?attr/colorTertiaryContainer"
-        app:tint="?attr/colorOnTertiaryContainer"
+        android:src="@drawable/ic_share_24"
+        app:backgroundTint="?attr/colorPrimaryContainer"
+        app:tint="?attr/colorOnPrimaryContainer"
         app:fabSize="mini" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -148,9 +148,9 @@
         android:layout_margin="16dp"
         android:layout_gravity="bottom|start"
         android:contentDescription="Añadir categoría"
-        android:src="@android:drawable/ic_input_get"
-        app:backgroundTint="?attr/colorSecondaryContainer"
-        app:tint="?attr/colorOnSecondaryContainer"
+        android:src="@drawable/ic_book_24"
+        app:backgroundTint="?attr/colorPrimaryContainer"
+        app:tint="?attr/colorOnPrimaryContainer"
         app:fabSize="mini" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -22,7 +22,8 @@
             app:boxCornerRadiusTopStart="16dp"
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
-            app:boxCornerRadiusBottomEnd="16dp">
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:startIconDrawable="@drawable/ic_edit_24">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etTituloDeseo"
@@ -41,7 +42,8 @@
             app:boxCornerRadiusTopStart="16dp"
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
-            app:boxCornerRadiusBottomEnd="16dp">
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:startIconDrawable="@drawable/ic_description_24">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etDescripcionDeseo"
@@ -63,6 +65,7 @@
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusBottomEnd="16dp"
+            app:startIconDrawable="@drawable/ic_today_24"
             app:suffixText="€">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -82,7 +85,8 @@
             app:boxCornerRadiusTopStart="16dp"
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
-            app:boxCornerRadiusBottomEnd="16dp">
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:startIconDrawable="@drawable/ic_link">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEnlaceDeseo"

@@ -609,6 +609,14 @@ class ItemListByCollectionFragment : Fragment() {
         actvEstado.setOnClickListener { actvEstado.showDropDown() }
         actvEstado.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) actvEstado.showDropDown() }
 
+        val adapterCategorias = ArrayAdapter(
+            requireContext(), android.R.layout.simple_list_item_1, categoriasList.map { it.value }
+        )
+        actvCategoria.setAdapter(adapterCategorias)
+        actvCategoria.setText(categoriasList.firstOrNull()?.value.orEmpty(), false)
+        actvCategoria.setOnClickListener { actvCategoria.showDropDown() }
+        actvCategoria.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) actvCategoria.showDropDown() }
+
         val dialog = MaterialAlertDialogBuilder(requireContext())
             .setTitle("Nuevo item").setView(view)
             .setPositiveButton("Crear", null).setNegativeButton("Cancelar", null).create()
@@ -624,7 +632,10 @@ class ItemListByCollectionFragment : Fragment() {
                 }
                 val valor = etValor.text.toString().toDoubleOrNull() ?: 0.0
                 val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
-                val categoriaId = categoriasList.firstOrNull()?.key ?: 0
+                
+                val categoriaNombre = actvCategoria.text.toString()
+                val categoriaId = categoriasList.find { it.value == categoriaNombre }?.key ?: categoriasList.firstOrNull()?.key ?: 0
+
                 val estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { "Nuevo" }
                 val posibleDuplicado = fullItemList.firstOrNull { it.titulo.trim().equals(titulo, ignoreCase = true) }
                 val insertarItem = {

@@ -89,7 +89,7 @@ class DeseoAdapter(
         // --- PRECIO OBJETIVO ---
         holder.tvPrecio.text =
             if (item.precioObjetivo > 0)
-                "${"%.2f".format(item.precioObjetivo)}€"
+                "${"%.2f".format(item.precioObjetivo)} €"
             else
                 "Sin precio"
 

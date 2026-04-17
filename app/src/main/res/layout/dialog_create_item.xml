@@ -28,7 +28,7 @@
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusTopStart="16dp"
-            app:startIconDrawable="@android:drawable/ic_menu_edit">
+            app:startIconDrawable="@drawable/ic_edit_24">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etTitulo"
@@ -47,8 +47,8 @@
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusTopStart="16dp"
-            app:prefixText="$"
-            app:startIconDrawable="@android:drawable/ic_menu_day">
+            app:prefixText="€"
+            app:startIconDrawable="@drawable/ic_today_24">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etValor"
@@ -86,7 +86,7 @@
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusTopStart="16dp"
-            app:startIconDrawable="@android:drawable/ic_menu_agenda">
+            app:startIconDrawable="@drawable/ic_book_24">
 
             <com.google.android.material.textfield.MaterialAutoCompleteTextView
                 android:id="@+id/actvItemCategoria"
@@ -189,7 +189,7 @@
                 android:layout_gravity="bottom|center_horizontal"
                 android:layout_marginBottom="16dp"
                 android:text="Cambiar Foto"
-                app:icon="@android:drawable/ic_menu_camera" />
+                app:icon="@drawable/ic_camera_24" />
         </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
