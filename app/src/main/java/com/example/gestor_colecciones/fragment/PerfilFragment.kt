@@ -114,7 +114,13 @@ class PerfilFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val repo = PerfilRepository(ApiProvider.getApi(requireContext()))
+        val db = com.example.gestor_colecciones.database.DatabaseProvider.getDatabase(requireContext())
+        val repo = PerfilRepository(
+            ApiProvider.getApi(requireContext()),
+            db.coleccionDao(),
+            db.itemDao(),
+            db.logroDao()
+        )
         viewModel = ViewModelProvider(this, PerfilViewModelFactory(repo))[PerfilViewModel::class.java]
 
         binding.btnBack.setOnClickListener {
@@ -170,6 +176,15 @@ class PerfilFragment : Fragment() {
                         binding.ivAvatar.setImageResource(R.drawable.ic_person_24)
                     }
                 }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.stats.collectLatest { stats ->
+                if (stats == null) return@collectLatest
+                binding.tvStatCollections.text = stats.collections.toString()
+                binding.tvStatItems.text = stats.items.toString()
+                binding.tvStatLogros.text = stats.logros.toString()
             }
         }
 

@@ -23,6 +23,9 @@ class PerfilViewModel(
     private val _perfil = MutableStateFlow<UsuarioPerfilDto?>(null)
     val perfil: StateFlow<UsuarioPerfilDto?> = _perfil
 
+    private val _stats = MutableStateFlow<PerfilRepository.Stats?>(null)
+    val stats: StateFlow<PerfilRepository.Stats?> = _stats
+
     private val _state = MutableStateFlow<PerfilState>(PerfilState.Idle)
     val state: StateFlow<PerfilState> = _state
 
@@ -31,6 +34,7 @@ class PerfilViewModel(
             _state.value = PerfilState.Loading
             try {
                 _perfil.value = repository.getMiPerfil()
+                _stats.value = repository.getStats()
                 _state.value = PerfilState.Idle
             } catch (e: Exception) {
                 _state.value = PerfilState.Error(e.message ?: "Error cargando perfil")
