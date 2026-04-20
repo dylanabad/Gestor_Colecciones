@@ -79,12 +79,12 @@ interface ItemDao {
     @Query("SELECT * FROM Item WHERE eliminado = 1 ORDER BY fechaEliminacion DESC")
     fun getItemsEliminados(): Flow<List<Item>>
 
-    // VacÃ­a la papelera de items (eliminaciÃ³n fÃ­sica local)
+    // Vacía la papelera de items (eliminación física local)
     @Query("DELETE FROM Item WHERE eliminado = 1")
     suspend fun deleteAllEliminados()
 
-    // Elimina todos los items (activos o eliminados) de una colecciÃ³n.
-    // Ãštil cuando se borra definitivamente una colecciÃ³n desde la papelera.
+    // Elimina todos los items (activos o eliminados) de una colección.
+    // Ãštil cuando se borra definitivamente una colección desde la papelera.
     @Query("DELETE FROM Item WHERE collectionId = :collectionId")
     suspend fun deleteByCollectionId(collectionId: Int)
 
