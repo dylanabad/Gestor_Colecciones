@@ -191,44 +191,68 @@ class ItemDetailFragment : Fragment() {
                 .show()
         }
 
-        // Gestionar tags
-        fun showManageTagsDialog() {
-            viewLifecycleOwner.lifecycleScope.launch {
-                val allTags = tagRepository.getAllTagsOnce()
-                if (allTags.isEmpty()) {
-                    showCreateTagDialog { showManageTagsDialog() }
-                    return@launch
-                }
+        // Gestionar tags (Mejorado con layout personalizado)
+        fun showManageTagsDialog(onDismiss: (() -> Unit)? = null) {
+            val dialogView = layoutInflater.inflate(R.layout.dialog_manage_tags, null)
+            val etNombre = dialogView.findViewById<EditText>(R.id.etTagNombre)
+            val btnAdd = dialogView.findViewById<View>(R.id.btnAddTag)
+            val listView = dialogView.findViewById<android.widget.ListView>(R.id.lvTags)
 
-                val names = allTags.map { it.nombre }.toTypedArray()
-                var selectedIndex = 0
+            val dialog = MaterialAlertDialogBuilder(requireContext())
+                .setView(dialogView)
+                .setPositiveButton("Cerrar", null)
+                .setOnDismissListener { onDismiss?.invoke() }
+                .create()
 
-                MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Gestionar etiquetas")
-                    .setSingleChoiceItems(names, 0) { _, which ->
-                        selectedIndex = which
-                    }
-                    .setPositiveButton("Eliminar") { _, _ ->
-                        val tag = allTags.getOrNull(selectedIndex) ?: return@setPositiveButton
-                        MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Eliminar etiqueta")
-                            .setMessage("Eliminar \"${tag.nombre}\"? Se quitara de los items.")
-                            .setPositiveButton("Eliminar") { _, _ ->
-                                viewLifecycleOwner.lifecycleScope.launch {
-                                    tagRepository.delete(tag)
-                                    itemTagRepository.syncTagsForItem(itemId)
-                                    Snackbar.make(view, "Etiqueta \"${tag.nombre}\" eliminada", Snackbar.LENGTH_SHORT).show()
-                                }
+            fun refreshList() {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val allTags = tagRepository.getAllTagsOnce()
+                    val adapter = object : android.widget.ArrayAdapter<Tag>(
+                        requireContext(),
+                        R.layout.item_tag_manage,
+                        allTags
+                    ) {
+                        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                            val view = convertView ?: layoutInflater.inflate(R.layout.item_tag_manage, parent, false)
+                            val tag = getItem(position) ?: return view
+                            
+                            view.findViewById<TextView>(R.id.tvTagName).text = tag.nombre
+                            view.findViewById<View>(R.id.btnDeleteTag).setOnClickListener {
+                                MaterialAlertDialogBuilder(requireContext())
+                                    .setTitle("Eliminar etiqueta")
+                                    .setMessage("¿Deseas eliminar \"${tag.nombre}\"?")
+                                    .setPositiveButton("Eliminar") { _, _ ->
+                                        viewLifecycleOwner.lifecycleScope.launch {
+                                            tagRepository.delete(tag)
+                                            itemTagRepository.syncTagsForItem(itemId)
+                                            refreshList()
+                                            Snackbar.make(this@ItemDetailFragment.requireView(), "Etiqueta eliminada", Snackbar.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                    .setNegativeButton("Cancelar", null)
+                                    .show()
                             }
-                            .setNegativeButton("Cancelar", null)
-                            .show()
+                            return view
+                        }
                     }
-                    .setNeutralButton("Nueva") { _, _ ->
-                        showCreateTagDialog { showManageTagsDialog() }
-                    }
-                    .setNegativeButton("Cerrar", null)
-                    .show()
+                    listView.adapter = adapter
+                }
             }
+
+            btnAdd.setOnClickListener {
+                val nombre = etNombre.text?.toString()?.trim().orEmpty()
+                if (nombre.isNotBlank()) {
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        tagRepository.insert(Tag(nombre = nombre))
+                        etNombre.text?.clear()
+                        refreshList()
+                        Snackbar.make(view, "Etiqueta creada", Snackbar.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
+            refreshList()
+            dialog.show()
         }
 
         // Selección de tags
@@ -236,7 +260,7 @@ class ItemDetailFragment : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
                 val allTags = tagRepository.getAllTagsOnce()
                 if (allTags.isEmpty()) {
-                    showCreateTagDialog { showTagPickerDialog() }
+                    showManageTagsDialog { showTagPickerDialog() }
                     return@launch
                 }
 
@@ -250,7 +274,7 @@ class ItemDetailFragment : Fragment() {
                         checked[which] = isChecked
                     }
                     .setNeutralButton("Gestionar") { _, _ ->
-                        showManageTagsDialog()
+                        showManageTagsDialog { showTagPickerDialog() }
                     }
                     .setNegativeButton("Cancelar", null)
                     .setPositiveButton("Guardar") { _, _ ->
