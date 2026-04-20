@@ -15,7 +15,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.slider.Slider
-import com.google.android.material.switchmaterial.SwitchMaterial
+import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import java.util.Locale
 
@@ -47,7 +47,7 @@ class ItemFilterSortBottomSheet : BottomSheetDialogFragment() {
         val tvMinRating = view.findViewById<TextView>(R.id.tvMinRating)
         val sliderMinRating = view.findViewById<Slider>(R.id.sliderMinRating)
         val tgSortField = view.findViewById<MaterialButtonToggleGroup>(R.id.tgSortField)
-        val switchAscending = view.findViewById<SwitchMaterial>(R.id.switchAscending)
+        val switchAscending = view.findViewById<MaterialSwitch>(R.id.switchAscending)
         val btnClear = view.findViewById<Button>(R.id.btnClear)
         val btnApply = view.findViewById<Button>(R.id.btnApply)
 
