@@ -2,99 +2,125 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="12dp"
-    android:background="@drawable/bg_widget_card">
+    android:background="@drawable/bg_widget_card"
+    android:padding="16dp"
+    android:orientation="vertical">
 
+    <!-- Header superior con branding (Dark Mode) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:layout_marginBottom="16dp">
 
         <ImageView
-            android:layout_width="22dp"
-            android:layout_height="22dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:src="@mipmap/ic_launcher"
-            android:contentDescription="App" />
-
-        <TextView
-            android:id="@+id/tvWidgetTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="Gestor de Colecciones"
-            android:textStyle="bold"
-            android:textSize="14sp"
-            android:textColor="@android:color/white" />
-    </LinearLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Resumen rapido"
-        android:textSize="12sp"
-        android:textColor="#CCFFFFFF"
-        android:layout_marginTop="2dp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="12dp">
+            android:contentDescription="App Logo" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical"
-            android:padding="10dp"
-            android:background="@drawable/bg_widget_stat">
+            android:layout_marginStart="10dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Colecciones"
-                android:textSize="12sp"
-                android:textColor="#E6FFFFFF" />
+                android:text="Resumen"
+                android:textStyle="bold"
+                android:textSize="15sp"
+                android:textColor="#FFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Estado de tu inventario"
+                android:textSize="10sp"
+                android:textColor="#B0B0B0" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@android:drawable/ic_menu_rotate"
+            android:alpha="0.5"
+            android:contentDescription="Refresh icon" />
+    </LinearLayout>
+
+    <!-- Cuerpo con tarjetas de datos -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:baselineAligned="false">
+
+        <!-- Colecciones Card -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:padding="12dp"
+            android:background="@drawable/bg_widget_stat_dark_blue"
+            android:gravity="start|center_vertical"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tvColeccionesCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0"
+                android:textSize="26sp"
+                android:fontFamily="sans-serif-condensed-medium"
                 android:textStyle="bold"
-                android:textSize="22sp"
-                android:textColor="@android:color/white" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="10dp"
-            android:layout_height="wrap_content" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:padding="10dp"
-            android:background="@drawable/bg_widget_stat">
+                android:textColor="#5C9DFF" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Items"
-                android:textSize="12sp"
-                android:textColor="#E6FFFFFF" />
+                android:text="Colecciones"
+                android:textSize="11sp"
+                android:textAllCaps="true"
+                android:textStyle="bold"
+                android:textColor="#8AA9D6"
+                android:layout_marginTop="-2dp" />
+        </LinearLayout>
+
+        <!-- Items Card -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:padding="12dp"
+            android:background="@drawable/bg_widget_stat_dark_teal"
+            android:gravity="start|center_vertical"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tvItemsCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0"
+                android:textSize="26sp"
+                android:fontFamily="sans-serif-condensed-medium"
                 android:textStyle="bold"
-                android:textSize="22sp"
-                android:textColor="@android:color/white" />
+                android:textColor="#00D4BD" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Artículos"
+                android:textSize="11sp"
+                android:textAllCaps="true"
+                android:textStyle="bold"
+                android:textColor="#7DA8A2"
+                android:layout_marginTop="-2dp" />
         </LinearLayout>
     </LinearLayout>
 
