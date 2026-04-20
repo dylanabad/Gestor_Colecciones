@@ -114,6 +114,14 @@
                     android:layout_height="wrap_content"
                     app:chipIcon="@android:drawable/ic_menu_info_details"
                     tools:text="Excelente" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/tvFecha"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:chipIcon="@android:drawable/ic_menu_my_calendar"
+                    tools:text="01/01/2024" />
             </com.google.android.material.chip.ChipGroup>
 
             <!-- Sección de Calificación -->

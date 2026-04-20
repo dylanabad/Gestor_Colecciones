@@ -55,6 +55,7 @@ class ItemAdapter(
         val value: TextView = view.findViewById(R.id.tv_item_value)
         val categoria: TextView = view.findViewById(R.id.tv_item_categoria)
         val estado: TextView = view.findViewById(R.id.tv_item_estado)
+        val fecha: TextView = view.findViewById(R.id.tv_item_fecha)
         val tags: TextView = view.findViewById(R.id.tv_item_tags)
         val image: ImageView = view.findViewById(R.id.ivItemImage)
         val ratingBar: RatingBar = view.findViewById(R.id.rb_item_rating)
@@ -100,6 +101,10 @@ class ItemAdapter(
         holder.value.text = "Valor: ${item.valor} €"
         holder.categoria.text = categoriasMap[item.categoriaId] ?: "Sin categoría"
         holder.estado.text = "Estado: ${item.estado}"
+
+        // --- FECHA ---
+        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+        holder.fecha.text = "Fecha: ${item.fechaAdquisicion?.let { sdf.format(it) } ?: "-"}"
 
         // --- TAGS ---
         val tags = tagsByItemId[item.id].orEmpty()

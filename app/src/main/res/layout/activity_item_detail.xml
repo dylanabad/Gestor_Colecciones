@@ -85,6 +85,16 @@
                     app:chipCornerRadius="12dp"
                     app:chipIcon="@android:drawable/ic_menu_agenda" />
 
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipFecha"
+                    style="@style/Widget.Material3.Chip.Assist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Fecha"
+                    app:chipCornerRadius="12dp"
+                    app:chipIcon="@android:drawable/ic_menu_my_calendar" />
+
                 <View
                     android:layout_width="0dp"
                     android:layout_height="1dp"

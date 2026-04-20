@@ -48,6 +48,7 @@ import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.model.ItemFilterSortState
 import com.example.gestor_colecciones.model.ItemSortField
 import com.example.gestor_colecciones.model.ItemEstados
+import java.text.SimpleDateFormat
 import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemHistoryRepository
@@ -384,7 +385,7 @@ class ItemListByCollectionFragment : Fragment() {
         val baseComparator = when (filterSortState.sortField) {
             ItemSortField.NAME -> compareBy<Item> { it.titulo.lowercase(Locale.getDefault()) }
             ItemSortField.VALUE -> compareBy<Item> { it.valor }
-            ItemSortField.DATE -> compareBy<Item> { it.fechaAdquisicion.time }
+            ItemSortField.DATE -> compareBy<Item> { it.fechaAdquisicion }
         }
         val primaryComparator = if (filterSortState.ascending) baseComparator else baseComparator.reversed()
         val comparator = compareByDescending<Item> { it.favorito }
@@ -585,12 +586,32 @@ class ItemListByCollectionFragment : Fragment() {
         val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
         val etValor = view.findViewById<EditText>(R.id.etValor)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
+        val etFecha = view.findViewById<EditText>(R.id.etFechaAdquisicion)
         val actvEstado = view.findViewById<AutoCompleteTextView>(R.id.actvItemEstado)
         val actvCategoria = view.findViewById<AutoCompleteTextView>(R.id.actvItemCategoria)
         val ivPreview = view.findViewById<ImageView>(R.id.ivItemPreview)
         val btnSelectImage = view.findViewById<Button>(R.id.btnSelectImage)
         val rbCalificacion = view.findViewById<RatingBar>(R.id.rbCalificacion)
         val tvCalificacionValue = view.findViewById<TextView>(R.id.tvCalificacionValue)
+
+        var selectedDate = Date()
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        etFecha.setText(sdf.format(selectedDate))
+
+        etFecha.setOnClickListener {
+            val calendar = Calendar.getInstance().apply { time = selectedDate }
+            android.app.DatePickerDialog(
+                requireContext(),
+                { _, year, month, dayOfMonth ->
+                    calendar.set(year, month, dayOfMonth)
+                    selectedDate = calendar.time
+                    etFecha.setText(sdf.format(selectedDate))
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            ).show()
+        }
 
         currentItemImageView = ivPreview
         btnSelectImage.setOnClickListener { showItemImageSourceDialog() }
@@ -644,7 +665,7 @@ class ItemListByCollectionFragment : Fragment() {
                         viewModel.insert(
                             Item(
                                 titulo = titulo, categoriaId = categoriaId, collectionId = collectionId,
-                                fechaAdquisicion = Date(), valor = valor,
+                                fechaAdquisicion = selectedDate, valor = valor,
                                 imagenPath = imagePath,
                                 estado = estado, descripcion = descripcion, calificacion = rbCalificacion.rating
                             ),
@@ -677,12 +698,32 @@ class ItemListByCollectionFragment : Fragment() {
         val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
         val etValor = view.findViewById<EditText>(R.id.etValor)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
+        val etFecha = view.findViewById<EditText>(R.id.etFechaAdquisicion)
         val actvEstado = view.findViewById<AutoCompleteTextView>(R.id.actvItemEstado)
         val actvCategoria = view.findViewById<AutoCompleteTextView>(R.id.actvItemCategoria)
         val ivPreview = view.findViewById<ImageView>(R.id.ivItemPreview)
         val btnSelectImage = view.findViewById<Button>(R.id.btnSelectImage)
         val rbCalificacion = view.findViewById<RatingBar>(R.id.rbCalificacion)
         val tvCalificacionValue = view.findViewById<TextView>(R.id.tvCalificacionValue)
+
+        var selectedDate = item.fechaAdquisicion
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        etFecha.setText(sdf.format(selectedDate))
+
+        etFecha.setOnClickListener {
+            val calendar = Calendar.getInstance().apply { time = selectedDate }
+            android.app.DatePickerDialog(
+                requireContext(),
+                { _, year, month, dayOfMonth ->
+                    calendar.set(year, month, dayOfMonth)
+                    selectedDate = calendar.time
+                    etFecha.setText(sdf.format(selectedDate))
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            ).show()
+        }
 
         currentItemImageView = ivPreview
         ImageUtils.toGlideModel(item.imagenPath)?.let { model ->
@@ -738,6 +779,7 @@ class ItemListByCollectionFragment : Fragment() {
                             titulo = titulo,
                             valor = etValor.text.toString().toDoubleOrNull() ?: item.valor,
                             descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() },
+                            fechaAdquisicion = selectedDate,
                             categoriaId = categoriaId,
                             imagenPath = imagePath,
                             estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { item.estado },

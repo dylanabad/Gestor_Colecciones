@@ -77,6 +77,7 @@ class ItemDetailFragment : Fragment() {
         val tvTitulo = view.findViewById<TextView>(R.id.tvTitulo)
         val tvValor = view.findViewById<TextView>(R.id.tvValor)
         val tvEstado = view.findViewById<com.google.android.material.chip.Chip>(R.id.tvEstado)
+        val tvFecha = view.findViewById<com.google.android.material.chip.Chip>(R.id.tvFecha)
         val tvDescripcion = view.findViewById<TextView>(R.id.tvDescripcion)
         val tvCategoria = view.findViewById<com.google.android.material.chip.Chip>(R.id.tvCategoria)
         val tvCalificacion = view.findViewById<TextView>(R.id.tvCalificacion)
@@ -355,6 +356,10 @@ class ItemDetailFragment : Fragment() {
                 tvTitulo.text = it.titulo
                 tvValor.text = String.format(Locale.getDefault(), "%.2f€", it.valor)
                 tvEstado.text = it.estado
+
+                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                tvFecha.text = it.fechaAdquisicion?.let { d -> sdf.format(d) } ?: "Sin fecha"
+
                 tvDescripcion.text = it.descripcion ?: "Sin descripción disponible."
 
                 val rating = it.calificacion.coerceIn(0f, 5f)

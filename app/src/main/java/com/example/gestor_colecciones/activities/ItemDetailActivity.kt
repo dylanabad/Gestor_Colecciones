@@ -55,6 +55,9 @@ class ItemDetailActivity : AppCompatActivity() {
                 // Cargar nombre de categoría si es posible, o el ID
                 binding.chipCategory.text = "Categoría ${it.categoriaId}"
 
+                val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+                binding.chipFecha.text = sdf.format(it.fechaAdquisicion)
+
                 binding.tvValorDetail.text = String.format("%.2f€", it.valor)
                 binding.tvDescripcionDetail.text = it.descripcion?.takeIf { d -> d.isNotBlank() } ?: "Sin descripción disponible."
 

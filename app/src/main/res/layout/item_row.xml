@@ -68,6 +68,17 @@
                 android:textColor="?attr/colorOnSurfaceVariant" />
 
             <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/tv_item_fecha"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Fecha: -"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tv_item_tags"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
