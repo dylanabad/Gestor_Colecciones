@@ -49,8 +49,8 @@ class ItemRepository(
                 item.toDto()
             )
 
-            // Actualiza/insert en base de datos local
-            itemDao.insert(saved.toEntity(item.collectionId))
+            // Actualiza en base de datos local
+            itemDao.update(saved.toEntity(item.collectionId))
 
         } catch (e: HttpException) {
             throw RuntimeException(extractError(e))

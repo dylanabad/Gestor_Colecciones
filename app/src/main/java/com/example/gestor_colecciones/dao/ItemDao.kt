@@ -8,12 +8,12 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ItemDao {
 
-    // Inserta un item; si hay conflicto lo reemplaza
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // Inserta un item; si hay conflicto lo ignora para evitar borrar registros relacionados
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(item: Item): Long
 
-    // Inserta una lista de items
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // Inserta una lista de items ignorando conflictos
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(items: List<Item>)
 
     // Actualiza un item existente
