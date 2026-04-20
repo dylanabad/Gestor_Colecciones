@@ -72,19 +72,21 @@ class SyncRepository(
             val itemTags = mutableListOf<ItemTag>()
 
             for (item in allItems) {
+                try {
+                    val tagsForItem = api.getItemTags(item.id.toLong())
 
-                val tagsForItem = api.getItemTags(item.id.toLong())
-
-                tagsForItem.forEach { dto ->
-
-                    val tagId = dto.id?.toInt() ?: return@forEach
-
-                    itemTags.add(
-                        ItemTag(
-                            itemId = item.id,
-                            tagId = tagId
+                    tagsForItem.forEach { dto ->
+                        val tagId = dto.id?.toInt() ?: return@forEach
+                        itemTags.add(
+                            ItemTag(
+                                itemId = item.id,
+                                tagId = tagId
+                            )
                         )
-                    )
+                    }
+                } catch (e: Exception) {
+                    // Si falla un ítem (ej. un ítem eliminado), logueamos y continuamos con el resto
+                    e.printStackTrace()
                 }
             }
 

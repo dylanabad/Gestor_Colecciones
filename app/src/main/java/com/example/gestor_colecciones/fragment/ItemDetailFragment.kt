@@ -260,7 +260,14 @@ class ItemDetailFragment : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
                 val allTags = tagRepository.getAllTagsOnce()
                 if (allTags.isEmpty()) {
-                    showManageTagsDialog { showTagPickerDialog() }
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("No hay etiquetas")
+                        .setMessage("Aún no has creado ninguna etiqueta. ¿Quieres gestionar tus etiquetas ahora?")
+                        .setPositiveButton("Gestionar") { _, _ ->
+                            showManageTagsDialog()
+                        }
+                        .setNegativeButton("Cancelar", null)
+                        .show()
                     return@launch
                 }
 
