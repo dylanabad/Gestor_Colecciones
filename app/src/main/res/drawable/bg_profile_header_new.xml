@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="135"
+                android:startColor="?attr/colorPrimary"
+                android:endColor="?attr/colorPrimaryContainer" />
+        </shape>
+    </item>
+
+    <!-- Subtle decorative circle -->
+    <item
+        android:right="-100dp"
+        android:top="-50dp">
+        <shape android:shape="oval">
+            <size
+                android:width="300dp"
+                android:height="300dp" />
+            <solid android:color="#20FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- Bottom curve simulation -->
+    <item android:top="260dp">
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/colorSurface" />
+            <corners
+                android:topLeftRadius="32dp"
+                android:topRightRadius="32dp" />
+        </shape>
+    </item>
+</layer-list>

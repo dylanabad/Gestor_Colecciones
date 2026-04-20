@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Oscurece ligeramente para que destaque también en temas con primarios claros -->
-    <solid android:color="#22000000" />
-    <corners android:radius="10dp" />
-</shape>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorControlHighlight">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="?attr/colorSurfaceContainerHigh"
+                android:endColor="?attr/colorSurfaceContainerLow"
+                android:angle="135"/>
+            <corners android:radius="24dp" />
+            <stroke android:width="1.5dp" android:color="?attr/colorOutlineVariant"/>
+        </shape>
+    </item>
+</ripple>

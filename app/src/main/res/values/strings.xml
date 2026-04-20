@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">CollectHub</string>
+    <string name="mi_cuenta">Mi Cuenta</string>
+    <string name="nombre_para_mostrar">Nombre para mostrar</string>
+    <string name="biografia_descripcion">Biografía / Descripción</string>
+    <string name="guardar_cambios">Guardar Cambios</string>
+    <string name="eliminar_foto_de_perfil">Eliminar foto de perfil</string>
+    <string name="sincronizando">Sincronizando...</string>
+    <string name="colecciones">Colecciones</string>
+    <string name="items">Items</string>
+    <string name="logros">Logros</string>
+    <string name="galeria">Galería</string>
+    <string name="camara">Cámara</string>
+    <string name="seleccionar_avatar">Seleccionar avatar</string>
 </resources>

@@ -123,7 +123,7 @@ class PerfilFragment : Fragment() {
         )
         viewModel = ViewModelProvider(this, PerfilViewModelFactory(repo))[PerfilViewModel::class.java]
 
-        binding.btnBack.setOnClickListener {
+        binding.toolbar.setNavigationOnClickListener {
             parentFragmentManager.popBackStack()
         }
 
@@ -161,8 +161,12 @@ class PerfilFragment : Fragment() {
                 binding.tvDisplayName.text = nombreVisible
                 binding.tvUsernameEmail.text = "@${perfil.username} \u2022 ${perfil.email}"
 
-                binding.etDisplayName.setText(perfil.displayName.orEmpty())
-                binding.etBio.setText(perfil.bio.orEmpty())
+                if (binding.etDisplayName.text.isNullOrBlank()) {
+                    binding.etDisplayName.setText(perfil.displayName.orEmpty())
+                }
+                if (binding.etBio.text.isNullOrBlank()) {
+                    binding.etBio.setText(perfil.bio.orEmpty())
+                }
 
                 if (!removeAvatar && selectedAvatarUri == null) {
                     val model = ImageUtils.toGlideModel(perfil.avatarPath)
@@ -224,9 +228,9 @@ class PerfilFragment : Fragment() {
     }
 
     private fun showImageSourceDialog() {
-        val options = arrayOf("Galeria", "Camara")
+        val options = arrayOf(getString(R.string.galeria), getString(R.string.camara))
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Seleccionar avatar")
+            .setTitle(getString(R.string.seleccionar_avatar))
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> pickImageLauncher.launch("image/*")
@@ -286,7 +290,11 @@ class PerfilFragment : Fragment() {
             val values = ContentValues().apply {
                 put(MediaStore.Images.Media.IS_PENDING, 0)
             }
-            resolver.update(uri, values, null, null)
+            try {
+                resolver.update(uri, values, null, null)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
