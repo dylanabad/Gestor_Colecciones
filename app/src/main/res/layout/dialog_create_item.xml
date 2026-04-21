@@ -29,7 +29,8 @@
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusTopStart="16dp"
-            app:startIconDrawable="@drawable/ic_edit_24">
+            app:startIconDrawable="@drawable/ic_edit_24"
+            app:startIconTint="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etTitulo"
@@ -57,7 +58,9 @@
                 app:boxCornerRadiusTopEnd="16dp"
                 app:boxCornerRadiusTopStart="16dp"
                 app:prefixText="€"
-                app:startIconDrawable="@drawable/ic_today_24">
+                app:prefixTextColor="?attr/colorPrimary"
+                app:startIconDrawable="@drawable/ic_euro_24"
+                app:startIconTint="?attr/colorPrimary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etValor"
@@ -96,7 +99,8 @@
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusTopStart="16dp"
-            app:startIconDrawable="@drawable/ic_book_24">
+            app:startIconDrawable="@drawable/ic_book_24"
+            app:startIconTint="?attr/colorPrimary">
 
             <com.google.android.material.textfield.MaterialAutoCompleteTextView
                 android:id="@+id/actvItemCategoria"
@@ -115,7 +119,8 @@
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusTopStart="16dp"
-            app:startIconDrawable="@drawable/ic_today_24">
+            app:startIconDrawable="@drawable/ic_today_24"
+            app:startIconTint="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etFechaAdquisicion"
@@ -135,7 +140,9 @@
             app:boxCornerRadiusBottomEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusTopEnd="16dp"
-            app:boxCornerRadiusTopStart="16dp">
+            app:boxCornerRadiusTopStart="16dp"
+            app:startIconDrawable="@drawable/ic_description_24"
+            app:startIconTint="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etDescripcion"
