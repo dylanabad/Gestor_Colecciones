@@ -154,7 +154,3 @@ app/src/main/java/com/example/gestor_colecciones/
 </details>
 
 ---
-
-## Capturas (opcional)
-Si quieres que el README sea aún más visual, añade imágenes en `docs/screenshots/` y enlázalas aquí.
-

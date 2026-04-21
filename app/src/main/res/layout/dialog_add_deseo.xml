@@ -23,7 +23,8 @@
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusBottomEnd="16dp"
-            app:startIconDrawable="@drawable/ic_edit_24">
+            app:startIconDrawable="@drawable/ic_edit_24"
+            app:startIconTint="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etTituloDeseo"
@@ -43,7 +44,8 @@
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusBottomEnd="16dp"
-            app:startIconDrawable="@drawable/ic_description_24">
+            app:startIconDrawable="@drawable/ic_description_24"
+            app:startIconTint="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etDescripcionDeseo"
@@ -65,7 +67,10 @@
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusBottomEnd="16dp"
-            app:prefixText="€ ">
+            app:prefixText="€ "
+            app:prefixTextColor="?attr/colorPrimary"
+            app:startIconDrawable="@drawable/ic_euro_24"
+            app:startIconTint="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPrecioDeseo"
@@ -85,7 +90,8 @@
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusBottomEnd="16dp"
-            app:startIconDrawable="@drawable/ic_link">
+            app:startIconDrawable="@drawable/ic_link"
+            app:startIconTint="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEnlaceDeseo"
