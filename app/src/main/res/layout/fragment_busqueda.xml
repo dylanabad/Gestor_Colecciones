@@ -84,7 +84,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Busca por nombre, categorías, etiquetas o descripción de tus objetos."
+                        android:text="Busca aquellas colecciones o items disponibles en tu colección y accede a ellos de forma sencilla e intuitiva."
                         android:textAppearance="?attr/textAppearanceBodySmall"
                         android:textColor="?attr/colorOnPrimaryContainer"
                         app:layout_constraintEnd_toStartOf="@id/ivHero"
@@ -158,7 +158,7 @@
         android:id="@+id/searchView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:hint="Colecciones, items, etiquetas..."
+        android:hint="Colecciones, items..."
         app:layout_anchor="@id/searchBar">
 
         <LinearLayout
@@ -263,7 +263,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Busca por nombre, categoría o estado"
+                android:text="Busca por nombre las colecciones o items que necesites consultar"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:gravity="center" />
