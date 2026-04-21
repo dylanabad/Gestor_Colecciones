@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.example.gestor_colecciones.R
+import androidx.recyclerview.widget.DiffUtil
 import com.example.gestor_colecciones.entities.ItemDeseo
 
 // Adapter para mostrar lista de deseos en un RecyclerView
@@ -120,10 +121,25 @@ class DeseoAdapter(
     // Número de elementos en la lista
     override fun getItemCount() = items.size
 
-    // Actualiza toda la lista
+    // Clase interna para calcular diferencias entre listas para animaciones fluidas
+    class DeseoDiffCallback(
+        private val oldList: List<ItemDeseo>,
+        private val newList: List<ItemDeseo>
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize(): Int = oldList.size
+        override fun getNewListSize(): Int = newList.size
+        override fun areItemsTheSame(oldPos: Int, newPos: Int): Boolean =
+            oldList[oldPos].id == newList[newPos].id
+        override fun areContentsTheSame(oldPos: Int, newPos: Int): Boolean =
+            oldList[oldPos] == newList[newPos]
+    }
+
+    // Actualiza la lista usando DiffUtil para animar solo los cambios necesarios
     fun updateList(nuevos: List<ItemDeseo>) {
+        val diffCallback = DeseoDiffCallback(items, nuevos)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
         items = nuevos
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
     }
 
     // Obtiene un item por posición

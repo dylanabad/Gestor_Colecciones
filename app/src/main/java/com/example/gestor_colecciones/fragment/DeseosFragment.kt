@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.DefaultItemAnimator
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialFadeThrough
 import com.example.gestor_colecciones.R
@@ -33,6 +34,8 @@ class DeseosFragment : Fragment() {
 
     private lateinit var viewModel: DeseoViewModel // ViewModel para la lógica de deseos
     private lateinit var adapter: DeseoAdapter // Adapter del RecyclerView
+
+    private var fullList: List<ItemDeseo> = emptyList() // Lista completa para filtrado
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +79,12 @@ class DeseosFragment : Fragment() {
         // Configuración del RecyclerView
         binding.rvDeseos.layoutManager = LinearLayoutManager(requireContext())
         binding.rvDeseos.adapter = adapter
+        binding.rvDeseos.itemAnimator = DefaultItemAnimator().apply {
+            addDuration = 300
+            removeDuration = 300
+            moveDuration = 300
+            changeDuration = 300
+        }
 
         // Swipe para eliminar elementos
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
@@ -106,14 +115,25 @@ class DeseosFragment : Fragment() {
         binding.btnBack.setOnClickListener { parentFragmentManager.popBackStack() }
         binding.fabAddDeseo.setOnClickListener { showAddDialog() }
 
+        // Configuración de la búsqueda
+        binding.searchDeseos.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
+            override fun onQueryTextChange(newText: String?): Boolean {
+                filterList(newText.orEmpty())
+                return true
+            }
+        })
+
         // Observación de la lista de deseos
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.all.collectLatest { lista ->
-                adapter.updateList(lista)
+                fullList = lista
+                filterList(binding.searchDeseos.query.toString())
 
                 // Contador de elementos pendientes
                 val pendientes = lista.count { !it.conseguido }
-                binding.tvContador.text = "$pendientes pendientes"
+                // binding.tvContador ahora es interno al buscador en el layout XML o se puede ocultar si se prefiere
+                // Pero como lo hemos quitado del XML para poner el SearchView, ya no actualizamos binding.tvContador directamente aquí si no existe
 
                 // Alerta de elementos sin precio objetivo
                 val sinPrecio = lista.count { !it.conseguido && it.precioObjetivo == 0.0 }
@@ -126,6 +146,19 @@ class DeseosFragment : Fragment() {
                 }
             }
         }
+    }
+
+    // Filtra la lista según el texto de búsqueda
+    private fun filterList(query: String) {
+        val filtered = if (query.isEmpty()) {
+            fullList
+        } else {
+            fullList.filter {
+                it.titulo.contains(query, ignoreCase = true) ||
+                (it.descripcion?.contains(query, ignoreCase = true) ?: false)
+            }
+        }
+        adapter.updateList(filtered)
     }
 
     // Diálogo para añadir un nuevo deseo
