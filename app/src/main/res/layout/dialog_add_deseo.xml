@@ -65,8 +65,7 @@
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusBottomEnd="16dp"
-            app:startIconDrawable="@drawable/ic_today_24"
-            app:suffixText="€">
+            app:prefixText="€ ">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPrecioDeseo"
