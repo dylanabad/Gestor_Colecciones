@@ -57,25 +57,26 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
-                    app:cardCornerRadius="32dp"
+                    app:cardCornerRadius="28dp"
                     app:cardElevation="0dp"
                     app:strokeWidth="1dp"
                     app:strokeColor="?attr/colorOutlineVariant"
-                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
                     app:layout_constraintTop_toBottomOf="@id/btnBack">
 
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="24dp">
+                        android:padding="20dp">
 
                         <com.google.android.material.textview.MaterialTextView
                             android:id="@+id/tvProgressLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Progreso Total"
+                            android:text="Nivel de Coleccionista"
                             android:textAppearance="?attr/textAppearanceLabelLarge"
-                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textColor="?attr/colorPrimary"
+                            android:textStyle="bold"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
 
@@ -83,8 +84,8 @@
                             android:id="@+id/tvContador"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textAppearance="?attr/textAppearanceTitleLarge"
-                            android:textColor="?attr/colorPrimary"
+                            android:textAppearance="?attr/textAppearanceTitleMedium"
+                            android:textColor="?attr/colorOnSurface"
                             android:textStyle="bold"
                             app:layout_constraintBottom_toBottomOf="@id/tvProgressLabel"
                             app:layout_constraintEnd_toEndOf="parent"
@@ -94,21 +95,23 @@
                         <com.google.android.material.progressindicator.LinearProgressIndicator
                             android:id="@+id/progressLogros"
                             android:layout_width="match_parent"
-                            android:layout_height="12dp"
-                            android:layout_marginTop="20dp"
-                            app:trackCornerRadius="6dp"
+                            android:layout_height="10dp"
+                            android:layout_marginTop="16dp"
+                            app:trackCornerRadius="5dp"
                             app:indicatorColor="?attr/colorPrimary"
                             app:trackColor="?attr/colorSurfaceVariant"
                             app:layout_constraintTop_toBottomOf="@id/tvProgressLabel"
                             tools:progress="30" />
 
                         <com.google.android.material.textview.MaterialTextView
+                            android:id="@+id/tvMantra"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:text="¡Sigue coleccionando para desbloquear más!"
+                            android:text="¡Cada ítem cuenta para tu leyenda!"
                             android:textAppearance="?attr/textAppearanceBodySmall"
                             android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textStyle="italic"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toBottomOf="@id/progressLogros" />
 

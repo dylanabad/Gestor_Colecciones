@@ -75,9 +75,9 @@ class LogrosFragment : Fragment() {
             this, LogroViewModelFactory(logroRepo, manager)
         )[LogroViewModel::class.java]
 
-        // Preparar RecyclerView y adaptador de logros
+        // Preparar RecyclerView y adaptador de logros (Estilo Lista)
         adapter = LogroAdapter(emptyList())
-        binding.rvLogros.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvLogros.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(requireContext())
         binding.rvLogros.adapter = adapter
 
         // Botón para volver atrás en el stack de fragments
