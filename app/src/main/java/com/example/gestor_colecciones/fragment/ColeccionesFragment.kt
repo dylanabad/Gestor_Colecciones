@@ -423,17 +423,17 @@ class ColeccionesFragment : Fragment() {
             }
         }
 
-        // Filtro de búsqueda en tiempo real sobre listaCompleta
-        binding.searchColecciones.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?) = false
-            override fun onQueryTextChange(newText: String?): Boolean {
-                val texto = newText ?: ""
+        // Filtro de búsqueda en tiempo real sobre listaCompleta usando el nuevo SearchBar (EditText)
+        binding.searchBarCol.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val texto = s?.toString() ?: ""
                 val filtradas = listaCompleta.filter {
                     it.nombre.lowercase().contains(texto.lowercase())
                 }
                 updateStatsAndAdapter(filtradas) // Actualiza el adapter solo con las coincidencias
-                return true
             }
+            override fun afterTextChanged(s: android.text.Editable?) {}
         })
     }
 

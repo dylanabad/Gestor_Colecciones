@@ -54,23 +54,24 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     app:cardCornerRadius="28dp"
-                    app:cardElevation="2dp"
-                    app:strokeWidth="0dp"
-                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardElevation="0dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="?attr/colorOutlineVariant"
+                    app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
                     app:layout_constraintTop_toBottomOf="@id/tvCollectionName">
 
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:layout_width="match_parent"
-                        android:layout_height="56dp"
+                        android:layout_height="52dp"
                         android:paddingHorizontal="16dp">
 
                         <ImageView
                             android:id="@+id/ivSearchIcon"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@android:drawable/ic_menu_search"
                             android:contentDescription="Icono de búsqueda"
-                            app:tint="?attr/colorOnSurfaceVariant"
+                            app:tint="?attr/colorPrimary"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
                             app:layout_constraintBottom_toBottomOf="parent" />
@@ -81,17 +82,27 @@
                             android:layout_height="match_parent"
                             app:iconifiedByDefault="false"
                             app:searchIcon="@null"
-                            app:queryHint="Buscar item..."
+                            app:queryHint="Buscar en esta colección..."
                             app:queryBackground="@android:color/transparent"
                             app:layout_constraintStart_toEndOf="@id/ivSearchIcon"
+                            app:layout_constraintEnd_toStartOf="@id/dividerSearch"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent" />
+
+                        <View
+                            android:id="@+id/dividerSearch"
+                            android:layout_width="1dp"
+                            android:layout_height="24dp"
+                            android:layout_marginEnd="8dp"
+                            android:background="?attr/colorOutlineVariant"
                             app:layout_constraintEnd_toStartOf="@id/btnFilterSort"
                             app:layout_constraintTop_toTopOf="parent"
                             app:layout_constraintBottom_toBottomOf="parent" />
 
                         <ImageButton
                             android:id="@+id/btnFilterSort"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
                             android:background="?attr/selectableItemBackgroundBorderless"
                             android:src="@drawable/ic_tune_24"
                             android:contentDescription="Filtrar y ordenar"
