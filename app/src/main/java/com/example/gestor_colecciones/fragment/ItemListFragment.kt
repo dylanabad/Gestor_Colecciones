@@ -1,84 +1,130 @@
 package com.example.gestor_colecciones.fragment
 
-/*
- * ItemListFragment.kt
- *
- * Fragmento que muestra la lista global de items (todas las colecciones).
- * Provee búsqueda, filtrado/ordenación, edición de items y gestión de categorías.
- *
- */
-
+import android.Manifest
+import android.content.ContentValues
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.transition.MaterialSharedAxis
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ItemAdapter
 import com.example.gestor_colecciones.database.DatabaseProvider
-import com.example.gestor_colecciones.databinding.FragmentItemListBinding
 import com.example.gestor_colecciones.entities.Categoria
 import com.example.gestor_colecciones.entities.Item
+import com.example.gestor_colecciones.model.ItemEstados
 import com.example.gestor_colecciones.model.ItemFilterSortState
 import com.example.gestor_colecciones.model.ItemSortField
-import com.example.gestor_colecciones.model.ItemEstados
 import com.example.gestor_colecciones.repository.CategoriaRepository
 import com.example.gestor_colecciones.repository.ItemHistoryRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.repository.TagRepository
+import com.example.gestor_colecciones.util.ImageUtils
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
-import com.google.android.material.transition.MaterialSharedAxis
+import com.example.gestor_colecciones.databinding.FragmentItemListBinding
+import com.example.gestor_colecciones.network.ApiProvider
+import com.example.gestor_colecciones.network.UploadUtils
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
 import java.util.*
 
-// Fragment que muestra la lista de items (vista general).
-// Maneja UI, interacción del usuario y delega operaciones a ViewModel/repositorios.
+/**
+ * ItemListFragment: Fragmento que muestra la lista global de ítems.
+ * A diferencia de ItemListByCollectionFragment, permite ver todos los ítems de la base de datos,
+ * pero no permite la creación directa sin una colección asignada por simplicidad de la arquitectura actual.
+ */
 class ItemListFragment : Fragment() {
 
-    // ViewBinding: se inicializa en onCreateView y se limpia en onDestroyView
     private var _binding: FragmentItemListBinding? = null
     private val binding get() = _binding!!
 
-    // ViewModel y adaptador para la lista de items
     private lateinit var viewModel: ItemViewModel
     private lateinit var adapter: ItemAdapter
 
-    // Map de categorías (id -> nombre) y lista completa de items (sin filtrar)
     private var categoriasMap: MutableMap<Int, String> = mutableMapOf()
     private var fullItemList: List<Item> = emptyList()
 
-    // Estado de búsqueda/filtrado/orden
     private var searchQuery: String = ""
     private var filterSortState: ItemFilterSortState = ItemFilterSortState()
 
-    // Mapa auxiliar: para cada item, IDs de tags asociados (usado en filtros)
     private var tagIdsByItemId: Map<Int, Set<Int>> = emptyMap()
 
-    // Repositorios para acceso a datos (Room / providers)
     private lateinit var itemRepo: ItemRepository
     private lateinit var categoriaRepo: CategoriaRepository
     private lateinit var tagRepo: TagRepository
     private lateinit var historyRepo: ItemHistoryRepository
 
-    // Helper para mostrar mensajes tipo Snackbar con anclaje al FAB
-    private fun showSnackbar(message: String) {
-        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
-            .setAnchorView(binding.fabAddItem)
-            .show()
+    // Manejo de imágenes (similar a ItemListByCollectionFragment para consistencia en edición)
+    private var selectedItemImageUri: Uri? = null
+    private var currentItemImageView: ImageView? = null
+    private var cameraItemImageUri: Uri? = null
+
+    private val pickItemImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            selectedItemImageUri = it
+            currentItemImageView?.setImageURI(it)
+        }
     }
 
-    // Ciclo de vida: inicialización del fragmento y configuración de transiciones compartidas
+    private val takeItemImageLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success) {
+            cameraItemImageUri?.let {
+                selectedItemImageUri = it
+                currentItemImageView?.setImageURI(it)
+                finalizePendingImage(it)
+            }
+        } else {
+            takeItemImagePreviewLauncher.launch(null)
+        }
+    }
+
+    private val takeItemImagePreviewLauncher = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        if (bitmap != null) {
+            val uri = saveBitmapToGallery(bitmap, "item")
+            if (uri != null) {
+                selectedItemImageUri = uri
+                currentItemImageView?.setImageURI(uri)
+            }
+        }
+    }
+
+    private val cameraItemPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
+        val cameraGranted = grants[Manifest.permission.CAMERA] == true
+        val storageGranted = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            grants[Manifest.permission.WRITE_EXTERNAL_STORAGE] == true
+        } else {
+            true
+        }
+        if (cameraGranted && storageGranted) {
+            openCameraForItem()
+        } else {
+            showSnackbar("Permiso de cámara/almacenamiento denegado")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enterTransition = MaterialSharedAxis(MaterialSharedAxis.X, true).apply { duration = 240 }
@@ -87,43 +133,29 @@ class ItemListFragment : Fragment() {
         reenterTransition = MaterialSharedAxis(MaterialSharedAxis.X, false).apply { duration = 220 }
     }
 
-    // Infla la vista y prepara el binding
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentItemListBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-    // Configuración de la UI una vez creada la vista: inicializa repositorios, ViewModel,
-    // adaptador, listeners y recoge datos iniciales (categorías, items, etc.).
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // --- Inicialización repositorios ---
         val db = DatabaseProvider.getDatabase(requireContext())
         itemRepo = RepositoryProvider.itemRepository(requireContext())
         categoriaRepo = RepositoryProvider.categoriaRepository(requireContext())
         tagRepo = RepositoryProvider.tagRepository(requireContext())
         historyRepo = ItemHistoryRepository(db.itemHistoryDao())
 
-        // --- ViewModel ---
-        viewModel = ViewModelProvider(this, ItemViewModelFactory(itemRepo, null, historyRepo))[ItemViewModel::class.java]
+        viewModel = ViewModelProvider(this, ItemViewModelFactory(itemRepo, categoriaRepo, historyRepo))[ItemViewModel::class.java]
 
-        // --- RecyclerView ---
         adapter = ItemAdapter(emptyList(), categoriasMap)
         binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
         binding.rvItems.adapter = adapter
         binding.rvItems.itemAnimator = DefaultItemAnimator().apply {
             supportsChangeAnimations = false
-            addDuration = 180
-            removeDuration = 160
-            moveDuration = 180
-            changeDuration = 160
         }
 
-        // Click corto: abrir detalle del item
         adapter.onItemClick = { item ->
             val fragment = ItemDetailFragment.newInstance(item.id)
             parentFragmentManager.beginTransaction()
@@ -133,16 +165,11 @@ class ItemListFragment : Fragment() {
                 .commit()
         }
 
-        // Click largo: editar item
         adapter.onItemLongClick = { item ->
             showEditItemDialog(item)
         }
 
-        // Escuchar resultados del BottomSheet de filtros/ordenación
-        parentFragmentManager.setFragmentResultListener(
-            ItemFilterSortBottomSheet.RESULT_KEY,
-            viewLifecycleOwner
-        ) { _, bundle ->
+        parentFragmentManager.setFragmentResultListener(ItemFilterSortBottomSheet.RESULT_KEY, viewLifecycleOwner) { _, bundle ->
             val categoriaId = bundle.getInt(ItemFilterSortBottomSheet.BUNDLE_CATEGORY_ID, -1)
             val estado = bundle.getString(ItemFilterSortBottomSheet.BUNDLE_ESTADO, null)
             val tagId = bundle.getInt(ItemFilterSortBottomSheet.BUNDLE_TAG_ID, -1)
@@ -150,8 +177,7 @@ class ItemListFragment : Fragment() {
             val sortFieldName = bundle.getString(ItemFilterSortBottomSheet.BUNDLE_SORT_FIELD, ItemSortField.DATE.name)
             val ascending = bundle.getBoolean(ItemFilterSortBottomSheet.BUNDLE_ASCENDING, false)
 
-            val sortField = runCatching { ItemSortField.valueOf(sortFieldName ?: ItemSortField.DATE.name) }
-                .getOrDefault(ItemSortField.DATE)
+            val sortField = runCatching { ItemSortField.valueOf(sortFieldName ?: ItemSortField.DATE.name) }.getOrDefault(ItemSortField.DATE)
 
             filterSortState = ItemFilterSortState(
                 categoriaId = categoriaId.takeIf { it != -1 },
@@ -164,13 +190,11 @@ class ItemListFragment : Fragment() {
             applyFiltersAndSort()
         }
 
-        // --- Cargar categorías y items ---
         viewLifecycleOwner.lifecycleScope.launch {
             val categorias = categoriaRepo.allCategoriasOnce()
             categoriasMap.putAll(categorias.associate { it.id to it.nombre })
             updateFabState()
 
-            // Colección de items desde el ViewModel (Flow)
             viewModel.items.collect { items ->
                 fullItemList = items
                 refreshTagsMaps()
@@ -178,17 +202,14 @@ class ItemListFragment : Fragment() {
             }
         }
 
-        // --- FAB para crear item (en la vista global muestra un mensaje)
         binding.fabAddItem.setOnClickListener {
-            showSnackbar("Crea items desde dentro de una coleccion")
+            showSnackbar("Crea ítems desde dentro de una colección")
         }
 
-        // --- FAB para crear categoría (siempre activo) ---
         binding.fabAddCategory.setOnClickListener {
             showCreateCategoriaDialog()
         }
 
-        // --- Buscador ---
         binding.searchItems.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -203,16 +224,12 @@ class ItemListFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // Refrescar información dependiente del lifecycle al volver a primer plano
         viewLifecycleOwner.lifecycleScope.launch {
             refreshTagsMaps()
             applyFiltersAndSort()
         }
     }
 
-    // Actualiza los mapas de tags por item y los nombres usados por el adaptador.
-    // Se consulta el repositorio de tags de forma puntual (once) y se transforma
-    // la información para uso en filtros y en la UI.
     private suspend fun refreshTagsMaps() {
         val ids = fullItemList.map { it.id }
         val infos = tagRepo.getTagInfoForItemsOnce(ids)
@@ -221,33 +238,21 @@ class ItemListFragment : Fragment() {
         adapter.tagsByItemId = namesMap
     }
 
-    // Abre el BottomSheet para seleccionar filtros y ordenación. Construye las listas
-    // (categorías, estados, tags) y pasa el estado actual para inicializar la UI.
     private fun openFilterSort() {
         viewLifecycleOwner.lifecycleScope.launch {
-            val sortedCategorias = categoriasMap.entries
-                .sortedBy { it.value.lowercase(Locale.getDefault()) }
-
+            val sortedCategorias = categoriasMap.entries.sortedBy { it.value.lowercase(Locale.getDefault()) }
             val categoryIds = intArrayOf(-1) + sortedCategorias.map { it.key }.toIntArray()
             val categoryNames = arrayOf("Todas") + sortedCategorias.map { it.value }.toTypedArray()
-
-            val estados = (ItemEstados.DEFAULT + fullItemList.mapNotNull { it.estado.takeIf { s -> s.isNotBlank() } })
-                .distinct()
-                .sortedBy { it.lowercase(Locale.getDefault()) }
+            val estados = (ItemEstados.DEFAULT + fullItemList.mapNotNull { it.estado.takeIf { s -> s.isNotBlank() } }).distinct().sortedBy { it.lowercase(Locale.getDefault()) }
             val statusList = arrayOf("Cualquiera") + estados.toTypedArray()
-
-            val tags = tagRepo.getAllTagsOnce()
-                .sortedBy { it.nombre.lowercase(Locale.getDefault()) }
+            val tags = tagRepo.getAllTagsOnce().sortedBy { it.nombre.lowercase(Locale.getDefault()) }
             val tagIds = intArrayOf(-1) + tags.map { it.id }.toIntArray()
             val tagNames = arrayOf("Cualquiera") + tags.map { it.nombre }.toTypedArray()
 
-            ItemFilterSortBottomSheet
-                .newInstance(categoryIds, categoryNames, statusList, tagIds, tagNames, filterSortState)
-                .show(parentFragmentManager, "ItemFilterSortBottomSheet")
+            ItemFilterSortBottomSheet.newInstance(categoryIds, categoryNames, statusList, tagIds, tagNames, filterSortState).show(parentFragmentManager, "ItemFilterSortBottomSheet")
         }
     }
 
-    // Aplica la búsqueda, filtros y ordenación al listado completo y actualiza el adaptador.
     private fun applyFiltersAndSort() {
         val query = searchQuery.trim().lowercase(Locale.getDefault())
         var list = fullItemList
@@ -255,49 +260,113 @@ class ItemListFragment : Fragment() {
         if (query.isNotBlank()) {
             list = list.filter { it.titulo.lowercase(Locale.getDefault()).contains(query) }
         }
-
-        filterSortState.categoriaId?.let { categoriaId ->
-            list = list.filter { it.categoriaId == categoriaId }
-        }
-
-        filterSortState.tagId?.let { tagId ->
-            list = list.filter { tagIdsByItemId[it.id]?.contains(tagId) == true }
-        }
-
-        filterSortState.estado?.let { estado ->
-            list = list.filter { it.estado.equals(estado, ignoreCase = true) }
-        }
-
+        filterSortState.categoriaId?.let { id -> list = list.filter { it.categoriaId == id } }
+        filterSortState.tagId?.let { id -> list = list.filter { tagIdsByItemId[it.id]?.contains(id) == true } }
+        filterSortState.estado?.let { e -> list = list.filter { it.estado.equals(e, ignoreCase = true) } }
         if (filterSortState.minCalificacion > 0f) {
-            val min = filterSortState.minCalificacion
-            list = list.filter { it.calificacion >= min }
+            list = list.filter { it.calificacion >= filterSortState.minCalificacion }
         }
 
         val baseComparator = when (filterSortState.sortField) {
             ItemSortField.NAME -> compareBy<Item> { it.titulo.lowercase(Locale.getDefault()) }
             ItemSortField.VALUE -> compareBy<Item> { it.valor }
-            ItemSortField.DATE -> compareBy<Item> { it.fechaAdquisicion.time }
+            ItemSortField.DATE -> compareBy<Item> { it.fechaAdquisicion }
         }
         val primaryComparator = if (filterSortState.ascending) baseComparator else baseComparator.reversed()
-        val comparator = compareByDescending<Item> { it.favorito }
-            .then(primaryComparator)
-            .thenBy { it.id }
+        val comparator = compareByDescending<Item> { it.favorito }.then(primaryComparator).thenBy { it.id }
 
         adapter.updateList(list.sortedWith(comparator))
     }
 
-    // --- Actualiza estado del FAB de items ---
-    // Ajusta habilitación/alpha y pasa el mapa de categorías al adaptador
     private fun updateFabState() {
         binding.fabAddItem.isEnabled = true
-        binding.fabAddItem.alpha = 0.7f
+        binding.fabAddItem.alpha = 0.6f
         adapter.categoriasMap = categoriasMap
     }
 
-    // --- EDITAR ITEM ---
-    // --- EDITAR ITEM ---
-    // Muestra un diálogo para editar los campos de un item existente
+    private fun showSnackbar(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).setAnchorView(binding.fabAddItem).show()
+    }
+
+    // --- Lógica de Imágenes ---
+
+    private fun showItemImageSourceDialog() {
+        val options = arrayOf("Galería", "Cámara")
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Seleccionar imagen")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> pickItemImageLauncher.launch("image/*")
+                    1 -> checkCameraPermissions()
+                }
+            }
+            .show()
+    }
+
+    private fun checkCameraPermissions() {
+        val cameraGranted = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        val storageGranted = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        } else true
+
+        if (cameraGranted && storageGranted) openCameraForItem()
+        else {
+            val perms = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            else arrayOf(Manifest.permission.CAMERA)
+            cameraItemPermissionLauncher.launch(perms)
+        }
+    }
+
+    private fun openCameraForItem() {
+        val uri = createGalleryImageUri("item")
+        cameraItemImageUri = uri
+        takeItemImageLauncher.launch(uri)
+    }
+
+    private fun createGalleryImageUri(prefix: String): Uri {
+        val fileName = "${prefix}_${System.currentTimeMillis()}.jpg"
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/GestorColecciones")
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+            }
+        }
+        return requireContext().contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)!!
+    }
+
+    private fun finalizePendingImage(uri: Uri) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val values = ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) }
+            requireContext().contentResolver.update(uri, values, null, null)
+        }
+    }
+
+    private fun saveBitmapToGallery(bitmap: Bitmap, prefix: String): Uri? {
+        val uri = createGalleryImageUri(prefix)
+        requireContext().contentResolver.openOutputStream(uri)?.use { out ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 92, out)
+        }
+        finalizePendingImage(uri)
+        return uri
+    }
+
+    private suspend fun uploadImage(uri: Uri): String? {
+        return try {
+            val api = ApiProvider.getApi(requireContext())
+            val part = UploadUtils.createImagePart(requireContext(), uri)
+            api.uploadImage(part).url
+        } catch (e: Exception) {
+            showSnackbar("Error subiendo imagen")
+            null
+        }
+    }
+
+    // --- Edición de Item ---
+
     private fun showEditItemDialog(item: Item) {
+        selectedItemImageUri = null
         val categoriasList = categoriasMap.entries.toList()
         if (categoriasList.isEmpty()) return
 
@@ -305,115 +374,103 @@ class ItemListFragment : Fragment() {
         val etTitulo = view.findViewById<EditText>(R.id.etTitulo)
         val etValor = view.findViewById<EditText>(R.id.etValor)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
+        val etFecha = view.findViewById<EditText>(R.id.etFechaAdquisicion)
         val actvEstado = view.findViewById<AutoCompleteTextView>(R.id.actvItemEstado)
         val actvCategoria = view.findViewById<AutoCompleteTextView>(R.id.actvItemCategoria)
+        val ivPreview = view.findViewById<ImageView>(R.id.ivItemPreview)
+        val btnSelectImage = view.findViewById<Button>(R.id.btnSelectImage)
         val rbCalificacion = view.findViewById<RatingBar>(R.id.rbCalificacion)
         val tvCalificacionValue = view.findViewById<TextView>(R.id.tvCalificacionValue)
+
+        var selectedDate = item.fechaAdquisicion
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        etFecha.setText(sdf.format(selectedDate))
+
+        etFecha.setOnClickListener {
+            val calendar = Calendar.getInstance().apply { time = selectedDate }
+            android.app.DatePickerDialog(requireContext(), { _, year, month, day ->
+                calendar.set(year, month, day)
+                selectedDate = calendar.time
+                etFecha.setText(sdf.format(selectedDate))
+            }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
+        }
+
+        currentItemImageView = ivPreview
+        ImageUtils.toGlideModel(item.imagenPath)?.let { Glide.with(requireContext()).load(it).into(ivPreview) }
+        btnSelectImage.setOnClickListener { showItemImageSourceDialog() }
 
         etTitulo.setText(item.titulo)
         etValor.setText(item.valor.toString())
         etDescripcion.setText(item.descripcion)
-        rbCalificacion.rating = item.calificacion.coerceIn(0f, 5f)
-        tvCalificacionValue.text = String.format(Locale.getDefault(), "%.1f", rbCalificacion.rating)
-        rbCalificacion.setOnRatingBarChangeListener { _, rating, _ ->
-            tvCalificacionValue.text = String.format(Locale.getDefault(), "%.1f", rating)
-        }
+        rbCalificacion.rating = item.calificacion
+        tvCalificacionValue.text = String.format(Locale.getDefault(), "%.1f", item.calificacion)
+        rbCalificacion.setOnRatingBarChangeListener { _, r, _ -> tvCalificacionValue.text = String.format(Locale.getDefault(), "%.1f", r) }
 
-        val estadosLista = (ItemEstados.DEFAULT + item.estado).distinct()
-        val estadosAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, estadosLista)
+        val estadosAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, (ItemEstados.DEFAULT + item.estado).distinct())
         actvEstado.setAdapter(estadosAdapter)
         actvEstado.setText(item.estado, false)
-        actvEstado.keyListener = null
-        actvEstado.isCursorVisible = false
-        actvEstado.setOnClickListener { actvEstado.showDropDown() }
-        actvEstado.setOnFocusChangeListener { _, hasFocus -> if (hasFocus) actvEstado.showDropDown() }
 
-        val adapterCategorias = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_list_item_1,
-            categoriasList.map { it.value }
-        )
+        val adapterCategorias = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, categoriasList.map { it.value })
         actvCategoria.setAdapter(adapterCategorias)
-
-        val selectedIndex = categoriasList.indexOfFirst { it.key == item.categoriaId }
-        if (selectedIndex >= 0) actvCategoria.setText(categoriasList[selectedIndex].value, false)
-        actvCategoria.setOnClickListener { actvCategoria.showDropDown() }
+        categoriasList.find { it.key == item.categoriaId }?.let { actvCategoria.setText(it.value, false) }
 
         val dialog = MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Editar item")
+            .setTitle("Editar ítem")
             .setView(view)
             .setPositiveButton("Guardar", null)
             .setNegativeButton("Cancelar", null)
             .create()
 
         dialog.setOnShowListener {
-            val btnGuardar = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            btnGuardar.setOnClickListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val titulo = etTitulo.text.toString().trim()
                 if (titulo.isBlank()) {
-                    Toast.makeText(requireContext(), "El título no puede estar vacío", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "El título es obligatorio", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
 
-                val valor = etValor.text.toString().toDoubleOrNull() ?: item.valor
-                val descripcion = etDescripcion.text.toString().takeIf { it.isNotBlank() }
-                
-                val categoriaNombre = actvCategoria.text.toString()
-                val categoriaId = categoriasList.find { it.value == categoriaNombre }?.key ?: item.categoriaId
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val imagePath = selectedItemImageUri?.let { uploadImage(it) } ?: item.imagenPath
+                    val categoriaId = categoriasList.find { it.value == actvCategoria.text.toString() }?.key ?: item.categoriaId
 
-                val estado = actvEstado.text?.toString()?.trim().orEmpty().ifBlank { item.estado }
-
-                val actualizado = item.copy(
-                    titulo = titulo,
-                    valor = valor,
-                    descripcion = descripcion,
-                    categoriaId = categoriaId,
-                    estado = estado,
-                    calificacion = rbCalificacion.rating,
-                    prestado = item.prestado
-                )
-
-                viewModel.update(
-                    actualizado,
-                    onUpdated = { showSnackbar("Item \"$titulo\" actualizado") },
-                    onError = { msg -> showSnackbar(msg) }
-                )
-                dialog.dismiss()
+                    viewModel.update(item.copy(
+                        titulo = titulo,
+                        valor = etValor.text.toString().toDoubleOrNull() ?: item.valor,
+                        descripcion = etDescripcion.text.toString(),
+                        fechaAdquisicion = selectedDate,
+                        categoriaId = categoriaId,
+                        imagenPath = imagePath,
+                        estado = actvEstado.text.toString(),
+                        calificacion = rbCalificacion.rating
+                    ), onUpdated = {
+                        showSnackbar("Ítem actualizado")
+                        dialog.dismiss()
+                    })
+                }
             }
         }
-
         dialog.show()
     }
 
-    // --- CREAR CATEGORIA ---
-    // --- CREAR CATEGORIA ---
-    // Muestra un diálogo para crear/editar/eliminar categorías
     private fun showCreateCategoriaDialog() {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_categoria, null)
         val lvCategorias = view.findViewById<ListView>(R.id.lvCategorias)
         val etCategoriaNombre = view.findViewById<EditText>(R.id.etCategoriaNombre)
         val btnAddCategoria = view.findViewById<Button>(R.id.btnAddCategoria)
 
-        val adapterList = ArrayAdapter<String>(
-            requireContext(),
-            android.R.layout.simple_list_item_1,
-            categoriasMap.values.toMutableList()
-        )
+        val adapterList = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, categoriasMap.values.toMutableList())
         lvCategorias.adapter = adapterList
 
         btnAddCategoria.setOnClickListener {
             val nombre = etCategoriaNombre.text.toString().trim()
             if (nombre.isNotBlank()) {
                 viewLifecycleOwner.lifecycleScope.launch {
-                    val categoria = Categoria(nombre = nombre)
-                    val id = categoriaRepo.insert(categoria).toInt()
+                    val id = categoriaRepo.insert(Categoria(nombre = nombre)).toInt()
                     categoriasMap[id] = nombre
-                    adapterList.clear()
-                    adapterList.addAll(categoriasMap.values)
-                    adapterList.notifyDataSetChanged()
+                    adapterList.clear(); adapterList.addAll(categoriasMap.values); adapterList.notifyDataSetChanged()
                     etCategoriaNombre.text.clear()
-                    showSnackbar("Categoría \"$nombre\" creada")
-                    updateFabState() // habilita el FAB de items si había cero
+                    updateFabState()
+                    showSnackbar("Categoría creada")
                 }
             }
         }
@@ -421,36 +478,25 @@ class ItemListFragment : Fragment() {
         lvCategorias.setOnItemClickListener { _, _, position, _ ->
             val categoriaId = categoriasMap.keys.toList()[position]
             val nombreActual = categoriasMap[categoriaId]!!
-            val editView = EditText(requireContext())
-            editView.setText(nombreActual)
+            val editView = EditText(requireContext()).apply { setText(nombreActual) }
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Editar categoría")
                 .setView(editView)
                 .setPositiveButton("Guardar") { _, _ ->
                     viewLifecycleOwner.lifecycleScope.launch {
-                        val nuevoNombre = editView.text.toString()
-                        val cat = Categoria(id = categoriaId, nombre = nuevoNombre)
-                        categoriaRepo.update(cat)
-                        categoriasMap[categoriaId] = nuevoNombre
-                        adapterList.clear()
-                        adapterList.addAll(categoriasMap.values)
-                        adapterList.notifyDataSetChanged()
-                        showSnackbar("Categoría actualizada")
+                        categoriaRepo.update(Categoria(id = categoriaId, nombre = editView.text.toString()))
+                        categoriasMap[categoriaId] = editView.text.toString()
+                        adapterList.clear(); adapterList.addAll(categoriasMap.values); adapterList.notifyDataSetChanged()
                     }
                 }
                 .setNegativeButton("Eliminar") { _, _ ->
                     viewLifecycleOwner.lifecycleScope.launch {
-                        val cat = Categoria(id = categoriaId, nombre = nombreActual)
-                        categoriaRepo.delete(cat)
+                        categoriaRepo.delete(Categoria(id = categoriaId, nombre = nombreActual))
                         categoriasMap.remove(categoriaId)
-                        adapterList.clear()
-                        adapterList.addAll(categoriasMap.values)
-                        adapterList.notifyDataSetChanged()
+                        adapterList.clear(); adapterList.addAll(categoriasMap.values); adapterList.notifyDataSetChanged()
                         updateFabState()
-                        showSnackbar("Categoría \"$nombreActual\" eliminada")
                     }
-                }
-                .show()
+                }.show()
         }
 
         MaterialAlertDialogBuilder(requireContext())
@@ -462,13 +508,6 @@ class ItemListFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Limpiar referencia al binding para evitar fugas de memoria
         _binding = null
     }
 }
-
-
-
-
-
-

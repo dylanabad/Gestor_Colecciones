@@ -70,7 +70,7 @@ class DeseosFragment : Fragment() {
                         viewModel.marcarConseguido(item)
                         showSnackbar("🎉 \"${item.titulo}\" conseguido!")
                     }
-                    .setNegativeButton("Cancelar", null)
+                    .setNegativeButton("Cerrar", null)
                     .show()
             },
             onLongClick = { item -> showEditDialog(item) }
