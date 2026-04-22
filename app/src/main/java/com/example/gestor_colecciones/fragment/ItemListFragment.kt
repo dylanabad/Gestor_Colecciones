@@ -21,6 +21,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -156,6 +157,39 @@ class ItemListFragment : Fragment() {
         binding.rvItems.itemAnimator = DefaultItemAnimator().apply {
             supportsChangeAnimations = false
         }
+
+        val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ) = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.bindingAdapterPosition
+                if (position == RecyclerView.NO_POSITION) return
+
+                val item = adapter.getItem(position)
+                viewLifecycleOwner.lifecycleScope.launch {
+                    RepositoryProvider.papeleraRepository(requireContext()).moverItemAPapelera(item)
+                    Snackbar.make(
+                        binding.root,
+                        "\"${item.titulo}\" movido a la papelera",
+                        Snackbar.LENGTH_LONG
+                    )
+                        .setAction("Ver papelera") {
+                            parentFragmentManager.beginTransaction()
+                                .setReorderingAllowed(true)
+                                .replace((view.parent as ViewGroup).id, PapeleraFragment())
+                                .addToBackStack(null)
+                                .commit()
+                        }
+                        .setAnchorView(binding.fabAddItem)
+                        .show()
+                }
+            }
+        }
+        ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvItems)
 
         adapter.onItemClick = { item ->
             val fragment = ItemDetailFragment.newInstance(item.id)
