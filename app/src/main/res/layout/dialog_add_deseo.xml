@@ -2,6 +2,7 @@
 <androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:fillViewport="true">
@@ -10,19 +11,46 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp"
-        android:paddingBottom="8dp">
+        android:padding="24dp"
+        android:clipChildren="false"
+        android:clipToPadding="false">
 
-        <!-- Título -->
+        <!-- Header del Diálogo -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_priority_high"
+                app:tint="?attr/colorPrimary"
+                android:alpha="0.8" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="Nuevo Deseo"
+                android:textAppearance="?attr/textAppearanceTitleLarge"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface" />
+        </LinearLayout>
+
+        <!-- Sección de Información Principal -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Título *"
-            app:boxBackgroundMode="outline"
-            app:boxCornerRadiusTopStart="16dp"
-            app:boxCornerRadiusTopEnd="16dp"
-            app:boxCornerRadiusBottomStart="16dp"
-            app:boxCornerRadiusBottomEnd="16dp"
+            android:hint="¿Qué quieres conseguir? *"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            app:boxStrokeWidth="2dp"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp"
             app:startIconDrawable="@drawable/ic_edit_24">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -32,17 +60,17 @@
                 android:inputType="textCapWords" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Descripción -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:hint="Descripción"
-            app:boxBackgroundMode="outline"
-            app:boxCornerRadiusTopStart="16dp"
-            app:boxCornerRadiusTopEnd="16dp"
-            app:boxCornerRadiusBottomStart="16dp"
-            app:boxCornerRadiusBottomEnd="16dp"
+            android:layout_marginTop="12dp"
+            android:hint="Añade una descripción (opcional)"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            app:boxStrokeWidth="2dp"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp"
             app:startIconDrawable="@drawable/ic_description_24">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -54,61 +82,85 @@
                 android:gravity="top|start" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Precio objetivo -->
-        <com.google.android.material.textfield.TextInputLayout
+        <com.google.android.material.divider.MaterialDivider
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:hint="Precio objetivo"
-            app:boxBackgroundMode="outline"
-            app:boxCornerRadiusTopStart="16dp"
-            app:boxCornerRadiusTopEnd="16dp"
-            app:boxCornerRadiusBottomStart="16dp"
-            app:boxCornerRadiusBottomEnd="16dp"
-            app:prefixText="€ ">
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
+            app:dividerColor="?attr/colorOutlineVariant" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etPrecioDeseo"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="numberDecimal" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Enlace -->
-        <com.google.android.material.textfield.TextInputLayout
+        <!-- Sección de Detalles (Precio y Link) -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:hint="Enlace (URL)"
-            app:boxBackgroundMode="outline"
-            app:boxCornerRadiusTopStart="16dp"
-            app:boxCornerRadiusTopEnd="16dp"
-            app:boxCornerRadiusBottomStart="16dp"
-            app:boxCornerRadiusBottomEnd="16dp"
-            app:startIconDrawable="@drawable/ic_link">
+            android:orientation="horizontal"
+            android:baselineAligned="false">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etEnlaceDeseo"
-                android:layout_width="match_parent"
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:inputType="textUri" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:hint="Precio"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                app:boxStrokeWidth="2dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:prefixText="€ ">
 
-        <!-- Prioridad -->
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPrecioDeseo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.5"
+                android:hint="Enlace URL"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                app:boxStrokeWidth="2dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:startIconDrawable="@drawable/ic_link">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEnlaceDeseo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textUri" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <!-- Sección de Prioridad -->
         <com.google.android.material.textview.MaterialTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="Prioridad"
-            android:textAppearance="?attr/textAppearanceTitleSmall" />
+            android:layout_marginTop="20dp"
+            android:text="Nivel de Prioridad"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="?attr/colorPrimary"
+            android:textStyle="bold"
+            android:letterSpacing="0.05" />
 
         <RadioGroup
             android:id="@+id/rgPrioridad"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="6dp"
-            android:checkedButton="@id/rbMedia">
+            android:layout_marginTop="12dp"
+            android:checkedButton="@id/rbMedia"
+            android:background="@drawable/bg_priority_selector"
+            android:padding="6dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:animateLayoutChanges="true">
 
             <com.google.android.material.radiobutton.MaterialRadioButton
                 android:id="@+id/rbAlta"
@@ -116,11 +168,16 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Alta"
+                android:button="@null"
+                android:background="@drawable/selector_priority_chip"
+                android:gravity="center"
+                android:paddingVertical="10dp"
                 android:textSize="12sp"
-                app:buttonTint="?attr/colorPrimary"
-                android:drawableStart="@drawable/ic_priority_high"
-                android:drawablePadding="6dp"
-                android:drawableTint="?attr/colorPrimary" />
+                android:textStyle="bold"
+                android:textColor="@color/selector_priority_text"
+                android:drawableTop="@drawable/ic_priority_high"
+                android:drawablePadding="4dp"
+                android:drawableTint="@color/selector_priority_text" />
 
             <com.google.android.material.radiobutton.MaterialRadioButton
                 android:id="@+id/rbMedia"
@@ -128,11 +185,17 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Media"
+                android:button="@null"
+                android:background="@drawable/selector_priority_chip"
+                android:gravity="center"
+                android:paddingVertical="10dp"
                 android:textSize="12sp"
-                app:buttonTint="?attr/colorPrimary"
-                android:drawableStart="@drawable/ic_priority_medium"
-                android:drawablePadding="6dp"
-                android:drawableTint="?attr/colorPrimary" />
+                android:textStyle="bold"
+                android:textColor="@color/selector_priority_text"
+                android:layout_marginHorizontal="4dp"
+                android:drawableTop="@drawable/ic_priority_medium"
+                android:drawablePadding="4dp"
+                android:drawableTint="@color/selector_priority_text" />
 
             <com.google.android.material.radiobutton.MaterialRadioButton
                 android:id="@+id/rbBaja"
@@ -140,13 +203,27 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Baja"
+                android:button="@null"
+                android:background="@drawable/selector_priority_chip"
+                android:gravity="center"
+                android:paddingVertical="10dp"
                 android:textSize="12sp"
-                app:buttonTint="?attr/colorPrimary"
-                android:drawableStart="@drawable/ic_priority_low"
-                android:drawablePadding="6dp"
-                android:drawableTint="?attr/colorPrimary" />
+                android:textStyle="bold"
+                android:textColor="@color/selector_priority_text"
+                android:drawableTop="@drawable/ic_priority_low"
+                android:drawablePadding="4dp"
+                android:drawableTint="@color/selector_priority_text" />
 
         </RadioGroup>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="* Los campos marcados son obligatorios"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:fontStyle="italic" />
 
     </LinearLayout>
 

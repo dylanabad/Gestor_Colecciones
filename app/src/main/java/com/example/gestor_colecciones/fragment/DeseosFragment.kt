@@ -180,6 +180,24 @@ class DeseosFragment : Fragment() {
                     .text.toString()
                 val rgPrioridad = dialogView.findViewById<RadioGroup>(R.id.rgPrioridad)
 
+                // Animación fluida al cambiar de prioridad
+                rgPrioridad.setOnCheckedChangeListener { group, checkedId ->
+                    android.transition.TransitionManager.beginDelayedTransition(
+                        group,
+                        android.transition.AutoTransition().setDuration(200)
+                    )
+                    
+                    // Efecto de escala para que se note el movimiento
+                    for (i in 0 until group.childCount) {
+                        val child = group.getChildAt(i)
+                        if (child.id == checkedId) {
+                            child.animate().scaleX(1.05f).scaleY(1.05f).setDuration(200).start()
+                        } else {
+                            child.animate().scaleX(0.95f).scaleY(0.95f).setDuration(200).start()
+                        }
+                    }
+                }
+
                 val prioridad = when (rgPrioridad.checkedRadioButtonId) {
                     R.id.rbAlta -> 1
                     R.id.rbMedia -> 2
@@ -216,6 +234,25 @@ class DeseosFragment : Fragment() {
         dialogView.findViewById<EditText>(R.id.etEnlaceDeseo).setText(item.enlace ?: "")
 
         val rgPrioridad = dialogView.findViewById<RadioGroup>(R.id.rgPrioridad)
+        
+        // Animación fluida al cambiar de prioridad
+        rgPrioridad.setOnCheckedChangeListener { group, checkedId ->
+            android.transition.TransitionManager.beginDelayedTransition(
+                group,
+                android.transition.AutoTransition().setDuration(200)
+            )
+            
+            // Efecto de escala para que se note el movimiento
+            for (i in 0 until group.childCount) {
+                val child = group.getChildAt(i)
+                if (child.id == checkedId) {
+                    child.animate().scaleX(1.05f).scaleY(1.05f).setDuration(200).start()
+                } else {
+                    child.animate().scaleX(0.95f).scaleY(0.95f).setDuration(200).start()
+                }
+            }
+        }
+
         when (item.prioridad) {
             1 -> rgPrioridad.check(R.id.rbAlta)
             2 -> rgPrioridad.check(R.id.rbMedia)
