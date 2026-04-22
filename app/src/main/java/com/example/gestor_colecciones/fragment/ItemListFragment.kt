@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -454,28 +455,94 @@ class ItemListFragment : Fragment() {
 
     private fun showCreateCategoriaDialog() {
         val view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_create_categoria, null)
-        val lvCategorias = view.findViewById<ListView>(R.id.lvCategorias)
-        val etCategoriaNombre = view.findViewById<EditText>(R.id.etCategoriaNombre)
+        val rvCategorias = view.findViewById<RecyclerView>(R.id.rvCategorias)
+        val etCategoriaNombre = view.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.etCategoriaNombre)
         val btnAddCategoria = view.findViewById<Button>(R.id.btnAddCategoria)
 
-        val adapterList = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, categoriasMap.values.toMutableList())
-        lvCategorias.adapter = adapterList
+        val categoriesList = categoriasMap.entries.map { it.toPair() }.toMutableList()
+
+        class CategoriaVH(v: View) : RecyclerView.ViewHolder(v) {
+            val tvNombre: TextView = v.findViewById(R.id.tvCategoriaNombre)
+            val btnEdit: View = v.findViewById(R.id.btnEditCategoria)
+            val btnDelete: View = v.findViewById(R.id.btnDeleteCategoria)
+        }
+
+        val adapter = object : RecyclerView.Adapter<CategoriaVH>() {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoriaVH {
+                val v = LayoutInflater.from(parent.context).inflate(R.layout.item_categoria_manage, parent, false)
+                return CategoriaVH(v)
+            }
+
+            override fun onBindViewHolder(holder: CategoriaVH, position: Int) {
+                val item = categoriesList[position]
+                holder.tvNombre.text = item.second
+
+                holder.btnEdit.setOnClickListener {
+                    val editView = EditText(requireContext()).apply { setText(item.second) }
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Editar categoria")
+                        .setView(editView)
+                        .setPositiveButton("Guardar") { _, _ ->
+                            val nuevoNombre = editView.text.toString().trim()
+                            if (nuevoNombre.isNotBlank()) {
+                                viewLifecycleOwner.lifecycleScope.launch {
+                                    categoriaRepo.update(Categoria(id = item.first, nombre = nuevoNombre))
+                                    categoriasMap[item.first] = nuevoNombre
+                                    refresh()
+                                    updateFabState()
+                                    showSnackbar("Categoria actualizada")
+                                }
+                            }
+                        }
+                        .setNegativeButton("Cancelar", null)
+                        .show()
+                }
+
+                holder.btnDelete.setOnClickListener {
+                    MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Eliminar categoria")
+                        .setMessage("¿Seguro que quieres eliminar \"${item.second}\"?")
+                        .setPositiveButton("Eliminar") { _, _ ->
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                categoriaRepo.delete(Categoria(id = item.first, nombre = item.second))
+                                categoriasMap.remove(item.first)
+                                refresh()
+                                updateFabState()
+                                showSnackbar("Categoria eliminada")
+                            }
+                        }
+                        .setNegativeButton("Cancelar", null)
+                        .show()
+                }
+            }
+
+            override fun getItemCount() = categoriesList.size
+
+            fun refresh() {
+                categoriesList.clear()
+                categoriesList.addAll(categoriasMap.entries.map { it.toPair() })
+                notifyDataSetChanged()
+            }
+        }
+
+        rvCategorias.layoutManager = LinearLayoutManager(requireContext())
+        rvCategorias.adapter = adapter
 
         btnAddCategoria.setOnClickListener {
-            val nombre = etCategoriaNombre.text.toString().trim()
+            val nombre = etCategoriaNombre.text?.toString()?.trim().orEmpty()
             if (nombre.isNotBlank()) {
                 viewLifecycleOwner.lifecycleScope.launch {
                     val id = categoriaRepo.insert(Categoria(nombre = nombre)).toInt()
                     categoriasMap[id] = nombre
-                    adapterList.clear(); adapterList.addAll(categoriasMap.values); adapterList.notifyDataSetChanged()
-                    etCategoriaNombre.text.clear()
+                    adapter.refresh()
+                    etCategoriaNombre.text?.clear()
                     updateFabState()
                     showSnackbar("Categoría creada")
                 }
             }
         }
 
-        lvCategorias.setOnItemClickListener { _, _, position, _ ->
+        /*
             val categoriaId = categoriasMap.keys.toList()[position]
             val nombreActual = categoriasMap[categoriaId]!!
             val editView = EditText(requireContext()).apply { setText(nombreActual) }
@@ -497,7 +564,7 @@ class ItemListFragment : Fragment() {
                         updateFabState()
                     }
                 }.show()
-        }
+        */
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Gestionar categorías")

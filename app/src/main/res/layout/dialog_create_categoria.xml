@@ -59,12 +59,10 @@
         app:strokeColor="?attr/colorOutlineVariant"
         app:cardBackgroundColor="?attr/colorSurface">
 
-        <ListView
-            android:id="@+id/lvCategorias"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvCategorias"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:divider="@android:color/transparent"
-            android:dividerHeight="0dp"
             android:padding="8dp"
             android:clipToPadding="false" />
     </com.google.android.material.card.MaterialCardView>
