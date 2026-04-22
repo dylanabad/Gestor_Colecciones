@@ -23,6 +23,9 @@ class DeseoAdapter(
     // ViewHolder que contiene las vistas de cada item de la lista
     inner class DeseoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
+        val cardDeseo: com.google.android.material.card.MaterialCardView = itemView.findViewById(R.id.cardDeseo)
+        val cvPrioridad: View = itemView.findViewById(R.id.cvPrioridad)
+        val ivPrioridad: android.widget.ImageView = itemView.findViewById(R.id.ivPrioridad)
         val tvPrioridad: TextView = itemView.findViewById(R.id.tvPrioridad)
         val tvTitulo: TextView = itemView.findViewById(R.id.tvTitulo)
         val tvDescripcion: TextView = itemView.findViewById(R.id.tvDescripcion)
@@ -44,10 +47,19 @@ class DeseoAdapter(
         val item = items[position]
 
         // --- PRIORIDAD VISUAL ---
-        holder.tvPrioridad.text = when (item.prioridad) {
-            1 -> "🔴"   // alta prioridad
-            2 -> "🟡"   // media prioridad
-            else -> "🟢" // baja prioridad
+        when (item.prioridad) {
+            1 -> {
+                holder.tvPrioridad.text = "ALTA"
+                holder.ivPrioridad.setImageResource(R.drawable.ic_priority_high)
+            }
+            2 -> {
+                holder.tvPrioridad.text = "MEDIA"
+                holder.ivPrioridad.setImageResource(R.drawable.ic_priority_medium)
+            }
+            else -> {
+                holder.tvPrioridad.text = "BAJA"
+                holder.ivPrioridad.setImageResource(R.drawable.ic_priority_low)
+            }
         }
 
         holder.tvTitulo.text = item.titulo
@@ -59,8 +71,17 @@ class DeseoAdapter(
             holder.tvTitulo.paintFlags =
                 holder.tvTitulo.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
 
-            // Reduce opacidad del item completo
-            holder.itemView.alpha = 0.5f
+            // Efecto de oscurecimiento: cambiamos el fondo de la tarjeta
+            // En modo claro será un gris tenue, en modo noche un tono aún más oscuro
+            val colorSurface = com.google.android.material.color.MaterialColors.getColor(holder.itemView, com.google.android.material.R.attr.colorSurfaceVariant)
+            holder.cardDeseo.setCardBackgroundColor(android.content.res.ColorStateList.valueOf(colorSurface))
+            holder.cardDeseo.strokeWidth = 0 // Quitamos el borde para que parezca más "hundido"
+
+            // Bajamos la opacidad de los textos para que se sientan inactivos
+            holder.tvTitulo.alpha = 0.5f
+            holder.tvDescripcion.alpha = 0.5f
+            holder.tvPrecio.alpha = 0.5f
+            holder.cvPrioridad.alpha = 0.5f
 
             // Oculta botón de "conseguido"
             holder.btnConseguido.visibility = View.GONE
@@ -71,7 +92,16 @@ class DeseoAdapter(
             holder.tvTitulo.paintFlags =
                 holder.tvTitulo.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
 
-            holder.itemView.alpha = 1f
+            // Restauramos fondo y borde original
+            val colorSurface = com.google.android.material.color.MaterialColors.getColor(holder.itemView, com.google.android.material.R.attr.colorSurface)
+            holder.cardDeseo.setCardBackgroundColor(android.content.res.ColorStateList.valueOf(colorSurface))
+            holder.cardDeseo.strokeWidth = (2 * holder.itemView.context.resources.displayMetrics.density).toInt()
+
+            // Restauramos opacidad
+            holder.tvTitulo.alpha = 1f
+            holder.tvDescripcion.alpha = 1f
+            holder.tvPrecio.alpha = 1f
+            holder.cvPrioridad.alpha = 1f
 
             holder.btnConseguido.visibility = View.VISIBLE
         }

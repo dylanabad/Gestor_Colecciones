@@ -110,26 +110,41 @@
             android:layout_marginTop="6dp"
             android:checkedButton="@id/rbMedia">
 
-            <RadioButton
+            <com.google.android.material.radiobutton.MaterialRadioButton
                 android:id="@+id/rbAlta"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="🔴 Alta" />
+                android:text="Alta"
+                android:textSize="12sp"
+                app:buttonTint="?attr/colorPrimary"
+                android:drawableStart="@drawable/ic_priority_high"
+                android:drawablePadding="6dp"
+                android:drawableTint="?attr/colorPrimary" />
 
-            <RadioButton
+            <com.google.android.material.radiobutton.MaterialRadioButton
                 android:id="@+id/rbMedia"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="🟡 Media" />
+                android:text="Media"
+                android:textSize="12sp"
+                app:buttonTint="?attr/colorPrimary"
+                android:drawableStart="@drawable/ic_priority_medium"
+                android:drawablePadding="6dp"
+                android:drawableTint="?attr/colorPrimary" />
 
-            <RadioButton
+            <com.google.android.material.radiobutton.MaterialRadioButton
                 android:id="@+id/rbBaja"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="🟢 Baja" />
+                android:text="Baja"
+                android:textSize="12sp"
+                app:buttonTint="?attr/colorPrimary"
+                android:drawableStart="@drawable/ic_priority_low"
+                android:drawablePadding="6dp"
+                android:drawableTint="?attr/colorPrimary" />
 
         </RadioGroup>
 

@@ -37,6 +37,9 @@
         <item name="colorOnPrimary">@color/theme_purple_on_primary</item>
         <item name="colorPrimaryContainer">@color/theme_purple_primary_container</item>
         <item name="colorOnPrimaryContainer">@color/theme_purple_on_primary_container</item>
+        <!-- Sincronizamos el secundario para evitar verdes persistentes -->
+        <item name="colorSecondary">?attr/colorPrimary</item>
+        <item name="colorSecondaryContainer">?attr/colorPrimaryContainer</item>
     </style>
 
     <style name="Theme.Gestor_Colecciones.Green" parent="Theme.Gestor_Colecciones">
@@ -51,6 +54,8 @@
         <item name="colorOnPrimary">@color/theme_orange_on_primary</item>
         <item name="colorPrimaryContainer">@color/theme_orange_primary_container</item>
         <item name="colorOnPrimaryContainer">@color/theme_orange_on_primary_container</item>
+        <item name="colorSecondary">?attr/colorPrimary</item>
+        <item name="colorSecondaryContainer">?attr/colorPrimaryContainer</item>
     </style>
 
     <style name="ThemeOverlay.Gestor_Colecciones.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
