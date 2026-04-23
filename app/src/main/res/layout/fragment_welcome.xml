@@ -450,17 +450,44 @@
             app:iconTint="?attr/colorPrimary"
             android:alpha="0.8" />
 
-        <!-- Hint de interacción -->
-        <com.google.android.material.textview.MaterialTextView
-            android:layout_width="match_parent"
+        <!-- Hint de interacción estilizado -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="💡  Mantén pulsado un ítem para editarlo o eliminarlo"
-            android:textSize="12sp"
-            android:lineSpacingMultiplier="1.4"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:gravity="center"
-            android:alpha="0.75" />
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLowest"
+            app:strokeWidth="1dp"
+            app:strokeColor="?attr/colorOutlineVariant">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@android:drawable/ic_dialog_info"
+                    app:tint="?attr/colorSecondary"
+                    android:contentDescription="Tip" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Mantén pulsado un ítem para editarlo o eliminarlo"
+                    android:textSize="11sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:alpha="0.8" />
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 

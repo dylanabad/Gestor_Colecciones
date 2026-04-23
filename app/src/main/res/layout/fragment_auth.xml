@@ -45,7 +45,7 @@
             android:id="@+id/tvAppName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Gestor de Colecciones"
+            android:text="CollectHub"
             android:textSize="13sp"
             android:textStyle="bold"
             android:letterSpacing="0.12"
@@ -312,16 +312,41 @@
         </com.google.android.material.card.MaterialCardView>
 
         <!-- ─── Nota de privacidad ─── -->
-        <com.google.android.material.textview.MaterialTextView
-            android:layout_width="match_parent"
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="🔒  Tus datos viajan cifrados y nunca se comparten con terceros."
-            android:textSize="11sp"
-            android:lineSpacingMultiplier="1.4"
-            android:textColor="?attr/colorOnBackground"
-            android:alpha="0.45"
-            android:gravity="center" />
+            android:layout_marginTop="32dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+            android:alpha="0.8">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_auth_lock"
+                    app:tint="?attr/colorPrimary"
+                    android:contentDescription="Seguridad" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Tus datos viajan cifrados y nunca se comparten con terceros."
+                    android:textSize="11sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:letterSpacing="0.01" />
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 
