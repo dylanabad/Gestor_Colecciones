@@ -18,49 +18,60 @@
             android:textStyle="bold"
             android:layout_marginBottom="24dp" />
 
-        <com.google.android.material.textview.MaterialTextView
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilItem"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Selecciona el ítem"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            android:textColor="?attr/colorPrimary" />
+            android:hint="Selecciona el ítem"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp"
+            app:startIconDrawable="@drawable/ic_category_24"
+            app:startIconTint="?attr/colorPrimary">
 
-        <Spinner
-            android:id="@+id/spinnerItem"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_spinner_outlined" />
+            <AutoCompleteTextView
+                android:id="@+id/spinnerItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textview.MaterialTextView
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilUsuario"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="¿A quién se lo prestas?"
-            android:textAppearance="?attr/textAppearanceLabelLarge"
-            android:textColor="?attr/colorPrimary" />
+            android:layout_marginTop="16dp"
+            android:hint="¿A quién se lo prestas?"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp"
+            app:startIconDrawable="@drawable/ic_person_24"
+            app:startIconTint="?attr/colorPrimary">
 
-        <Spinner
-            android:id="@+id/spinnerUsuario"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_spinner_outlined" />
+            <AutoCompleteTextView
+                android:id="@+id/spinnerUsuario"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilFechaDevolucion"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:hint="Fecha de devolución prevista"
+            android:layout_marginTop="16dp"
+            android:hint="Fecha de devolución"
             app:boxCornerRadiusBottomEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusTopEnd="16dp"
             app:boxCornerRadiusTopStart="16dp"
-            app:endIconMode="custom"
-            app:endIconDrawable="@android:drawable/ic_menu_my_calendar"
-            app:startIconDrawable="@android:drawable/ic_menu_today">
+            app:startIconDrawable="@drawable/ic_today_24"
+            app:startIconTint="?attr/colorPrimary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etFechaDevolucion"
@@ -72,23 +83,29 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tilNotas"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:hint="Notas adicionales"
+            android:hint="Notas adicionales (opcional)"
             app:boxCornerRadiusBottomEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
             app:boxCornerRadiusTopEnd="16dp"
-            app:boxCornerRadiusTopStart="16dp">
+            app:boxCornerRadiusTopStart="16dp"
+            app:startIconDrawable="@drawable/ic_description_24"
+            app:startIconTint="?attr/colorPrimary"
+            app:counterEnabled="true"
+            app:counterMaxLength="200">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etNotas"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textMultiLine"
-                android:minLines="3" />
+                android:minLines="1" />
         </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
+

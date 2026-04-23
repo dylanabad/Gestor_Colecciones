@@ -19,9 +19,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AutoCompleteTextView
 import android.widget.ArrayAdapter
 import android.widget.EditText
-import android.widget.Spinner
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
@@ -271,8 +271,8 @@ class PrestamosFragment : Fragment() {
         // fecha de devolución y notas. Gestiona la lógica de pickers y validaciones
         val dialogView = LayoutInflater.from(requireContext())
             .inflate(R.layout.dialog_crear_prestamo, null)
-        val spinnerItem = dialogView.findViewById<Spinner>(R.id.spinnerItem)
-        val spinnerUsuario = dialogView.findViewById<Spinner>(R.id.spinnerUsuario)
+        val spinnerItem = dialogView.findViewById<AutoCompleteTextView>(R.id.spinnerItem)
+        val spinnerUsuario = dialogView.findViewById<AutoCompleteTextView>(R.id.spinnerUsuario)
         val etFechaDevolucion = dialogView.findViewById<EditText>(R.id.etFechaDevolucion)
         val tilFechaDevolucion = dialogView.findViewById<TextInputLayout>(R.id.tilFechaDevolucion)
         val etNotas = dialogView.findViewById<EditText>(R.id.etNotas)
@@ -301,19 +301,20 @@ class PrestamosFragment : Fragment() {
         tilFechaDevolucion.setEndIconOnClickListener { openDatePicker() }
         etFechaDevolucion.setOnClickListener { openDatePicker() }
 
-        // Rellenar el spinner de usuarios desde el flujo de usuarios del ViewModel
+        // Rellenar el selector de usuarios
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.usuarios.collectLatest { usuarios ->
                 usuariosLista = usuarios
-                spinnerUsuario.adapter = ArrayAdapter(
+                val adapter = ArrayAdapter(
                     requireContext(),
-                    android.R.layout.simple_spinner_dropdown_item,
+                    android.R.layout.simple_dropdown_item_1line,
                     usuarios.map { it.username }
                 )
+                spinnerUsuario.setAdapter(adapter)
             }
         }
 
-        // Cargar lista de items desde repositorio (operación IO), y preparar labels
+        // Cargar lista de items y preparar labels
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val itemRepo = RepositoryProvider.itemRepository(requireContext())
@@ -322,42 +323,51 @@ class PrestamosFragment : Fragment() {
                 val labels = items.map { item ->
                     if (item.prestado) "${item.titulo} (Prestado)" else item.titulo
                 }
-                spinnerItem.adapter = ArrayAdapter(
+                val adapter = ArrayAdapter(
                     requireContext(),
-                    android.R.layout.simple_spinner_dropdown_item,
+                    android.R.layout.simple_dropdown_item_1line,
                     labels
                 )
+                spinnerItem.setAdapter(adapter)
             } catch (_: Exception) {
-                // En caso de fallo, dejar el spinner vacío
-                spinnerItem.adapter = ArrayAdapter(
+                spinnerItem.setAdapter(ArrayAdapter(
                     requireContext(),
-                    android.R.layout.simple_spinner_dropdown_item,
+                    android.R.layout.simple_dropdown_item_1line,
                     emptyList<String>()
-                )
+                ))
             }
         }
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Nuevo prestamo")
+            .setTitle("Nuevo préstamo")
             .setView(dialogView)
             .setPositiveButton("Prestar") { _, _ ->
-                // Validar selección y crear el préstamo a través del ViewModel
-                val usuarioSeleccionado = usuariosLista.getOrNull(spinnerUsuario.selectedItemPosition)
-                val itemSeleccionado = itemsLista.getOrNull(spinnerItem.selectedItemPosition)
+                // Validar selección buscando por texto en las listas cargadas
+                val itemText = spinnerItem.text.toString()
+                val usuarioText = spinnerUsuario.text.toString()
+
+                val itemSeleccionado = itemsLista.find { item ->
+                    val label = if (item.prestado) "${item.titulo} (Prestado)" else item.titulo
+                    label == itemText
+                }
+                val usuarioSeleccionado = usuariosLista.find { it.username == usuarioText }
+
                 val fechaDevolucion = fechaSeleccionada ?: etFechaDevolucion.text.toString().ifBlank { null }
                 val notas = etNotas.text.toString().ifBlank { null }
+
                 if (itemSeleccionado == null) {
-                    Snackbar.make(requireView(), "Selecciona un item", Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(requireView(), "Selecciona un ítem válido", Snackbar.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
                 if (itemSeleccionado.prestado) {
-                    Snackbar.make(requireView(), "Este item ya esta prestado", Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(requireView(), "Este ítem ya está prestado", Snackbar.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
                 if (usuarioSeleccionado == null) {
-                    Snackbar.make(requireView(), "Selecciona un usuario", Snackbar.LENGTH_SHORT).show()
+                    Snackbar.make(requireView(), "Selecciona un usuario válido", Snackbar.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
+
                 viewModel.crearPrestamo(
                     PrestamoRequest(
                         itemId = itemSeleccionado.id.toLong(),
