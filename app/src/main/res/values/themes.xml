@@ -47,6 +47,8 @@
         <item name="colorOnPrimary">@color/theme_green_on_primary</item>
         <item name="colorPrimaryContainer">@color/theme_green_primary_container</item>
         <item name="colorOnPrimaryContainer">@color/theme_green_on_primary_container</item>
+        <item name="colorSecondary">?attr/colorPrimary</item>
+        <item name="colorSecondaryContainer">?attr/colorPrimaryContainer</item>
     </style>
 
     <style name="Theme.Gestor_Colecciones.Orange" parent="Theme.Gestor_Colecciones">

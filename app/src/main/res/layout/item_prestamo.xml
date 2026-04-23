@@ -196,11 +196,13 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnEliminar"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Eliminar"
-                android:textColor="?attr/colorError" />
+                app:backgroundTint="?attr/colorErrorContainer"
+                android:textColor="?attr/colorError"
+                app:rippleColor="?attr/colorError" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDevolver"
@@ -208,7 +210,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="Marcar Devuelto"
+                android:text="Marcar devuelto"
+                app:backgroundTint="?attr/colorPrimaryContainer"
+                android:textColor="?attr/colorPrimary"
                 android:visibility="gone"
                 tools:visibility="visible" />
         </LinearLayout>
