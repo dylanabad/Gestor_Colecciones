@@ -1,6 +1,7 @@
 package com.example.gestor_colecciones.fragment
 
 // Imports de Android, Material, Glide, Room, Coroutines, etc.
+import android.graphics.Color
 import android.content.ContentValues
 import android.content.Intent
 import android.content.res.ColorStateList
@@ -811,6 +812,7 @@ class ColeccionesFragment : Fragment() {
             .inflate(R.layout.dialog_create_collection, null)
 
         val etNombre = view.findViewById<EditText>(R.id.etNombre)
+        val tilNombre = view.findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.tilNombre)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
         val ivPreview = view.findViewById<ImageView>(R.id.ivPreview)
         val btnSelectImage = view.findViewById<Button>(R.id.btnSelectImage)
@@ -819,13 +821,13 @@ class ColeccionesFragment : Fragment() {
         currentImageView = ivPreview
         btnSelectImage.setOnClickListener { showImageSourceDialog() }
 
-        var selectedColor = 0 // 0 = color por defecto (sin color personalizado)
+        var selectedColor = 0
         setupCollectionColorChips(chipGroupColors, selectedColor) { selectedColor = it }
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Nueva colección")
             .setView(view)
-            .setPositiveButton("Crear", null) // null para poder sobreescribir el comportamiento
+            .setPositiveButton("Crear", null)
             .setNegativeButton("Cancelar") { _, _ ->
                 selectedImageUri = null
                 currentImageView = null
@@ -833,13 +835,14 @@ class ColeccionesFragment : Fragment() {
             .create()
             .also { dialog ->
                 dialog.setOnShowListener {
-                    // Sobreescribimos el botón positivo para evitar que cierre el diálogo
-                    // automáticamente si hay errores de validación
                     dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                         val nombre = etNombre.text.toString().trim()
                         if (nombre.isBlank()) {
-                            Toast.makeText(requireContext(), "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show()
+                            tilNombre.error = "El nombre es obligatorio"
+                            etNombre.requestFocus()
                             return@setOnClickListener
+                        } else {
+                            tilNombre.error = null
                         }
 
                         val descripcion = etDescripcion.text.toString()
@@ -899,6 +902,7 @@ class ColeccionesFragment : Fragment() {
             .inflate(R.layout.dialog_create_collection, null) // Reutiliza el mismo layout
 
         val etNombre = view.findViewById<EditText>(R.id.etNombre)
+        val tilNombre = view.findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.tilNombre)
         val etDescripcion = view.findViewById<EditText>(R.id.etDescripcion)
         val ivPreview = view.findViewById<ImageView>(R.id.ivPreview)
         val btnSelectImage = view.findViewById<Button>(R.id.btnSelectImage)
@@ -907,7 +911,7 @@ class ColeccionesFragment : Fragment() {
         // Precarga los valores actuales en los campos
         etNombre.setText(coleccion.nombre)
         etDescripcion.setText(coleccion.descripcion)
-        // Carga la imagen actual con Glide (soporta URLs remotas y rutas locales)
+        // Carga la imagen actual con Glide
         ImageUtils.toGlideModel(coleccion.imagenPath)?.let { model ->
             Glide.with(this).load(model).into(ivPreview)
         }
@@ -915,32 +919,47 @@ class ColeccionesFragment : Fragment() {
         currentImageView = ivPreview
         btnSelectImage.setOnClickListener { showImageSourceDialog() }
 
-        var selectedColor = coleccion.color // Restaura el color actual
+        var selectedColor = coleccion.color
         setupCollectionColorChips(chipGroupColors, selectedColor) { selectedColor = it }
 
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("Editar colección")
             .setView(view)
-            .setPositiveButton("Guardar") { _, _ ->
-                viewLifecycleOwner.lifecycleScope.launch {
-                    // Si hay nueva imagen la sube; si no, mantiene la anterior
-                    val imagePath = selectedImageUri?.let { uri -> uploadImage(uri) } ?: coleccion.imagenPath
-                    viewModel.update(
-                        coleccion.copy(
-                            nombre = etNombre.text.toString().trim(),
-                            descripcion = etDescripcion.text.toString(),
-                            imagenPath = imagePath,
-                            color = selectedColor
-                        )
-                    )
-                    showSnackbar("Colección \"${coleccion.nombre}\" actualizada")
-                }
-                selectedImageUri = null
-                currentImageView = null
-            }
+            .setPositiveButton("Guardar", null) // Cambiado a null para validar
             .setNegativeButton("Cancelar") { _, _ ->
                 selectedImageUri = null
                 currentImageView = null
+            }
+            .create()
+            .also { dialog ->
+                dialog.setOnShowListener {
+                    dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                        val nombre = etNombre.text.toString().trim()
+                        if (nombre.isBlank()) {
+                            tilNombre.error = "El nombre es obligatorio"
+                            etNombre.requestFocus()
+                            return@setOnClickListener
+                        } else {
+                            tilNombre.error = null
+                        }
+
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            val imagePath = selectedImageUri?.let { uri -> uploadImage(uri) } ?: coleccion.imagenPath
+                            viewModel.update(
+                                coleccion.copy(
+                                    nombre = nombre,
+                                    descripcion = etDescripcion.text.toString().trim(),
+                                    imagenPath = imagePath,
+                                    color = selectedColor
+                                )
+                            )
+                            showSnackbar("Colección actualizada")
+                        }
+                        selectedImageUri = null
+                        currentImageView = null
+                        dialog.dismiss()
+                    }
+                }
             }
             .show()
     }
@@ -956,33 +975,34 @@ class ColeccionesFragment : Fragment() {
         onSelected: (Int) -> Unit
     ) {
         chipGroup.removeAllViews()
-        chipGroup.isSingleSelection = true // Solo puede estar uno seleccionado a la vez
+        chipGroup.isSingleSelection = true
+        chipGroup.isSelectionRequired = true
 
         fun addChip(label: String, color: Int, isDefault: Boolean = false) {
             val chip = Chip(requireContext()).apply {
                 text = label
                 isCheckable = true
+                isCheckedIconVisible = true
                 if (isDefault) {
-                    // El chip Default tiene estilo neutro (gris claro) para indicar "sin color"
                     chipBackgroundColor = ColorStateList.valueOf(0xFFECEFF1.toInt())
-                    chipStrokeWidth = 1f
+                    chipStrokeWidth = 2f
                     chipStrokeColor = ColorStateList.valueOf(0xFFB0BEC5.toInt())
                     setTextColor(0xFF263238.toInt())
                 } else {
-                    // Chips de color: fondo del color elegido, texto blanco para contraste
                     chipBackgroundColor = ColorStateList.valueOf(color)
-                    setTextColor(0xFFFFFFFF.toInt())
+                    setTextColor(Color.WHITE)
+                    checkedIconTint = ColorStateList.valueOf(Color.WHITE)
                 }
                 id = View.generateViewId()
                 setOnCheckedChangeListener { _, checked -> if (checked) onSelected(color) }
             }
             chipGroup.addView(chip)
-            // Marca el chip correspondiente al color inicial como seleccionado
-            if (color == initialColor) chip.isChecked = true
-            if (initialColor == 0 && isDefault) chip.isChecked = true
+            if (color == initialColor || (initialColor == 0 && isDefault)) {
+                chip.isChecked = true
+            }
         }
 
-        addChip("Default", 0, isDefault = true)
+        addChip("Ninguno", 0, isDefault = true)
         ColeccionColors.PALETTE.forEach { option -> addChip(option.name, option.color) }
     }
 
