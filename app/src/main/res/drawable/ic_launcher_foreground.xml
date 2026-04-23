@@ -5,68 +5,116 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.20"
-        android:pathData="M28,31
-            L66,20
-            C69,19 72,21 73,24
-            L77,38
-            C78,41 76,44 73,45
-            L35,56
-            C32,57 29,55 28,52
-            L24,38
-            C23,35 25,32 28,31 Z" />
+    <group android:translateX="5">
+        <!-- Shadow block for depth -->
+        <path
+            android:fillColor="#000000"
+            android:fillAlpha="0.14"
+            android:pathData="M30,26
+                H71
+                C76.52,26 81,30.48 81,36
+                V79
+                C81,84.52 76.52,89 71,89
+                H30
+                C24.48,89 20,84.52 20,79
+                V36
+                C20,30.48 24.48,26 30,26 Z" />
 
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.34"
-        android:pathData="M23,41
-            L68,31
-            C71,30 74,32 75,35
-            L78,49
-            C79,52 77,55 74,56
-            L29,66
-            C26,67 23,65 22,62
-            L19,48
-            C18,45 20,42 23,41 Z" />
+        <!-- Book cover -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M28,22
+                H69
+                C74.52,22 79,26.48 79,32
+                V75
+                C79,80.52 74.52,85 69,85
+                H28
+                C22.48,85 18,80.52 18,75
+                V32
+                C18,26.48 22.48,22 28,22 Z" />
 
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M31,48
-            L77,48
-            C80.31,48 83,50.69 83,54
-            L83,79
-            C83,82.31 80.31,85 77,85
-            L31,85
-            C27.69,85 25,82.31 25,79
-            L25,54
-            C25,50.69 27.69,48 31,48 Z" />
+        <!-- Spine -->
+        <path
+            android:fillColor="#DDE7FF"
+            android:pathData="M28,22
+                H37
+                V85
+                H28
+                C22.48,85 18,80.52 18,75
+                V32
+                C18,26.48 22.48,22 28,22 Z" />
 
-    <path
-        android:fillColor="@color/brand_primary"
-        android:fillAlpha="0.14"
-        android:pathData="M25,57h58v12h-58z" />
+        <!-- Top highlight -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillAlpha="0.38"
+            android:pathData="M28,22
+                H69
+                C74.52,22 79,26.48 79,32
+                V38
+                H18
+                V32
+                C18,26.48 22.48,22 28,22 Z" />
 
-    <path
-        android:fillColor="@color/brand_primary"
-        android:fillAlpha="0.14"
-        android:pathData="M34,73h31
-            C36.76,73 39,75.24 39,78
-            C39,80.76 36.76,83 34,83
-            H65
-            C67.76,83 70,80.76 70,78
-            C70,75.24 67.76,73 65,73 Z" />
+        <!-- Page edge -->
+        <path
+            android:fillColor="#C7D6FF"
+            android:fillAlpha="0.80"
+            android:pathData="M69,22
+                C74.52,22 79,26.48 79,32
+                V75
+                C79,80.52 74.52,85 69,85
+                H65
+                C70.52,85 75,80.52 75,75
+                V32
+                C75,26.48 70.52,22 65,22 Z" />
 
-    <path
-        android:fillColor="@color/brand_primary"
-        android:pathData="M57,32
-            L67,32
-            C69.21,32 71,33.79 71,36
-            L71,55
-            L62,50
-            L53,55
-            L53,36
-            C53,33.79 54.79,32 57,32 Z" />
+        <!-- Bookmark ribbon -->
+        <path
+            android:fillColor="@color/brand_primary"
+            android:pathData="M56,18
+                H66
+                C67.1,18 68,18.9 68,20
+                V46
+                L61,41
+                L54,46
+                V20
+                C54,18.9 54.9,18 56,18 Z" />
+
+        <!-- Decorative lines on cover -->
+        <path
+            android:fillColor="@color/brand_primary"
+            android:fillAlpha="0.18"
+            android:pathData="M44,39
+                H63
+                C64.66,39 66,40.34 66,42
+                C66,43.66 64.66,45 63,45
+                H44
+                C42.34,45 41,43.66 41,42
+                C41,40.34 42.34,39 44,39 Z" />
+
+        <path
+            android:fillColor="@color/brand_primary"
+            android:fillAlpha="0.18"
+            android:pathData="M44,51
+                H59
+                C60.66,51 62,52.34 62,54
+                C62,55.66 60.66,57 59,57
+                H44
+                C42.34,57 41,55.66 41,54
+                C41,52.34 42.34,51 44,51 Z" />
+
+        <!-- Bottom page accent -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillAlpha="0.50"
+            android:pathData="M24,76
+                H73
+                C74.66,76 76,77.34 76,79
+                C76,80.66 74.66,82 73,82
+                H24
+                C22.34,82 21,80.66 21,79
+                C21,77.34 22.34,76 24,76 Z" />
+    </group>
 
 </vector>
