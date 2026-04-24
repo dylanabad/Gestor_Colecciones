@@ -116,10 +116,10 @@ class OnboardingFragment : Fragment() {
         requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
             .edit().putBoolean("onboarding_completed", true).apply()
 
-        // Volver al fragmento de bienvenida (desde donde el usuario podrá loguearse o entrar)
+        // Volver al fragmento de autenticación (Login)
         parentFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
-            .replace(R.id.fragment_container, WelcomeFragment())
+            .replace(R.id.fragment_container, AuthFragment())
             .commit()
     }
 
