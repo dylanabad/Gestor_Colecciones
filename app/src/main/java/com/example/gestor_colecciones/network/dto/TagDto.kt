@@ -2,7 +2,9 @@ package com.example.gestor_colecciones.network.dto
 
 import com.example.gestor_colecciones.entities.Tag
 
-// DTO que representa una etiqueta (tag) en la comunicación con la API
+/**
+ * DTO remoto de una etiqueta asignable a items.
+ */
 data class TagDto(
     val id: Long? = null,   // Identificador opcional del tag
     val nombre: String      // Nombre de la etiqueta

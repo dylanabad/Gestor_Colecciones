@@ -1,26 +1,34 @@
 package com.example.gestor_colecciones.network.dto
 
-// DTO usado para enviar credenciales de login al servidor
+/**
+ * Cuerpo enviado al backend para autenticacion por email y contrasena.
+ */
 data class LoginRequest(
     val email: String,     // Email del usuario para autenticación
     val password: String   // Contraseña del usuario
 )
 
-// DTO usado para login estricto: username + email + password
+/**
+ * Cuerpo usado en el login estricto con usuario, email y contrasena.
+ */
 data class LoginStrictRequest(
     val username: String,
     val email: String,
     val password: String
 )
 
-// DTO usado para enviar datos de registro al servidor
+/**
+ * Cuerpo enviado al backend para registrar un nuevo usuario.
+ */
 data class RegisterRequest(
     val username: String,  // Nombre de usuario elegido
     val email: String,     // Email del nuevo usuario
     val password: String   // Contraseña del nuevo usuario
 )
 
-// DTO que representa la respuesta de autenticación del servidor
+/**
+ * Respuesta de autenticacion devuelta por el backend tras login o registro.
+ */
 data class AuthResponse(
     val token: String,     // Token JWT o similar para sesiones autenticadas
     val username: String,  // Nombre de usuario devuelto por el backend

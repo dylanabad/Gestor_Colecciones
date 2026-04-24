@@ -4,12 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.gestor_colecciones.repository.PapeleraRepository
 
-// Factory encargada de crear instancias de PapeleraViewModel
+/**
+ * Factory encargada de crear instancias de PapeleraViewModel
+ */
 class PapeleraViewModelFactory(
     private val repository: PapeleraRepository
 ) : ViewModelProvider.Factory {
 
-    // Método genérico para crear ViewModels
+    /**
+     * Método genérico para crear ViewModels
+     */
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 
         // Verifica que el ViewModel solicitado sea el correcto

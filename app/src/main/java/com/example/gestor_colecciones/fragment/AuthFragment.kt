@@ -25,9 +25,10 @@ import com.example.gestor_colecciones.widget.ColeccionesWidgetProvider
 import kotlinx.coroutines.launch
 
 /**
- * Fragment que gestiona el login y registro de usuarios.
- * Tras autenticarse correctamente, sincroniza los datos del servidor
- * y navega al onboarding o a la pantalla principal según corresponda.
+ * Pantalla de acceso y registro de usuarios.
+ * 
+ * Valida la entrada, coordina la autenticacion con el ViewModel y dispara la
+ * sincronizacion inicial de datos tras una sesion valida.
  */
 class AuthFragment : Fragment() {
 

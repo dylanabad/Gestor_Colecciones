@@ -4,12 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.gestor_colecciones.repository.ItemDeseoRepository
 
-// Factory encargada de crear instancias de DeseoViewModel con sus dependencias
+/**
+ * Factory encargada de crear instancias de DeseoViewModel con sus dependencias
+ */
 class DeseoViewModelFactory(
     private val repository: ItemDeseoRepository
 ) : ViewModelProvider.Factory {
 
-    // Crea el ViewModel solicitado por el sistema
+    /**
+     * Crea el ViewModel solicitado por el sistema
+     */
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 
         // Comprueba si el ViewModel solicitado es DeseoViewModel

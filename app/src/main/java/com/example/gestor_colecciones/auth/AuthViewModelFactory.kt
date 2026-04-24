@@ -1,24 +1,20 @@
-package com.example.gestor_colecciones.auth
+﻿package com.example.gestor_colecciones.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 
-// Factory encargada de crear instancias de AuthViewModel con dependencias inyectadas
+/** Fabrica de [AuthViewModel] para poder suministrarle el repositorio desde la UI. */
 class AuthViewModelFactory(
-    private val repository: AuthRepository // Repositorio necesario para el ViewModel
+    private val repository: AuthRepository
 ) : ViewModelProvider.Factory {
 
-    // Método encargado de crear el ViewModel solicitado
+    /** Crea la instancia solicitada cuando el tipo coincide con [AuthViewModel]. */
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-
-        // Comprueba si el ViewModel solicitado es AuthViewModel
         if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
-
             @Suppress("UNCHECKED_CAST")
             return AuthViewModel(repository) as T
         }
 
-        // Si se solicita otro ViewModel, lanza excepción
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

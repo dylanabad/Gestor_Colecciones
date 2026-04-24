@@ -12,14 +12,18 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Date
 
-// ViewModel encargado de la lógica de Items y su historial
+/**
+ * ViewModel encargado de la lógica de Items y su historial
+ */
 class ItemViewModel(
     private val itemRepository: ItemRepository,
     private val categoriaRepository: CategoriaRepository? = null, // opcional: gestión de categorías
     private val historyRepository: ItemHistoryRepository? = null  // opcional: historial de cambios
 ) : ViewModel() {
 
-    // Lista reactiva de items
+    /**
+     * Lista reactiva de items
+     */
     val items: StateFlow<List<Item>> =
         itemRepository.allItems.stateIn(
             viewModelScope,
@@ -27,7 +31,9 @@ class ItemViewModel(
             emptyList()
         )
 
-    // Inserta un item y registra su creación en el historial
+    /**
+     * Inserta un item y registra su creación en el historial
+     */
     fun insert(
         item: Item,
         onInserted: ((Int) -> Unit)? = null,
@@ -36,7 +42,9 @@ class ItemViewModel(
         viewModelScope.launch {
             try {
 
-                // Inserta item en repositorio y obtiene su ID
+                /**
+                 * Inserta item en repositorio y obtiene su ID
+                 */
                 val id = itemRepository.insert(item).toInt()
 
                 // Registra historial de creación si existe repositorio
@@ -57,17 +65,23 @@ class ItemViewModel(
         }
     }
 
-    // Sobrecarga simple de update sin callbacks
+    /**
+     * Sobrecarga simple de update sin callbacks
+     */
     fun update(item: Item) {
         update(item, null, null)
     }
 
-    // Elimina un item sin callbacks
+    /**
+     * Elimina un item sin callbacks
+     */
     fun delete(item: Item) {
         delete(item, null, null)
     }
 
-    // Actualiza un item y registra cambios en el historial
+    /**
+     * Actualiza un item y registra cambios en el historial
+     */
     fun update(
         item: Item,
         onUpdated: (() -> Unit)? = null,
@@ -76,7 +90,9 @@ class ItemViewModel(
         viewModelScope.launch {
             try {
 
-                // Obtiene estado anterior (solo si hay historial habilitado)
+                /**
+                 * Obtiene estado anterior (solo si hay historial habilitado)
+                 */
                 val old = historyRepository?.let {
                     itemRepository.getItemById(item.id)
                 }
@@ -91,10 +107,14 @@ class ItemViewModel(
 
                     if (old != null) {
 
-                        // Detecta cambio de estado
+                        /**
+                         * Detecta cambio de estado
+                         */
                         val estadoChanged = old.estado != item.estado
 
-                        // Detecta otros cambios generales
+                        /**
+                         * Detecta otros cambios generales
+                         */
                         val otherChanged = old.copy(estado = item.estado) != item
 
                         // Historial por cambio de estado
@@ -157,7 +177,9 @@ class ItemViewModel(
         }
     }
 
-    // Elimina un item
+    /**
+     * Elimina un item
+     */
     fun delete(
         item: Item,
         onDeleted: (() -> Unit)? = null,
@@ -173,23 +195,33 @@ class ItemViewModel(
         }
     }
 
-    // Obtiene items por colección (Flow directo)
+    /**
+     * Obtiene items por colección (Flow directo)
+     */
     fun getItemsByCollection(collectionId: Int) =
         itemRepository.getItemsByCollection(collectionId)
 
-    // Obtiene items por categoría
+    /**
+     * Obtiene items por categoría
+     */
     fun getItemsByCategoria(categoriaId: Int) =
         itemRepository.getItemsByCategoria(categoriaId)
 
-    // Flow específico por colección
+    /**
+     * Flow específico por colección
+     */
     fun getItemsByCollectionFlow(collectionId: Int) =
         itemRepository.getItemsByCollectionFlow(collectionId)
 
-    // Búsqueda por título
+    /**
+     * Búsqueda por título
+     */
     fun searchItems(search: String) =
         itemRepository.searchItemsByTitle(search)
 
-    // Estadísticas
+    /**
+     * Estadísticas
+     */
     suspend fun getTotalItems() =
         itemRepository.getTotalItems()
 
@@ -199,7 +231,9 @@ class ItemViewModel(
     suspend fun getItemById(id: Int) =
         itemRepository.getItemById(id)
 
-    // Inserta una nueva categoría si el repositorio existe
+    /**
+     * Inserta una nueva categoría si el repositorio existe
+     */
     suspend fun insertCategoria(nombre: String): Categoria? {
         return if (categoriaRepository != null && nombre.isNotBlank()) {
             val categoria = Categoria(nombre = nombre)
@@ -208,7 +242,9 @@ class ItemViewModel(
         } else null
     }
 
-    // Obtiene todas las categorías (o lista vacía si no hay repo)
+    /**
+     * Obtiene todas las categorías (o lista vacía si no hay repo)
+     */
     suspend fun getAllCategorias(): List<Categoria> {
         return categoriaRepository?.allCategoriasOnce() ?: emptyList()
     }

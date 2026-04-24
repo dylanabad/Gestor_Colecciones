@@ -4,7 +4,9 @@ import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.network.DateMapper
 import java.util.Date
 
-// DTO que representa un item en la comunicación con la API
+/**
+ * Representacion remota de un item dentro de una coleccion.
+ */
 data class ItemDto(
     val id: Long? = null,                      // Identificador opcional del item
     val titulo: String,                        // Título del item

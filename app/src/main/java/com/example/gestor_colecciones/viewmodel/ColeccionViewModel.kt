@@ -1,20 +1,23 @@
-package com.example.gestor_colecciones.viewmodel
+﻿package com.example.gestor_colecciones.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.repository.ColeccionRepository
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// ViewModel encargado de gestionar colecciones en la UI
+/**
+ * Expone a la UI el listado de colecciones y las operaciones de mantenimiento
+ * sobre ellas.
+ */
 class ColeccionViewModel(
     private val repository: ColeccionRepository
 ) : ViewModel() {
 
-    // Lista reactiva de colecciones expuesta a la UI
+    /** Flujo de colecciones activo mientras exista un observador en pantalla. */
     val colecciones: StateFlow<List<Coleccion>> =
         repository.allColecciones.stateIn(
             viewModelScope,
@@ -22,28 +25,28 @@ class ColeccionViewModel(
             emptyList()
         )
 
-    // Inserta una nueva colección
+    /** Inserta una nueva coleccion. */
     fun insert(coleccion: Coleccion) {
         viewModelScope.launch {
             repository.insert(coleccion)
         }
     }
 
-    // Actualiza una colección existente
+    /** Actualiza una coleccion existente. */
     fun update(coleccion: Coleccion) {
         viewModelScope.launch {
             repository.update(coleccion)
         }
     }
 
-    // Elimina una colección
+    /** Elimina una coleccion. */
     fun delete(coleccion: Coleccion) {
         viewModelScope.launch {
             repository.delete(coleccion)
         }
     }
 
-    // Obtiene una colección por su ID y devuelve el resultado mediante callback
+    /** Recupera una coleccion puntual por id para formularios o pantallas de detalle. */
     fun getColeccionById(id: Int, onResult: (Coleccion?) -> Unit) {
         viewModelScope.launch {
             val coleccion = repository.getById(id)

@@ -51,8 +51,10 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Muestra los ítems de una colección concreta.
- * Este fragment es el punto natural para crear/editar ítems dentro de una colección.
+ * Lista los items pertenecientes a una coleccion concreta.
+ * 
+ * Es la pantalla operativa principal para navegar, crear, editar y reorganizar el
+ * contenido interno de una coleccion.
  */
 class ItemListByCollectionFragment : Fragment() {
 

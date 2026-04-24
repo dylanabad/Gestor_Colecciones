@@ -31,6 +31,9 @@ import com.example.gestor_colecciones.viewmodel.LogroViewModelFactory
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+/**
+ * Muestra el estado de progreso y desbloqueo de logros del usuario.
+ */
 class LogrosFragment : Fragment() {
 
     // ViewBinding para acceder a las vistas del layout

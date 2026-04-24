@@ -27,6 +27,12 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 // Fragmento que muestra y gestiona la lista de deseos del usuario
+/**
+ * Gestiona la lista de deseos del usuario.
+ * 
+ * Permite crear, editar, marcar como conseguido y enviar a papelera los deseos
+ * persistidos tanto en local como en backend.
+ */
 class DeseosFragment : Fragment() {
 
     private var _binding: FragmentDeseosBinding? = null // Binding de la vista del fragmento

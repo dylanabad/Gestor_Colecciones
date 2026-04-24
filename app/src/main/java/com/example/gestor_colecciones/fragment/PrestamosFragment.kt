@@ -59,6 +59,12 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
+/**
+ * Gestiona los prestamos enviados y recibidos por el usuario.
+ * 
+ * Desde esta pantalla se crean prestamos, se registran devoluciones y se consulta
+ * el historial operativo asociado.
+ */
 class PrestamosFragment : Fragment() {
 
     // ViewModel y adaptadores para las dos vistas (prestados / recibidos)

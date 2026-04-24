@@ -6,7 +6,9 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import java.util.Date
 
-// Entidad que representa un movimiento sobre un item (préstamo, devolución, etc.)
+/**
+ * Entidad Room que representa un movimiento o evento dentro del flujo de prestamos.
+ */
 @Entity(
     tableName = "Movimiento",
     foreignKeys = [

@@ -12,7 +12,9 @@ import kotlinx.coroutines.launch
 import java.io.File
 import com.example.gestor_colecciones.export.CatalogoPdfExporter
 
-// Estados posibles del proceso de exportación
+/**
+ * Estados posibles del proceso de exportación
+ */
 sealed class ExportState {
 
     object Idle : ExportState()          // Sin exportación activa
@@ -26,18 +28,26 @@ sealed class ExportState {
     data class Error(val message: String) : ExportState() // Error durante exportación
 }
 
-// ViewModel encargado de exportar datos a CSV o PDF
+/**
+ * ViewModel encargado de exportar datos a CSV o PDF
+ */
 class ExportViewModel(
     private val exportRepository: ExportRepository
 ) : ViewModel() {
 
-    // Estado interno de exportación
+    /**
+     * Estado interno de exportación
+     */
     private val _exportState = MutableStateFlow<ExportState>(ExportState.Idle)
 
-    // Estado expuesto a la UI
+    /**
+     * Estado expuesto a la UI
+     */
     val exportState: StateFlow<ExportState> = _exportState
 
-    // Exporta datos en formato CSV
+    /**
+     * Exporta datos en formato CSV
+     */
     fun exportCsv(
         context: Context,
         share: Boolean = false,
@@ -62,7 +72,9 @@ class ExportViewModel(
         }
     }
 
-    // Exporta datos en formato PDF estándar
+    /**
+     * Exporta datos en formato PDF estándar
+     */
     fun exportPdf(
         context: Context,
         share: Boolean = false,
@@ -87,7 +99,9 @@ class ExportViewModel(
         }
     }
 
-    // Exporta un PDF tipo catálogo (formato más visual)
+    /**
+     * Exporta un PDF tipo catálogo (formato más visual)
+     */
     fun exportCatalogoPdf(
         context: Context,
         share: Boolean = false,
@@ -112,7 +126,9 @@ class ExportViewModel(
         }
     }
 
-    // Reinicia el estado de exportación a Idle
+    /**
+     * Reinicia el estado de exportación a Idle
+     */
     fun resetState() {
         _exportState.value = ExportState.Idle
     }

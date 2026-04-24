@@ -3,7 +3,9 @@ package com.example.gestor_colecciones.network.dto
 import com.example.gestor_colecciones.entities.ItemDeseo
 import com.example.gestor_colecciones.network.DateMapper
 
-// DTO que representa un item de deseo en la comunicación con la API
+/**
+ * DTO usado para intercambiar elementos de la lista de deseos con el backend.
+ */
 data class ItemDeseoDto(
     val id: Long? = null,                  // Identificador opcional del item
     val titulo: String,                    // Título del item de deseo

@@ -2,7 +2,9 @@ package com.example.gestor_colecciones.network.dto
 
 import com.example.gestor_colecciones.entities.Categoria
 
-// DTO que representa una categoría en la comunicación con la API
+/**
+ * Representacion remota de una categoria y sus conversiones a entidad local.
+ */
 data class CategoriaDto(
     val id: Long? = null,  // Identificador opcional (puede venir nulo en creación)
     val nombre: String     // Nombre de la categoría

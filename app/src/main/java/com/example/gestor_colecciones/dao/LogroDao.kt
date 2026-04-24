@@ -4,7 +4,9 @@ import androidx.room.*
 import com.example.gestor_colecciones.entities.Logro
 import kotlinx.coroutines.flow.Flow
 
-// DAO encargado de la gestión de los logros del sistema
+/**
+ * DAO del progreso local de logros desbloqueables.
+ */
 @Dao
 interface LogroDao {
 

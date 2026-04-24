@@ -3,7 +3,9 @@ package com.example.gestor_colecciones.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-// Entidad que representa una persona asociada a préstamos o contactos
+/**
+ * Entidad Room que modela una persona relacionada con prestamos o contactos.
+ */
 @Entity(tableName = "Persona")
 data class Persona(
 

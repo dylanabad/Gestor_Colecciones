@@ -1,4 +1,4 @@
-package com.example.gestor_colecciones.repository
+﻿package com.example.gestor_colecciones.repository
 
 import com.example.gestor_colecciones.dao.ItemDao
 import com.example.gestor_colecciones.network.ApiService
@@ -8,8 +8,12 @@ import com.example.gestor_colecciones.network.dto.UsuarioDto
 import retrofit2.HttpException
 import java.io.IOException
 
-// Repositorio encargado de gestionar operaciones relacionadas con préstamos
-// usando exclusivamente la API remota
+/**
+ * Encapsula todas las operaciones de prestamos contra el backend.
+ *
+ * Ademas de consumir la API, mantiene sincronizado el flag local `prestado`
+ * del item para que la UI refleje el estado real sin esperar a una sincronizacion completa.
+ */
 class PrestamoRepository(
     private val api: ApiService,
     private val itemDao: ItemDao
@@ -20,121 +24,84 @@ class PrestamoRepository(
         return if (body.isNullOrBlank()) "HTTP ${e.code()}" else body
     }
 
-    // Obtiene la lista de usuarios desde el servidor
+    /** Recupera los posibles destinatarios de un prestamo. */
     suspend fun getUsuarios(): List<UsuarioDto> = try {
-
         api.getUsuarios()
-
     } catch (e: HttpException) {
-
-        // Si no está autenticado, lanza un error específico
-        if (e.code() == 401)
-            throw Exception("No autenticado. Por favor inicia sesión.")
-
-        // En otros errores HTTP devuelve lista vacía para no romper la UI
+        if (e.code() == 401) {
+            throw Exception("No autenticado. Por favor inicia sesion.")
+        }
         emptyList()
-
     } catch (e: IOException) {
-
-        // Error de red (sin conexión, timeout, etc.)
         throw Exception("Error de red al obtener usuarios: ${e.message}")
     }
 
-    // Crea un nuevo préstamo en el servidor
+    /** Crea un nuevo prestamo y marca el item como prestado en Room. */
     suspend fun crearPrestamo(request: PrestamoRequest): PrestamoDto = try {
-
         val result = api.crearPrestamo(request)
-        // Marcamos como prestado localmente
         itemDao.updatePrestadoStatus(request.itemId.toInt(), true)
         result
-
     } catch (e: HttpException) {
-
-        if (e.code() == 401)
-            throw Exception("No autenticado. Por favor inicia sesión.")
-
-        throw Exception("Error del servidor al crear el préstamo: ${e.message}")
-
+        if (e.code() == 401) {
+            throw Exception("No autenticado. Por favor inicia sesion.")
+        }
+        throw Exception("Error del servidor al crear el prestamo: ${e.message}")
     } catch (e: IOException) {
-
-        throw Exception("Error de red al crear el préstamo: ${e.message}")
+        throw Exception("Error de red al crear el prestamo: ${e.message}")
     }
 
-    // Marca un préstamo como devuelto
+    /** Marca un prestamo como devuelto y libera el item asociado en la cache local. */
     suspend fun devolverPrestamo(id: Long): PrestamoDto = try {
-
         val result = api.devolverPrestamo(id)
-        // Actualizamos localmente el estado del item si tenemos el ID
         itemDao.updatePrestadoStatus(result.itemId.toInt(), false)
         result
-
     } catch (e: HttpException) {
-
-        if (e.code() == 401)
-            throw Exception("No autenticado. Por favor inicia sesión.")
-
-        throw Exception("Error del servidor al devolver el préstamo: ${e.message}")
-
+        if (e.code() == 401) {
+            throw Exception("No autenticado. Por favor inicia sesion.")
+        }
+        throw Exception("Error del servidor al devolver el prestamo: ${e.message}")
     } catch (e: IOException) {
-
-        throw Exception("Error de red al devolver el préstamo: ${e.message}")
+        throw Exception("Error de red al devolver el prestamo: ${e.message}")
     }
 
-    // Elimina un préstamo del sistema
+    /** Elimina definitivamente un prestamo del sistema. */
     suspend fun deletePrestamo(id: Long) {
         try {
-
-            // Eliminación definitiva para que desaparezca realmente de la base de datos
             api.deletePrestamoHard(id)
-
         } catch (e: HttpException) {
-
-            if (e.code() == 401)
-                throw Exception("No autenticado. Por favor inicia sesión.")
-
-            if (e.code() == 403)
-                throw Exception("No tienes permisos para eliminar este préstamo")
-
+            if (e.code() == 401) {
+                throw Exception("No autenticado. Por favor inicia sesion.")
+            }
+            if (e.code() == 403) {
+                throw Exception("No tienes permisos para eliminar este prestamo")
+            }
             throw Exception(extractError(e))
-
         } catch (e: IOException) {
-
-            throw Exception("Error de red al eliminar el préstamo: ${e.message}")
+            throw Exception("Error de red al eliminar el prestamo: ${e.message}")
         }
     }
 
-    // Obtiene los préstamos enviados por el usuario
+    /** Recupera los prestamos enviados por el usuario autenticado. */
     suspend fun getPrestados(): List<PrestamoDto> = try {
-
         api.getPrestados()
-
     } catch (e: HttpException) {
-
-        if (e.code() == 401)
-            throw Exception("No autenticado. Por favor inicia sesión.")
-
-        // En caso de error interno, se devuelve lista vacía
+        if (e.code() == 401) {
+            throw Exception("No autenticado. Por favor inicia sesion.")
+        }
         emptyList()
-
     } catch (e: IOException) {
-
-        throw Exception("Error de red al obtener préstamos: ${e.message}")
+        throw Exception("Error de red al obtener prestamos: ${e.message}")
     }
 
-    // Obtiene los préstamos recibidos por el usuario
+    /** Recupera los prestamos recibidos por el usuario autenticado. */
     suspend fun getPrestamosRecibidos(): List<PrestamoDto> = try {
-
         api.getPrestamosRecibidos()
-
     } catch (e: HttpException) {
-
-        if (e.code() == 401)
-            throw Exception("No autenticado. Por favor inicia sesión.")
-
+        if (e.code() == 401) {
+            throw Exception("No autenticado. Por favor inicia sesion.")
+        }
         emptyList()
-
     } catch (e: IOException) {
-
-        throw Exception("Error de red al obtener préstamos recibidos: ${e.message}")
+        throw Exception("Error de red al obtener prestamos recibidos: ${e.message}")
     }
 }

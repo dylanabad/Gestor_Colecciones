@@ -25,6 +25,9 @@ import com.example.gestor_colecciones.databinding.FragmentOnboardingBinding
 import com.example.gestor_colecciones.model.OnboardingData
 
 // Fragment que gestiona el flujo de onboarding (pantallas de bienvenida)
+/**
+ * Fragment de bienvenida inicial usado para introducir la propuesta de valor de la app.
+ */
 class OnboardingFragment : Fragment() {
 
     // ViewBinding para acceder a las vistas del layout; se inicializa en onCreateView

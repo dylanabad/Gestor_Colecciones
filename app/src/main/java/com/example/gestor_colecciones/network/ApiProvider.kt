@@ -7,19 +7,11 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-/*
- * ApiProvider
+/**
+ * Construye y expone la instancia compartida de Retrofit para toda la aplicacion.
  *
- * Singleton encargado de construir y mantener una única instancia de
- * `ApiService` (Retrofit) configurada con interceptores necesarios.
- *
- * - Define la `BASE_URL` de la API local (10.0.2.2 para emulador Android).
- * - Construye un OkHttpClient con un `AuthInterceptor` que añade token de
- *   autenticación desde `AuthStore` y un interceptor de logging para depuración.
- * - Crea el Retrofit y su `ApiService` una única vez (lazy + thread-safe).
- *
- * Nota: Solo se han añadido comentarios explicativos en español; no se modifica
- * la lógica de construcción del cliente ni del servicio.
+ * Configura autenticacion por token, logging de peticiones y la URL base usada
+ * por el emulador Android para acceder al backend local.
  */
 object ApiProvider {
     // URL base de la API (usar 10.0.2.2 para acceder al host desde el emulador Android)

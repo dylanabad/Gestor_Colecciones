@@ -1,6 +1,8 @@
 package com.example.gestor_colecciones.network.dto
 
-// DTO que representa la respuesta de subida de archivos
+/**
+ * Respuesta del endpoint de subida de imagenes.
+ */
 data class UploadResponse(
     val url: String // URL del archivo subido devuelta por la API
 )

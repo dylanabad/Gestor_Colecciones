@@ -7,6 +7,9 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
 // Utilidad para preparar imágenes y poder enviarlas en peticiones multipart (subida de archivos)
+/**
+ * Helpers para transformar URIs y archivos locales en partes multipart compatibles con Retrofit.
+ */
 object UploadUtils {
 
     // Crea una parte multipart a partir de una imagen seleccionada desde el dispositivo

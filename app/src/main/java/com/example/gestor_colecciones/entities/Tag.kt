@@ -3,7 +3,9 @@ package com.example.gestor_colecciones.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-// Entidad que representa una etiqueta (tag) para clasificar items
+/**
+ * Entidad Room de una etiqueta creada por el usuario.
+ */
 @Entity(tableName = "Tag")
 data class Tag(
 

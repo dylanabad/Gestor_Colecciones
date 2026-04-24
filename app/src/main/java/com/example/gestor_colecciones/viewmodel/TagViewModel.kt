@@ -9,12 +9,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// ViewModel encargado de gestionar las etiquetas (tags)
+/**
+ * ViewModel encargado de gestionar las etiquetas (tags)
+ */
 class TagViewModel(
     private val repository: TagRepository
 ) : ViewModel() {
 
-    // Lista reactiva de tags disponibles
+    /**
+     * Lista reactiva de tags disponibles
+     */
     val tags: StateFlow<List<Tag>> =
         repository.allTags.stateIn(
             viewModelScope,
@@ -22,14 +26,18 @@ class TagViewModel(
             emptyList()
         )
 
-    // Inserta un nuevo tag
+    /**
+     * Inserta un nuevo tag
+     */
     fun insert(tag: Tag) {
         viewModelScope.launch {
             repository.insert(tag)
         }
     }
 
-    // Busca tags según texto introducido
+    /**
+     * Busca tags según texto introducido
+     */
     fun searchTags(search: String) =
         repository.searchTags(search)
 }

@@ -4,7 +4,9 @@ import androidx.room.*
 import com.example.gestor_colecciones.entities.ItemDeseo
 import kotlinx.coroutines.flow.Flow
 
-// DAO encargado del acceso a datos de la entidad ItemDeseo (lista de deseos)
+/**
+ * Contrato Room para la lista de deseos y su gestion de borrado logico.
+ */
 @Dao
 interface ItemDeseoDao {
 

@@ -1,6 +1,8 @@
 package com.example.gestor_colecciones.network.dto
 
-// DTO usado para crear un nuevo préstamo en la API
+/**
+ * Cuerpo enviado al backend para crear un nuevo prestamo.
+ */
 data class PrestamoRequest(
     val itemId: Long,                         // ID del item que se va a prestar
     val prestatarioUsuarioId: Long,           // ID del usuario que recibirá el préstamo

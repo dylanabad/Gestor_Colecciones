@@ -26,16 +26,11 @@ import retrofit2.http.Path
 import retrofit2.http.Part
 import retrofit2.http.Query
 
-/*
- * ApiService
+/**
+ * Contrato Retrofit con todos los endpoints consumidos por la app.
  *
- * Interfaz Retrofit que define los endpoints remotos usados por la app.
- * Cada método corresponde a una llamada HTTP y utiliza DTOs (data transfer
- * objects) en los cuerpos y respuestas. Los métodos son `suspend` para poder
- * llamarlos desde coroutines.
- *
- * Las rutas están agrupadas por responsabilidad: autenticación, colecciones,
- * items, categorías, tags, deseos, uploads, logros, usuarios y préstamos.
+ * Agrupa autenticacion, catalogo, papelera, logros, perfil, uploads y prestamos
+ * bajo una unica interfaz suspendida para su uso desde corrutinas.
  */
 interface ApiService {
 

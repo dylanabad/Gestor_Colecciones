@@ -68,10 +68,10 @@ import com.example.gestor_colecciones.activities.MainActivity
 import androidx.fragment.app.FragmentManager
 
 /**
- * Fragment principal de la app.
- * Muestra la lista de colecciones del usuario y actúa como hub
- * de navegación hacia el resto de secciones (búsqueda, logros,
- * préstamos, papelera, estadísticas, etc.).
+ * Pantalla principal de la aplicacion.
+ * 
+ * Muestra las colecciones del usuario y actua como punto de entrada al resto de
+ * modulos: items, prestamos, papelera, estadisticas, logros y perfil.
  */
 class ColeccionesFragment : Fragment() {
 
@@ -1020,6 +1020,9 @@ class ColeccionesFragment : Fragment() {
  * @param spanCount   Número de columnas del grid.
  * @param spacing     Espacio en píxeles entre celdas.
  * @param includeEdge Si true, también añade margen en los bordes exteriores del grid.
+ */
+/**
+ * Decoracion de RecyclerView que aplica separacion uniforme en una cuadricula.
  */
 class GridSpacingItemDecoration(
     private val spanCount: Int,

@@ -4,7 +4,9 @@ import androidx.room.*
 import com.example.gestor_colecciones.entities.Movimiento
 import kotlinx.coroutines.flow.Flow
 
-// DAO encargado de gestionar los movimientos (historial de acciones sobre items)
+/**
+ * DAO de movimientos asociados al modulo de prestamos.
+ */
 @Dao
 interface MovimientoDao {
 

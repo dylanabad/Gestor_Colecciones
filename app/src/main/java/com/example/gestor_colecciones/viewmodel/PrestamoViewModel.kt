@@ -1,4 +1,4 @@
-package com.example.gestor_colecciones.viewmodel
+﻿package com.example.gestor_colecciones.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// Estados posibles del módulo de préstamos
+/** Estado transversal del modulo de prestamos. */
 sealed class PrestamoState {
     object Idle : PrestamoState()
     object Loading : PrestamoState()
@@ -18,50 +18,55 @@ sealed class PrestamoState {
     data class Error(val message: String) : PrestamoState()
 }
 
-// ViewModel encargado de gestionar préstamos (API o backend)
+/**
+ * Coordina la carga y las operaciones de prestamos desde la UI.
+ *
+ * Mantiene flujos separados para enviados, recibidos y usuarios disponibles,
+ * ademas de un estado general para acciones de crear, devolver o eliminar.
+ */
 class PrestamoViewModel(
     private val repository: PrestamoRepository
 ) : ViewModel() {
 
-    // Lista de préstamos enviados por el usuario
+    /** Prestamos emitidos por el usuario autenticado. */
     private val _prestados = MutableStateFlow<List<PrestamoDto>>(emptyList())
     val prestados: StateFlow<List<PrestamoDto>> = _prestados
 
-    // Lista de préstamos recibidos por el usuario
+    /** Prestamos recibidos por el usuario autenticado. */
     private val _recibidos = MutableStateFlow<List<PrestamoDto>>(emptyList())
     val recibidos: StateFlow<List<PrestamoDto>> = _recibidos
 
-    // Lista de usuarios disponibles para prestar
+    /** Usuarios disponibles como destinatarios de un prestamo. */
     private val _usuarios = MutableStateFlow<List<UsuarioDto>>(emptyList())
     val usuarios: StateFlow<List<UsuarioDto>> = _usuarios
 
-    // Estado general de operaciones (loading, error, success, idle)
+    /** Estado general de las operaciones accionadas por la UI. */
     private val _state = MutableStateFlow<PrestamoState>(PrestamoState.Idle)
     val state: StateFlow<PrestamoState> = _state
 
-    // Carga los préstamos enviados por el usuario
+    /** Carga la bandeja de prestamos enviados. */
     fun cargarPrestados() {
         viewModelScope.launch {
             try {
                 _prestados.value = repository.getPrestados()
             } catch (e: Exception) {
-                _state.value = PrestamoState.Error("Error cargando préstamos: ${e.message}")
+                _state.value = PrestamoState.Error("Error cargando prestamos: ${e.message}")
             }
         }
     }
 
-    // Carga los préstamos recibidos por el usuario
+    /** Carga la bandeja de prestamos recibidos. */
     fun cargarRecibidos() {
         viewModelScope.launch {
             try {
                 _recibidos.value = repository.getPrestamosRecibidos()
             } catch (e: Exception) {
-                _state.value = PrestamoState.Error("Error cargando préstamos recibidos: ${e.message}")
+                _state.value = PrestamoState.Error("Error cargando prestamos recibidos: ${e.message}")
             }
         }
     }
 
-    // Carga la lista de usuarios disponibles
+    /** Recupera la lista de usuarios disponibles para prestar. */
     fun cargarUsuarios() {
         viewModelScope.launch {
             try {
@@ -72,61 +77,52 @@ class PrestamoViewModel(
         }
     }
 
-    // Crea un nuevo préstamo
+    /** Crea un nuevo prestamo y refresca ambas bandejas al completarse. */
     fun crearPrestamo(request: PrestamoRequest) {
         viewModelScope.launch {
             _state.value = PrestamoState.Loading
             try {
                 repository.crearPrestamo(request)
-                _state.value = PrestamoState.Success("Préstamo creado correctamente")
-
-                // Refresca ambas listas para sincronizar cambios
+                _state.value = PrestamoState.Success("Prestamo creado correctamente")
                 cargarPrestados()
                 cargarRecibidos()
-
             } catch (e: Exception) {
-                _state.value = PrestamoState.Error(e.message ?: "Error al crear el préstamo")
+                _state.value = PrestamoState.Error(e.message ?: "Error al crear el prestamo")
             }
         }
     }
 
-    // Marca un préstamo como devuelto
+    /** Marca un prestamo como devuelto y recarga los listados visibles. */
     fun devolverPrestamo(id: Long) {
         viewModelScope.launch {
             _state.value = PrestamoState.Loading
             try {
                 repository.devolverPrestamo(id)
-                _state.value = PrestamoState.Success("Devolución registrada correctamente")
-
-                // Refresca listas tras devolución
+                _state.value = PrestamoState.Success("Devolucion registrada correctamente")
                 cargarPrestados()
                 cargarRecibidos()
-
             } catch (e: Exception) {
-                _state.value = PrestamoState.Error(e.message ?: "Error al registrar la devolución")
+                _state.value = PrestamoState.Error(e.message ?: "Error al registrar la devolucion")
             }
         }
     }
 
-    // Elimina un préstamo
+    /** Elimina un prestamo y actualiza las bandejas del modulo. */
     fun eliminarPrestamo(id: Long) {
         viewModelScope.launch {
             _state.value = PrestamoState.Loading
             try {
                 repository.deletePrestamo(id)
-                _state.value = PrestamoState.Success("Préstamo eliminado correctamente")
-
-                // Refresca listas tras eliminación
+                _state.value = PrestamoState.Success("Prestamo eliminado correctamente")
                 cargarPrestados()
                 cargarRecibidos()
-
             } catch (e: Exception) {
-                _state.value = PrestamoState.Error(e.message ?: "Error al eliminar el préstamo")
+                _state.value = PrestamoState.Error(e.message ?: "Error al eliminar el prestamo")
             }
         }
     }
 
-    // Reinicia el estado de la UI
+    /** Devuelve el estado general a reposo tras consumir un mensaje o resultado. */
     fun resetState() {
         _state.value = PrestamoState.Idle
     }

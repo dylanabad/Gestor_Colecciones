@@ -1,14 +1,18 @@
-package com.example.gestor_colecciones.repository
+﻿package com.example.gestor_colecciones.repository
 
 import android.content.Context
 import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.network.ApiProvider
 
-// Proveedor central de instancias de repositorios
-// Se encarga de crear e inyectar dependencias (DAO + API) en cada repositorio
+/**
+ * Punto unico de creacion de repositorios.
+ *
+ * Mantiene la construccion de dependencias fuera de fragments y activities para
+ * reducir duplicacion y asegurar que cada repositorio recibe el DAO y la API correctos.
+ */
 object RepositoryProvider {
 
-    // Crea instancia del repositorio de colecciones
+    /** Construye el repositorio de colecciones usando el contexto de aplicacion. */
     fun coleccionRepository(context: Context): ColeccionRepository {
         return ColeccionRepository(
             context.applicationContext,
@@ -17,7 +21,7 @@ object RepositoryProvider {
         )
     }
 
-    // Crea instancia del repositorio de items
+    /** Construye el repositorio de items. */
     fun itemRepository(context: Context): ItemRepository {
         return ItemRepository(
             context.applicationContext,
@@ -26,7 +30,7 @@ object RepositoryProvider {
         )
     }
 
-    // Crea instancia del repositorio de categorías
+    /** Construye el repositorio de categorias. */
     fun categoriaRepository(context: Context): CategoriaRepository {
         return CategoriaRepository(
             DatabaseProvider.getCategoriaDao(context),
@@ -34,9 +38,8 @@ object RepositoryProvider {
         )
     }
 
-    // Crea instancia del repositorio de papelera (soft delete y restauración)
+    /** Construye el repositorio de papelera con acceso a colecciones, items y deseos. */
     fun papeleraRepository(context: Context): PapeleraRepository {
-
         val db = DatabaseProvider.getDatabase(context)
 
         return PapeleraRepository(
@@ -48,7 +51,7 @@ object RepositoryProvider {
         )
     }
 
-    // Crea instancia del repositorio de sincronización
+    /** Construye el repositorio responsable de sincronizar la cache local. */
     fun syncRepository(context: Context): SyncRepository {
         return SyncRepository(
             ApiProvider.getApi(context),
@@ -56,7 +59,7 @@ object RepositoryProvider {
         )
     }
 
-    // Crea instancia del repositorio de tags
+    /** Construye el repositorio de etiquetas. */
     fun tagRepository(context: Context): TagRepository {
         return TagRepository(
             DatabaseProvider.getTagDao(context),
@@ -64,9 +67,8 @@ object RepositoryProvider {
         )
     }
 
-    // Crea instancia del repositorio de relación item-tag
+    /** Construye el repositorio que gestiona la relacion entre items y etiquetas. */
     fun itemTagRepository(context: Context): ItemTagRepository {
-
         val db = DatabaseProvider.getDatabase(context)
 
         return ItemTagRepository(
@@ -76,7 +78,7 @@ object RepositoryProvider {
         )
     }
 
-    // Crea instancia del repositorio de lista de deseos
+    /** Construye el repositorio de lista de deseos. */
     fun itemDeseoRepository(context: Context): ItemDeseoRepository {
         return ItemDeseoRepository(
             DatabaseProvider.getDatabase(context).itemDeseoDao(),
@@ -84,7 +86,7 @@ object RepositoryProvider {
         )
     }
 
-    // Crea instancia del repositorio de préstamos
+    /** Construye el repositorio de prestamos. */
     fun prestamoRepository(context: Context): PrestamoRepository {
         return PrestamoRepository(
             ApiProvider.getApi(context),

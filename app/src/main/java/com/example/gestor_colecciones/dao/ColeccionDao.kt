@@ -4,7 +4,9 @@ import androidx.room.*
 import com.example.gestor_colecciones.entities.Coleccion
 import kotlinx.coroutines.flow.Flow
 
-// DAO encargado del acceso a datos de la entidad Coleccion
+/**
+ * Contrato Room para consultar, contar y depurar colecciones activas o en papelera.
+ */
 @Dao
 interface ColeccionDao {
 

@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.Flow
 import java.util.Calendar
 import java.util.Date
 
-// Repositorio encargado de gestionar la papelera (soft delete, restauración y borrado definitivo)
+/**
+ * Repositorio encargado de gestionar la papelera (soft delete, restauración y borrado definitivo)
+ */
 class PapeleraRepository(
     private val context: Context,
     private val coleccionDao: ColeccionDao, // Acceso a colecciones en BD local
@@ -23,19 +25,27 @@ class PapeleraRepository(
     private val api: ApiService             // Acceso a API remota
 ) {
 
-    // Flujo con colecciones marcadas como eliminadas (papelera)
+    /**
+     * Flujo con colecciones marcadas como eliminadas (papelera)
+     */
     val coleccionesEliminadas: Flow<List<Coleccion>> =
         coleccionDao.getColeccionesEliminadas()
 
-    // Flujo con items marcados como eliminados (papelera)
+    /**
+     * Flujo con items marcados como eliminados (papelera)
+     */
     val itemsEliminados: Flow<List<Item>> =
         itemDao.getItemsEliminados()
 
-    // Flujo con deseos marcados como eliminados (papelera)
+    /**
+     * Flujo con deseos marcados como eliminados (papelera)
+     */
     val deseosEliminados: Flow<List<ItemDeseo>> =
         deseoDao.getDeseosEliminados()
 
-    // Mueve una colección a la papelera (soft delete)
+    /**
+     * Mueve una colección a la papelera (soft delete)
+     */
     suspend fun moverColeccionAPapelera(coleccion: Coleccion) {
 
         // Notifica al backend eliminación lógica
@@ -51,7 +61,9 @@ class PapeleraRepository(
         ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
-    // Mueve un item a la papelera (soft delete)
+    /**
+     * Mueve un item a la papelera (soft delete)
+     */
     suspend fun moverItemAPapelera(item: Item) {
 
         // Envía versión eliminada al backend
@@ -74,7 +86,9 @@ class PapeleraRepository(
         ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
-    // Restaura una colección desde la papelera
+    /**
+     * Restaura una colección desde la papelera
+     */
     suspend fun restaurarColeccion(coleccion: Coleccion) {
 
         // Actualiza en backend quitando el estado de eliminado
@@ -95,7 +109,9 @@ class PapeleraRepository(
         ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
-    // Restaura un item desde la papelera
+    /**
+     * Restaura un item desde la papelera
+     */
     suspend fun restaurarItem(item: Item) {
 
         // Actualiza en backend
@@ -118,7 +134,9 @@ class PapeleraRepository(
         ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
-    // Elimina una colección de forma permanente
+    /**
+     * Elimina una colección de forma permanente
+     */
     suspend fun eliminarColeccionDefinitivamente(coleccion: Coleccion) {
 
         // Eliminación física en backend
@@ -129,7 +147,9 @@ class PapeleraRepository(
         ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
-    // Elimina un item de forma permanente
+    /**
+     * Elimina un item de forma permanente
+     */
     suspend fun eliminarItemDefinitivamente(item: Item) {
 
         // Eliminación física en backend
@@ -140,7 +160,9 @@ class PapeleraRepository(
         ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
-    // Restaura un deseo desde la papelera
+    /**
+     * Restaura un deseo desde la papelera
+     */
     suspend fun restaurarDeseo(deseo: ItemDeseo) {
 
         api.saveDeseo(
@@ -158,13 +180,17 @@ class PapeleraRepository(
         )
     }
 
-    // Elimina un deseo de forma permanente
+    /**
+     * Elimina un deseo de forma permanente
+     */
     suspend fun eliminarDeseoDefinitivamente(deseo: ItemDeseo) {
         api.deleteDeseoHard(deseo.id.toLong())
         deseoDao.delete(deseo)
     }
 
-    // Vaciar papelera: elimina definitivamente (backend + local) todos los elementos de una pestaña
+    /**
+     * Vaciar papelera: elimina definitivamente (backend + local) todos los elementos de una pestaña
+     */
     suspend fun vaciarColeccionesEliminadas(colecciones: List<Coleccion>) {
         // Backend: borrado físico (en bucle, porque no hay endpoint bulk)
         colecciones.forEach { api.deleteColeccionHard(it.id.toLong()) }
@@ -186,10 +212,14 @@ class PapeleraRepository(
         deseoDao.deleteAllEliminados()
     }
 
-    // Limpia elementos antiguos de la papelera (más de 30 días)
+    /**
+     * Limpia elementos antiguos de la papelera (más de 30 días)
+     */
     suspend fun limpiarElementosAntiguos() {
 
-        // Calcula timestamp de hace 30 días
+        /**
+         * Calcula timestamp de hace 30 días
+         */
         val hace30Dias = Calendar.getInstance().apply {
             add(Calendar.DAY_OF_YEAR, -30)
         }.timeInMillis

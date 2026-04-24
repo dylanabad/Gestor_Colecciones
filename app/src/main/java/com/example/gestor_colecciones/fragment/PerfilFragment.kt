@@ -34,6 +34,11 @@ import kotlinx.coroutines.launch
 import okhttp3.MultipartBody
 import java.io.File
 
+/**
+ * Pantalla de perfil del coleccionista.
+ * 
+ * Muestra informacion editable del usuario, avatar y estadisticas agregadas de su actividad.
+ */
 class PerfilFragment : Fragment() {
 
     private var _binding: FragmentPerfilBinding? = null

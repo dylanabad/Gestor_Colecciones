@@ -4,7 +4,9 @@ import androidx.room.*
 import com.example.gestor_colecciones.entities.Item
 import kotlinx.coroutines.flow.Flow
 
-// DAO encargado de gestionar el acceso a datos de la entidad Item
+/**
+ * Contrato Room para el catalogo de items, su estado de prestamo y su ciclo de papelera.
+ */
 @Dao
 interface ItemDao {
 

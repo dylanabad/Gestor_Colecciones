@@ -26,6 +26,9 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.transition.MaterialFadeThrough
 import kotlinx.coroutines.launch
 
+/**
+ * Pantalla de arranque que decide si debe mantenerse la sesion existente o redirigir al login.
+ */
 class WelcomeFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

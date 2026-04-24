@@ -3,7 +3,9 @@ package com.example.gestor_colecciones.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-// Entidad que representa una categoría dentro de la base de datos
+/**
+ * Entidad Room que representa una categoria personal del usuario.
+ */
 @Entity(tableName = "Categoria")
 data class Categoria(
 

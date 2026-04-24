@@ -4,7 +4,9 @@ import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.network.DateMapper
 import java.util.Date
 
-// DTO que representa una colección en la comunicación con la API
+/**
+ * Representacion remota de una coleccion y sus adaptadores con Room.
+ */
 data class ColeccionDto(
     val id: Long? = null,                 // Identificador opcional (puede no venir del servidor)
     val nombre: String,                   // Nombre de la colección

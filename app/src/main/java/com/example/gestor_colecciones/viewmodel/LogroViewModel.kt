@@ -12,13 +12,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// ViewModel encargado de gestionar logros del usuario
+/**
+ * ViewModel encargado de gestionar logros del usuario
+ */
 class LogroViewModel(
     private val logroRepository: LogroRepository,
     private val logroManager: LogroManager
 ) : ViewModel() {
 
-    // Lista reactiva de logros almacenados
+    /**
+     * Lista reactiva de logros almacenados
+     */
     val logros: StateFlow<List<Logro>> =
         logroRepository.allLogros.stateIn(
             viewModelScope,
@@ -26,13 +30,19 @@ class LogroViewModel(
             emptyList()
         )
 
-    // Evento puntual para notificar nuevos logros desbloqueados
+    /**
+     * Evento puntual para notificar nuevos logros desbloqueados
+     */
     private val _nuevoLogro = MutableSharedFlow<String>()
 
-    // Flujo público de eventos de logros
+    /**
+     * Flujo público de eventos de logros
+     */
     val nuevoLogro: SharedFlow<String> = _nuevoLogro
 
-    // Comprueba si se han desbloqueado nuevos logros
+    /**
+     * Comprueba si se han desbloqueado nuevos logros
+     */
     fun checkLogros() = viewModelScope.launch {
 
         logroManager.checkAll().forEach { key ->

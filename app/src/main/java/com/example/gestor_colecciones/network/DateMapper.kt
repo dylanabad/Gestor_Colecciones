@@ -4,6 +4,9 @@ import java.util.Date
 import java.util.Locale
 
 // Objeto encargado de convertir fechas entre String y Date usando distintos formatos posibles
+/**
+ * Utilidad de conversion entre fechas locales y representaciones String usadas por la API.
+ */
 object DateMapper {
 
     // Lista de patrones de entrada que se intentarán para parsear un String a Date

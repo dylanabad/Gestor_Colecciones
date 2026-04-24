@@ -4,7 +4,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.Date
 
-// Entidad que representa una colección de items
+/**
+ * Entidad Room que representa una coleccion principal dentro del inventario.
+ */
 @Entity(tableName = "Coleccion")
 data class Coleccion(
 

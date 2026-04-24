@@ -8,19 +8,25 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// Estados posibles para la pantalla de estadísticas
+/**
+ * Estados posibles para la pantalla de estadísticas
+ */
 sealed class StatsState {
     object Loading : StatsState()
     data class Success(val data: List<ColeccionExportData>) : StatsState()
     data class Error(val message: String) : StatsState()
 }
 
-// ViewModel encargado de cargar y exponer estadísticas exportadas
+/**
+ * ViewModel encargado de cargar y exponer estadísticas exportadas
+ */
 class StatsViewModel(
     private val exportRepository: ExportRepository
 ) : ViewModel() {
 
-    // Estado reactivo de la pantalla (loading / success / error)
+    /**
+     * Estado reactivo de la pantalla (loading / success / error)
+     */
     private val _state = MutableStateFlow<StatsState>(StatsState.Loading)
     val state: StateFlow<StatsState> = _state
 
@@ -29,7 +35,9 @@ class StatsViewModel(
         loadStats()
     }
 
-    // Carga estadísticas desde el repositorio
+    /**
+     * Carga estadísticas desde el repositorio
+     */
     fun loadStats() = viewModelScope.launch {
         _state.value = StatsState.Loading
 

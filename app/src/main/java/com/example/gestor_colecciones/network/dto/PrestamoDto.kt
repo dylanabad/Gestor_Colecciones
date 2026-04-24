@@ -1,6 +1,8 @@
 package com.example.gestor_colecciones.network.dto
 
-// DTO que representa un préstamo en la comunicación con la API
+/**
+ * Representacion remota de un prestamo entre usuarios.
+ */
 data class PrestamoDto(
     val movimientoId: Long,                    // Identificador del movimiento del préstamo
     val itemId: Long,                          // ID del item prestado

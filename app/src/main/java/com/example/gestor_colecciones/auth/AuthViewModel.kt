@@ -1,4 +1,4 @@
-package com.example.gestor_colecciones.auth
+﻿package com.example.gestor_colecciones.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,55 +7,47 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// Estados posibles del proceso de autenticación
+/** Representa el estado observable del flujo de autenticacion. */
 sealed class AuthState {
-
-    // Estado inicial sin acción
+    /** Estado inicial, sin operaciones pendientes ni resultados que mostrar. */
     object Idle : AuthState()
 
-    // Estado mientras se está realizando la petición
+    /** Estado transitorio mientras se ejecuta una peticion de autenticacion. */
     object Loading : AuthState()
 
-    // Estado cuando la autenticación es correcta
+    /** Estado emitido cuando el backend devuelve una autenticacion valida. */
     data class Success(val response: AuthResponse) : AuthState()
 
-    // Estado cuando ocurre un error
+    /** Estado emitido cuando la operacion falla y la UI debe informar al usuario. */
     data class Error(val message: String) : AuthState()
 }
 
-// ViewModel que gestiona el flujo de autenticación
+/**
+ * Orquesta login y registro desde la interfaz, exponiendo un unico flujo de
+ * estado para mantener la pantalla desacoplada del repositorio.
+ */
 class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
 
-    // Estado interno mutable
+    /** Estado interno mutable que solo modifica el ViewModel. */
     private val _state = MutableStateFlow<AuthState>(AuthState.Idle)
 
-    // Estado expuesto de forma inmutable a la UI
+    /** Estado publico consumido por la UI. */
     val state: StateFlow<AuthState> = _state
 
-    // Inicia el proceso de login
+    /** Inicia el login clasico por email y contrasena. */
     fun login(email: String, password: String) {
         viewModelScope.launch {
-
-            // Cambia a estado de carga
             _state.value = AuthState.Loading
-
             try {
-                // Llamada al repositorio
                 val response = repository.login(email, password)
-
-                // Estado de éxito con respuesta
                 _state.value = AuthState.Success(response)
-
             } catch (e: Exception) {
-
-                // Estado de error con mensaje
-                _state.value =
-                    AuthState.Error(e.message ?: "Error al iniciar sesión")
+                _state.value = AuthState.Error(e.message ?: "Error al iniciar sesion")
             }
         }
     }
 
-    // Inicia el proceso de login estricto (username + email + password)
+    /** Inicia el login estricto validando usuario, email y contrasena. */
     fun loginStrict(username: String, email: String, password: String) {
         viewModelScope.launch {
             _state.value = AuthState.Loading
@@ -63,30 +55,20 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 val response = repository.loginStrict(username, email, password)
                 _state.value = AuthState.Success(response)
             } catch (e: Exception) {
-                _state.value = AuthState.Error(e.message ?: "Error al iniciar sesión")
+                _state.value = AuthState.Error(e.message ?: "Error al iniciar sesion")
             }
         }
     }
 
-    // Inicia el proceso de registro
+    /** Inicia el registro y refleja el resultado en el estado observable. */
     fun register(username: String, email: String, password: String) {
         viewModelScope.launch {
-
-            // Cambia a estado de carga
             _state.value = AuthState.Loading
-
             try {
-                // Llamada al repositorio
                 val response = repository.register(username, email, password)
-
-                // Estado de éxito con respuesta
                 _state.value = AuthState.Success(response)
-
             } catch (e: Exception) {
-
-                // Estado de error con mensaje
-                _state.value =
-                    AuthState.Error(e.message ?: "Error al registrar")
+                _state.value = AuthState.Error(e.message ?: "Error al registrar")
             }
         }
     }

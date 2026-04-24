@@ -6,7 +6,9 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import java.util.Date
 
-// Entidad que representa un item dentro de una colección
+/**
+ * Entidad Room de un item coleccionable con metadatos, estado y referencias.
+ */
 @Entity(
     tableName = "Item",
     foreignKeys = [

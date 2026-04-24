@@ -20,6 +20,9 @@ import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import java.util.Locale
 
 // Fragmento tipo BottomSheet para filtrar y ordenar items
+/**
+ * Bottom sheet que encapsula el filtrado y la ordenacion avanzada de items.
+ */
 class ItemFilterSortBottomSheet : BottomSheetDialogFragment() {
 
     // Se ejecuta cuando el diálogo empieza a mostrarse

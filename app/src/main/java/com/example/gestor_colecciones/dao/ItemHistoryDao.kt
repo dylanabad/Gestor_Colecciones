@@ -6,7 +6,9 @@ import androidx.room.Query
 import com.example.gestor_colecciones.entities.ItemHistory
 import kotlinx.coroutines.flow.Flow
 
-// DAO encargado del historial de cambios de los items
+/**
+ * DAO encargado del historial local de eventos asociados a items.
+ */
 @Dao
 interface ItemHistoryDao {
 

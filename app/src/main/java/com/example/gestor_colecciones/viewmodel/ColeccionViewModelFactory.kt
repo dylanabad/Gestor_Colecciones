@@ -4,12 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.gestor_colecciones.repository.ColeccionRepository
 
-// Factory encargada de crear instancias de ColeccionViewModel con dependencias
+/**
+ * Factory encargada de crear instancias de ColeccionViewModel con dependencias
+ */
 class ColeccionViewModelFactory(
     private val repo: ColeccionRepository
 ) : ViewModelProvider.Factory {
 
-    // Crea el ViewModel solicitado por el sistema
+    /**
+     * Crea el ViewModel solicitado por el sistema
+     */
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
 
         // Comprueba si el ViewModel solicitado es el correcto

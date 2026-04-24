@@ -4,15 +4,8 @@ import com.example.gestor_colecciones.auth.AuthStore
 import okhttp3.Interceptor
 import okhttp3.Response
 
-/*
- * AuthInterceptor.kt
- *
- * Interceptor OkHttp que añade el encabezado de autorización (Bearer token)
- * a las peticiones salientes cuando exista un token válido en `AuthStore`.
- *
- * Este interceptor se inyecta en el cliente OkHttp usado por Retrofit para
- * garantizar que todas las llamadas remotas que requieran autenticación
- * envíen el token en la cabecera `Authorization`.
+/**
+ * Interceptor de OkHttp que anade el token almacenado en [AuthStore] a cada peticion autenticada.
  */
 class AuthInterceptor(private val authStore: AuthStore) : Interceptor {
     // Intercepta la petición, comprueba si hay token y añade la cabecera si procede

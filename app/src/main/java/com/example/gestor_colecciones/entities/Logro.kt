@@ -4,7 +4,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.Date
 
-// Entidad que representa un logro desbloqueable dentro de la aplicación
+/**
+ * Entidad Room que persiste el estado de desbloqueo de cada logro.
+ */
 @Entity(tableName = "Logro")
 data class Logro(
 

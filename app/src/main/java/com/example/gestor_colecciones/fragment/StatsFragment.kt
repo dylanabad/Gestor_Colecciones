@@ -51,6 +51,9 @@ import android.graphics.Rect
 import java.util.Locale
 import com.github.mikephil.charting.animation.Easing
 
+/**
+ * Resume indicadores agregados del inventario del usuario para la vista de estadisticas.
+ */
 class StatsFragment : Fragment() {
 
     // ViewBinding para acceder a las vistas del layout

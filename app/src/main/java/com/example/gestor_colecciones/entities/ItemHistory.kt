@@ -6,7 +6,9 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
-// Entidad que representa el historial de cambios de un Item
+/**
+ * Entidad Room que registra eventos historicos asociados a items.
+ */
 @Entity(
     tableName = "item_history",
     foreignKeys = [

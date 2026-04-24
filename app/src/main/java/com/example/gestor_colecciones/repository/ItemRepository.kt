@@ -11,21 +11,29 @@ import kotlinx.coroutines.flow.Flow
 import retrofit2.HttpException
 import java.util.Date
 
-// Repositorio encargado de gestionar los items, combinando base de datos local y API remota
+/**
+ * Repositorio encargado de gestionar los items, combinando base de datos local y API remota
+ */
 class ItemRepository(
     private val context: Context,
     private val itemDao: ItemDao, // Acceso a la base de datos local
     private val api: ApiService   // Acceso a la API remota
 ) {
 
-    // Flujo con todos los items almacenados localmente
+    /**
+     * Flujo con todos los items almacenados localmente
+     */
     val allItems: Flow<List<Item>> = itemDao.getAllItems()
 
-    // Inserta un item en la API y lo guarda en la base de datos local
+    /**
+     * Inserta un item en la API y lo guarda en la base de datos local
+     */
     suspend fun insert(item: Item): Long {
         try {
 
-            // Llama a la API para guardar el item en el servidor
+            /**
+             * Llama a la API para guardar el item en el servidor
+             */
             val saved = api.saveItem(
                 item.collectionId.toLong(), // ID de la colección
                 item.categoriaId.takeIf { it > 0 }?.toLong(), // categoría opcional
@@ -43,11 +51,15 @@ class ItemRepository(
         }
     }
 
-    // Actualiza un item en API y base de datos local
+    /**
+     * Actualiza un item en API y base de datos local
+     */
     suspend fun update(item: Item) {
         try {
 
-            // Envía actualización al servidor
+            /**
+             * Envía actualización al servidor
+             */
             val saved = api.saveItem(
                 item.collectionId.toLong(),
                 item.categoriaId.takeIf { it > 0 }?.toLong(),
@@ -63,7 +75,9 @@ class ItemRepository(
         }
     }
 
-    // Elimina un item tanto en la API como en local (soft delete)
+    /**
+     * Elimina un item tanto en la API como en local (soft delete)
+     */
     suspend fun delete(item: Item) {
         try {
 
@@ -84,39 +98,57 @@ class ItemRepository(
         }
     }
 
-    // Obtiene items de una colección como Flow reactivo
+    /**
+     * Obtiene items de una colección como Flow reactivo
+     */
     fun getItemsByCollection(collectionId: Int): Flow<List<Item>> =
         itemDao.getItemsByCollection(collectionId)
 
-    // Obtiene items por categoría como Flow reactivo
+    /**
+     * Obtiene items por categoría como Flow reactivo
+     */
     fun getItemsByCategoria(categoriaId: Int): Flow<List<Item>> =
         itemDao.getItemsByCategoria(categoriaId)
 
-    // Búsqueda de items por título
+    /**
+     * Búsqueda de items por título
+     */
     fun searchItemsByTitle(search: String): Flow<List<Item>> =
         itemDao.searchItemsByTitle(search)
 
-    // Total de items en la base de datos
+    /**
+     * Total de items en la base de datos
+     */
     suspend fun getTotalItems(): Int =
         itemDao.getTotalItems()
 
-    // Suma total del valor de los items
+    /**
+     * Suma total del valor de los items
+     */
     suspend fun getTotalValor(): Double =
         itemDao.getTotalValor() ?: 0.0
 
-    // Alias de flujo por colección (redundante pero útil para UI)
+    /**
+     * Alias de flujo por colección (redundante pero útil para UI)
+     */
     fun getItemsByCollectionFlow(collectionId: Int): Flow<List<Item>> =
         itemDao.getItemsByCollection(collectionId)
 
-    // Obtiene un item por ID
+    /**
+     * Obtiene un item por ID
+     */
     suspend fun getItemById(id: Int): Item? =
         itemDao.getItemById(id)
 
-    // Obtiene items de una colección en una sola consulta (no Flow)
+    /**
+     * Obtiene items de una colección en una sola consulta (no Flow)
+     */
     suspend fun getItemsByCollectionOnce(collectionId: Int): List<Item> =
         itemDao.getItemsByCollectionOnce(collectionId)
 
-    // Extrae un mensaje de error legible desde una HttpException
+    /**
+     * Extrae un mensaje de error legible desde una HttpException
+     */
     private fun extractError(e: HttpException): String {
         val body = e.response()?.errorBody()?.string()
         return if (body.isNullOrBlank()) "HTTP ${e.code()}" else body

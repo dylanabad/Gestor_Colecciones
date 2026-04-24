@@ -39,6 +39,12 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 // Fragmento que muestra el detalle de un item y permite gestionarlo
+/**
+ * Muestra el detalle completo de un item y las acciones asociadas.
+ * 
+ * Desde aqui se consultan sus metadatos, etiquetas, estado de prestamo y operaciones
+ * de edicion o eliminacion.
+ */
 class ItemDetailFragment : Fragment() {
 
     private var itemId: Int = 0 // ID del item recibido por argumentos

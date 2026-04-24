@@ -6,7 +6,9 @@ import com.example.gestor_colecciones.model.ItemTagInfo
 import com.example.gestor_colecciones.model.ItemTagName
 import kotlinx.coroutines.flow.Flow
 
-// DAO encargado de la gestión de etiquetas (tags)
+/**
+ * DAO para etiquetas definidas por el usuario.
+ */
 @Dao
 interface TagDao {
 

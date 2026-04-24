@@ -1,4 +1,4 @@
-package com.example.gestor_colecciones.viewmodel
+﻿package com.example.gestor_colecciones.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import okhttp3.MultipartBody
 
+/** Estado operativo de la pantalla de perfil. */
 sealed class PerfilState {
     object Idle : PerfilState()
     object Loading : PerfilState()
@@ -16,19 +17,29 @@ sealed class PerfilState {
     data class Saved(val message: String) : PerfilState()
 }
 
+/**
+ * Gestiona la carga y actualizacion del perfil del coleccionista.
+ *
+ * Separa la informacion del perfil, las estadisticas derivadas y el estado de
+ * guardado para que la UI pueda reaccionar de forma independiente a cada flujo.
+ */
 class PerfilViewModel(
     private val repository: PerfilRepository
 ) : ViewModel() {
 
+    /** Perfil remoto actual del usuario autenticado. */
     private val _perfil = MutableStateFlow<UsuarioPerfilDto?>(null)
     val perfil: StateFlow<UsuarioPerfilDto?> = _perfil
 
+    /** Estadisticas agregadas que se muestran en el encabezado del perfil. */
     private val _stats = MutableStateFlow<PerfilRepository.Stats?>(null)
     val stats: StateFlow<PerfilRepository.Stats?> = _stats
 
+    /** Estado general de carga y guardado. */
     private val _state = MutableStateFlow<PerfilState>(PerfilState.Idle)
     val state: StateFlow<PerfilState> = _state
 
+    /** Carga de forma conjunta el perfil remoto y las estadisticas locales. */
     fun cargarPerfil() {
         viewModelScope.launch {
             _state.value = PerfilState.Loading
@@ -42,6 +53,7 @@ class PerfilViewModel(
         }
     }
 
+    /** Guarda cambios textuales del perfil y, opcionalmente, sube o elimina el avatar. */
     fun guardarCambios(
         displayName: String?,
         bio: String?,
@@ -70,8 +82,8 @@ class PerfilViewModel(
         }
     }
 
+    /** Limpia el estado temporal una vez consumido por la UI. */
     fun resetState() {
         _state.value = PerfilState.Idle
     }
 }
-

@@ -54,9 +54,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 /**
- * ItemListFragment: Fragmento que muestra la lista global de ítems.
- * A diferencia de ItemListByCollectionFragment, permite ver todos los ítems de la base de datos,
- * pero no permite la creación directa sin una colección asignada por simplicidad de la arquitectura actual.
+ * Presenta el catalogo global de items del usuario fuera del contexto de una sola coleccion.
  */
 class ItemListFragment : Fragment() {
 

@@ -4,7 +4,9 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 
-// Entidad intermedia que representa la relación muchos-a-muchos entre Item y Tag
+/**
+ * Entidad intermedia que relaciona items con etiquetas en Room.
+ */
 @Entity(
     tableName = "item_tags",
     primaryKeys = ["itemId", "tagId"],

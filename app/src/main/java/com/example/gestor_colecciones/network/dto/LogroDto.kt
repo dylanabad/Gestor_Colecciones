@@ -3,7 +3,9 @@ package com.example.gestor_colecciones.network.dto
 import com.example.gestor_colecciones.entities.Logro
 import com.example.gestor_colecciones.network.DateMapper
 
-// DTO que representa un logro en la comunicación con la API
+/**
+ * DTO que modela el estado remoto de un logro desbloqueable.
+ */
 data class LogroDto(
     val key: String,                     // Identificador único del logro
     val desbloqueado: Boolean = false,   // Indica si el logro está desbloqueado

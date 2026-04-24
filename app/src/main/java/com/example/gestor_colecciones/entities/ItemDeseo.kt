@@ -4,7 +4,9 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.Date
 
-// Entidad que representa un item en la lista de deseos
+/**
+ * Entidad Room para elementos guardados en la lista de deseos.
+ */
 @Entity(tableName = "ItemDeseo")
 data class ItemDeseo(
 

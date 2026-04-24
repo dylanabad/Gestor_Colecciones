@@ -39,6 +39,11 @@ import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 
+/**
+ * Centraliza la gestion de elementos eliminados logicamente.
+ * 
+ * Permite restaurar o borrar de forma definitiva colecciones, items y deseos.
+ */
 class PapeleraFragment : Fragment() {
 
     companion object {

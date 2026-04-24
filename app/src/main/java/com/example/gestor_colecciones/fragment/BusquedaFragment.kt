@@ -23,6 +23,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import com.example.gestor_colecciones.R
 
+/**
+ * Fragment dedicado a la busqueda global dentro de la coleccion del usuario.
+ * 
+ * Centraliza filtros y resultados de colecciones, items y otros elementos indexables.
+ */
 class BusquedaFragment : Fragment() {
 
     private var _binding: FragmentBusquedaBinding? = null

@@ -4,7 +4,9 @@ import androidx.room.*
 import com.example.gestor_colecciones.entities.ItemTag
 import kotlinx.coroutines.flow.Flow
 
-// DAO encargado de la relación entre Items y Tags (tabla intermedia)
+/**
+ * DAO de relacion muchos-a-muchos entre items y etiquetas.
+ */
 @Dao
 interface ItemTagDao {
 

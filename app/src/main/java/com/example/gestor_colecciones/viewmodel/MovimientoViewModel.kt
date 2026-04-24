@@ -9,12 +9,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-// ViewModel encargado de gestionar los movimientos de items
+/**
+ * ViewModel encargado de gestionar los movimientos de items
+ */
 class MovimientoViewModel(
     private val repository: MovimientoRepository
 ) : ViewModel() {
 
-    // Lista reactiva de todos los movimientos
+    /**
+     * Lista reactiva de todos los movimientos
+     */
     val movimientos: StateFlow<List<Movimiento>> =
         repository.allMovimientos.stateIn(
             viewModelScope,
@@ -22,18 +26,24 @@ class MovimientoViewModel(
             emptyList()
         )
 
-    // Inserta un nuevo movimiento en la base de datos
+    /**
+     * Inserta un nuevo movimiento en la base de datos
+     */
     fun insert(movimiento: Movimiento) {
         viewModelScope.launch {
             repository.insert(movimiento)
         }
     }
 
-    // Obtiene movimientos filtrados por item
+    /**
+     * Obtiene movimientos filtrados por item
+     */
     fun getMovimientosByItem(itemId: Int) =
         repository.getMovimientosByItem(itemId)
 
-    // Obtiene movimientos filtrados por persona
+    /**
+     * Obtiene movimientos filtrados por persona
+     */
     fun getMovimientosByPersona(personaId: Int) =
         repository.getMovimientosByPersona(personaId)
 }

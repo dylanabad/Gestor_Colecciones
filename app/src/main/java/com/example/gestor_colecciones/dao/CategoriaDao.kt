@@ -4,7 +4,9 @@ import androidx.room.*
 import com.example.gestor_colecciones.entities.Categoria
 import kotlinx.coroutines.flow.Flow
 
-// DAO (Data Access Object) que define las operaciones de base de datos para Categoria
+/**
+ * Define las operaciones Room para categorias activas del usuario.
+ */
 @Dao
 interface CategoriaDao {
 

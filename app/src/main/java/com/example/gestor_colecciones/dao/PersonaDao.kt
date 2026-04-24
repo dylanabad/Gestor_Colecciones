@@ -4,7 +4,9 @@ import androidx.room.*
 import com.example.gestor_colecciones.entities.Persona
 import kotlinx.coroutines.flow.Flow
 
-// DAO encargado de la gestión de personas en la base de datos
+/**
+ * DAO de personas relacionadas con prestamos o contactos del usuario.
+ */
 @Dao
 interface PersonaDao {
 
