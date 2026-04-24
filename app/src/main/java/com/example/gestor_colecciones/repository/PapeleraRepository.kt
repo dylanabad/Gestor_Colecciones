@@ -1,5 +1,6 @@
 package com.example.gestor_colecciones.repository
 
+import android.content.Context
 import com.example.gestor_colecciones.dao.ColeccionDao
 import com.example.gestor_colecciones.dao.ItemDao
 import com.example.gestor_colecciones.dao.ItemDeseoDao
@@ -8,12 +9,14 @@ import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.network.ApiService
 import com.example.gestor_colecciones.entities.ItemDeseo
 import com.example.gestor_colecciones.network.dto.toDto
+import com.example.gestor_colecciones.widget.ColeccionesWidgetProvider
 import kotlinx.coroutines.flow.Flow
 import java.util.Calendar
 import java.util.Date
 
 // Repositorio encargado de gestionar la papelera (soft delete, restauración y borrado definitivo)
 class PapeleraRepository(
+    private val context: Context,
     private val coleccionDao: ColeccionDao, // Acceso a colecciones en BD local
     private val itemDao: ItemDao,           // Acceso a items en BD local
     private val deseoDao: ItemDeseoDao,     // Acceso a deseos en BD local
@@ -45,6 +48,7 @@ class PapeleraRepository(
                 fechaEliminacion = Date()
             )
         )
+        ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
     // Mueve un item a la papelera (soft delete)
@@ -67,6 +71,7 @@ class PapeleraRepository(
                 fechaEliminacion = Date()
             )
         )
+        ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
     // Restaura una colección desde la papelera
@@ -87,6 +92,7 @@ class PapeleraRepository(
                 fechaEliminacion = null
             )
         )
+        ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
     // Restaura un item desde la papelera
@@ -109,6 +115,7 @@ class PapeleraRepository(
                 fechaEliminacion = null
             )
         )
+        ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
     // Elimina una colección de forma permanente
@@ -119,6 +126,7 @@ class PapeleraRepository(
 
         // Eliminación en base de datos local
         coleccionDao.delete(coleccion)
+        ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
     // Elimina un item de forma permanente
@@ -129,6 +137,7 @@ class PapeleraRepository(
 
         // Eliminación en base de datos local
         itemDao.delete(item)
+        ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
     // Restaura un deseo desde la papelera
@@ -163,11 +172,13 @@ class PapeleraRepository(
         // Local: si se borra una colección, borramos sus items locales para evitar huérfanos
         colecciones.forEach { itemDao.deleteByCollectionId(it.id) }
         coleccionDao.deleteAllEliminadas()
+        ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
     suspend fun vaciarItemsEliminados(items: List<Item>) {
         items.forEach { api.deleteItemHard(it.id.toLong()) }
         itemDao.deleteAllEliminados()
+        ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
     suspend fun vaciarDeseosEliminados(deseos: List<ItemDeseo>) {

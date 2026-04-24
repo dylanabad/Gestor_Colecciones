@@ -40,6 +40,7 @@ class ColeccionesWidgetProvider : AppWidgetProvider() {
             if (ids.isEmpty()) return
 
             CoroutineScope(Dispatchers.IO).launch {
+                refreshSnapshot(context)
                 updateWidgets(context, appWidgetManager, ids)
             }
         }
@@ -49,23 +50,7 @@ class ColeccionesWidgetProvider : AppWidgetProvider() {
             appWidgetManager: AppWidgetManager,
             appWidgetIds: IntArray
         ) {
-            val hasSession = !AuthStore(context).getToken().isNullOrBlank()
-
-            val (colecciones, items) = if (hasSession) {
-                val db = DatabaseProvider.getDatabase(context)
-                val coleccionesDb = runCatching { db.coleccionDao().countColecciones() }.getOrNull()
-                val itemsDb = runCatching { db.itemDao().getTotalItems() }.getOrNull()
-
-                if (coleccionesDb != null && itemsDb != null) {
-                    saveSnapshot(context, coleccionesDb, itemsDb)
-                    coleccionesDb to itemsDb
-                } else {
-                    readSnapshot(context)
-                }
-            } else {
-                saveSnapshot(context, 0, 0)
-                0 to 0
-            }
+            val (colecciones, items) = readSnapshot(context)
 
             appWidgetIds.forEach { widgetId ->
                 val views = RemoteViews(context.packageName, R.layout.widget_resumen).apply {
@@ -74,6 +59,23 @@ class ColeccionesWidgetProvider : AppWidgetProvider() {
                 }
 
                 appWidgetManager.updateAppWidget(widgetId, views)
+            }
+        }
+
+        private suspend fun refreshSnapshot(context: Context) {
+            val hasSession = !AuthStore(context).getToken().isNullOrBlank()
+
+            if (!hasSession) {
+                saveSnapshot(context, 0, 0)
+                return
+            }
+
+            val db = DatabaseProvider.getDatabase(context)
+            val colecciones = runCatching { db.coleccionDao().countColecciones() }.getOrNull()
+            val items = runCatching { db.itemDao().getTotalItems() }.getOrNull()
+
+            if (colecciones != null && items != null) {
+                saveSnapshot(context, colecciones, items)
             }
         }
 

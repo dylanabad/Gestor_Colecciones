@@ -11,6 +11,7 @@ object RepositoryProvider {
     // Crea instancia del repositorio de colecciones
     fun coleccionRepository(context: Context): ColeccionRepository {
         return ColeccionRepository(
+            context.applicationContext,
             DatabaseProvider.getColeccionDao(context),
             ApiProvider.getApi(context)
         )
@@ -19,6 +20,7 @@ object RepositoryProvider {
     // Crea instancia del repositorio de items
     fun itemRepository(context: Context): ItemRepository {
         return ItemRepository(
+            context.applicationContext,
             DatabaseProvider.getItemDao(context),
             ApiProvider.getApi(context)
         )
@@ -38,6 +40,7 @@ object RepositoryProvider {
         val db = DatabaseProvider.getDatabase(context)
 
         return PapeleraRepository(
+            context.applicationContext,
             db.coleccionDao(),
             db.itemDao(),
             db.itemDeseoDao(),

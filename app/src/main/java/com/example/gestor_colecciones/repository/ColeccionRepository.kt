@@ -1,15 +1,18 @@
 package com.example.gestor_colecciones.repository
 
+import android.content.Context
 import com.example.gestor_colecciones.dao.ColeccionDao
 import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.network.ApiService
 import com.example.gestor_colecciones.network.dto.toDto
 import com.example.gestor_colecciones.network.dto.toEntity
+import com.example.gestor_colecciones.widget.ColeccionesWidgetProvider
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
 // Repositorio encargado de gestionar colecciones entre base de datos local y API remota
 class ColeccionRepository(
+    private val context: Context,
     private val coleccionDao: ColeccionDao, // Acceso a la BD local
     private val api: ApiService             // Acceso a la API remota
 ) {
@@ -24,7 +27,9 @@ class ColeccionRepository(
         val saved = api.saveColeccion(coleccion.toDto())
 
         // Inserta la versión sincronizada en la base de datos local
-        return coleccionDao.insert(saved.toEntity())
+        return coleccionDao.insert(saved.toEntity()).also {
+            ColeccionesWidgetProvider.refreshAllWidgets(context)
+        }
     }
 
     // Actualiza una colección en API y base de datos local
@@ -37,6 +42,7 @@ class ColeccionRepository(
         // Usamos update() en lugar de insert() para evitar que OnConflictStrategy.REPLACE
         // dispare un DELETE que borre los items en cascada.
         coleccionDao.update(saved.toEntity())
+        ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
     // Elimina una colección en la API y marca como eliminada en local
@@ -52,6 +58,7 @@ class ColeccionRepository(
                 fechaEliminacion = Date()
             )
         )
+        ColeccionesWidgetProvider.refreshAllWidgets(context)
     }
 
     // Obtiene una colección por ID desde la base de datos local

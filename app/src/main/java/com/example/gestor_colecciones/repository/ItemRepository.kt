@@ -1,16 +1,19 @@
 package com.example.gestor_colecciones.repository
 
+import android.content.Context
 import com.example.gestor_colecciones.dao.ItemDao
 import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.network.ApiService
 import com.example.gestor_colecciones.network.dto.toDto
 import com.example.gestor_colecciones.network.dto.toEntity
+import com.example.gestor_colecciones.widget.ColeccionesWidgetProvider
 import kotlinx.coroutines.flow.Flow
 import retrofit2.HttpException
 import java.util.Date
 
 // Repositorio encargado de gestionar los items, combinando base de datos local y API remota
 class ItemRepository(
+    private val context: Context,
     private val itemDao: ItemDao, // Acceso a la base de datos local
     private val api: ApiService   // Acceso a la API remota
 ) {
@@ -30,7 +33,9 @@ class ItemRepository(
             )
 
             // Guarda en local la versión devuelta por la API
-            return itemDao.insert(saved.toEntity(item.collectionId))
+            return itemDao.insert(saved.toEntity(item.collectionId)).also {
+                ColeccionesWidgetProvider.refreshAllWidgets(context)
+            }
 
         } catch (e: HttpException) {
             // Convierte el error HTTP en excepción legible
@@ -51,6 +56,7 @@ class ItemRepository(
 
             // Actualiza en base de datos local
             itemDao.update(saved.toEntity(item.collectionId))
+            ColeccionesWidgetProvider.refreshAllWidgets(context)
 
         } catch (e: HttpException) {
             throw RuntimeException(extractError(e))
@@ -71,6 +77,7 @@ class ItemRepository(
                     fechaEliminacion = Date()
                 )
             )
+            ColeccionesWidgetProvider.refreshAllWidgets(context)
 
         } catch (e: HttpException) {
             throw RuntimeException(extractError(e))
