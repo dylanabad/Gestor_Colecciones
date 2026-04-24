@@ -21,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.auth.AuthStore
 import com.example.gestor_colecciones.repository.RepositoryProvider
+import com.example.gestor_colecciones.widget.ColeccionesWidgetProvider
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.transition.MaterialFadeThrough
 import kotlinx.coroutines.launch
@@ -60,6 +61,7 @@ class WelcomeFragment : Fragment() {
                 viewLifecycleOwner.lifecycleScope.launch {
                     try {
                         RepositoryProvider.syncRepository(requireContext()).syncAll()
+                        ColeccionesWidgetProvider.refreshAllWidgets(requireContext())
 
                         // Elegir destino: colecciones o onboarding según el flag
                         val destino = if (onboardingCompleted) ColeccionesFragment()
@@ -73,6 +75,7 @@ class WelcomeFragment : Fragment() {
                     } catch (e: Exception) {
                         // En caso de error (p. ej. token inválido), limpiar credenciales y volver al login
                         authStore.clear()
+                        ColeccionesWidgetProvider.refreshAllWidgets(requireContext())
                         parentFragmentManager.beginTransaction()
                             .setReorderingAllowed(true)
                             .replace(R.id.fragment_container, AuthFragment())

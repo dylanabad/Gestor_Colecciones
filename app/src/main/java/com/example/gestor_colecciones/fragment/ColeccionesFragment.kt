@@ -48,6 +48,7 @@ import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.repository.PrestamoRepository
 import com.example.gestor_colecciones.util.ImageUtils
 import com.example.gestor_colecciones.network.UploadUtils
+import com.example.gestor_colecciones.widget.ColeccionesWidgetProvider
 import com.example.gestor_colecciones.viewmodel.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gestor_colecciones.util.ThemeManager
@@ -383,6 +384,7 @@ class ColeccionesFragment : Fragment() {
                             // clearAllTables() es una operación de Room, se ejecuta en IO
                             DatabaseProvider.getDatabase(requireContext()).clearAllTables()
                         }
+                        ColeccionesWidgetProvider.refreshAllWidgets(requireContext())
                         // Limpia el back stack completo y navega al login
                         parentFragmentManager.popBackStack(
                             null,

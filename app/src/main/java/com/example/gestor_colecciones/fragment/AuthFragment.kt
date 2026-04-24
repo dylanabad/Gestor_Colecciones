@@ -21,6 +21,7 @@ import com.example.gestor_colecciones.auth.AuthViewModelFactory
 import com.example.gestor_colecciones.databinding.FragmentAuthBinding
 import com.example.gestor_colecciones.network.ApiProvider
 import com.example.gestor_colecciones.repository.RepositoryProvider
+import com.example.gestor_colecciones.widget.ColeccionesWidgetProvider
 import kotlinx.coroutines.launch
 
 /**
@@ -258,6 +259,7 @@ class AuthFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 RepositoryProvider.syncRepository(requireContext()).syncAll()
+                ColeccionesWidgetProvider.refreshAllWidgets(requireContext())
                 navigateToNext()
             } catch (e: Exception) {
                 binding.tvError.text = e.message ?: "Error al sincronizar datos"

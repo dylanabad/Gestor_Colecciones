@@ -2,69 +2,92 @@ package com.example.gestor_colecciones.widget
 
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.widget.RemoteViews
 import com.example.gestor_colecciones.R
+import com.example.gestor_colecciones.auth.AuthStore
 import com.example.gestor_colecciones.database.DatabaseProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-// Provider del widget de colecciones (home screen widget)
 class ColeccionesWidgetProvider : AppWidgetProvider() {
 
-    // Se llama cada vez que el widget necesita actualizarse
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        // Permite ejecutar trabajo asíncrono sin bloquear el hilo principal del widget
         val pendingResult = goAsync()
 
-        // Se lanza una corrutina en segundo plano para actualizar los widgets
         CoroutineScope(Dispatchers.IO).launch {
             updateWidgets(context, appWidgetManager, appWidgetIds)
-
-            // Finaliza la ejecución diferida del widget
             pendingResult.finish()
         }
     }
 
-    // Funciones compartidas para actualizar todos los widgets activos
     companion object {
+        private const val PREFS = "widget_prefs"
+        private const val KEY_COLECCIONES = "colecciones_count"
+        private const val KEY_ITEMS = "items_count"
 
-        // Función suspendida porque accede a base de datos
+        fun refreshAllWidgets(context: Context) {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val component = ComponentName(context, ColeccionesWidgetProvider::class.java)
+            val ids = appWidgetManager.getAppWidgetIds(component)
+
+            if (ids.isEmpty()) return
+
+            CoroutineScope(Dispatchers.IO).launch {
+                updateWidgets(context, appWidgetManager, ids)
+            }
+        }
+
         suspend fun updateWidgets(
             context: Context,
             appWidgetManager: AppWidgetManager,
             appWidgetIds: IntArray
         ) {
-            // Obtiene instancia de la base de datos
-            val db = DatabaseProvider.getDatabase(context)
+            val hasSession = !AuthStore(context).getToken().isNullOrBlank()
 
-            // Obtiene el número total de colecciones (con fallback a 0 si falla)
-            val colecciones = runCatching { db.coleccionDao().countColecciones() }.getOrDefault(0)
+            val (colecciones, items) = if (hasSession) {
+                val db = DatabaseProvider.getDatabase(context)
+                val coleccionesDb = runCatching { db.coleccionDao().countColecciones() }.getOrNull()
+                val itemsDb = runCatching { db.itemDao().getTotalItems() }.getOrNull()
 
-            // Obtiene el número total de items (con fallback a 0 si falla)
-            val items = runCatching { db.itemDao().getTotalItems() }.getOrDefault(0)
+                if (coleccionesDb != null && itemsDb != null) {
+                    saveSnapshot(context, coleccionesDb, itemsDb)
+                    coleccionesDb to itemsDb
+                } else {
+                    readSnapshot(context)
+                }
+            } else {
+                saveSnapshot(context, 0, 0)
+                0 to 0
+            }
 
-            // Recorre cada widget activo para actualizar su UI
             appWidgetIds.forEach { widgetId ->
-
-                // Crea la vista remota del widget usando el layout definido
                 val views = RemoteViews(context.packageName, R.layout.widget_resumen).apply {
-
-                    // Asigna el número de colecciones al TextView correspondiente
                     setTextViewText(R.id.tvColeccionesCount, colecciones.toString())
-
-                    // Asigna el número total de items al TextView correspondiente
                     setTextViewText(R.id.tvItemsCount, items.toString())
                 }
 
-                // Actualiza el widget en pantalla con los nuevos datos
                 appWidgetManager.updateAppWidget(widgetId, views)
             }
+        }
+
+        private fun saveSnapshot(context: Context, colecciones: Int, items: Int) {
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putInt(KEY_COLECCIONES, colecciones)
+                .putInt(KEY_ITEMS, items)
+                .apply()
+        }
+
+        private fun readSnapshot(context: Context): Pair<Int, Int> {
+            val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            return prefs.getInt(KEY_COLECCIONES, 0) to prefs.getInt(KEY_ITEMS, 0)
         }
     }
 }
