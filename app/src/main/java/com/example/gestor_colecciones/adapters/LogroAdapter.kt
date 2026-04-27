@@ -14,9 +14,20 @@ import com.google.android.material.color.MaterialColors
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * Adaptador para mostrar la lista de logros del usuario en un [RecyclerView].
+ *
+ * Visualiza cada logro con su icono, título, descripción y estado (bloqueado/desbloqueado),
+ * aplicando efectos visuales como escala de grises para los no conseguidos.
+ *
+ * @property logros Lista de objetos [Logro] a mostrar.
+ */
 class LogroAdapter(private var logros: List<Logro>) :
     RecyclerView.Adapter<LogroAdapter.LogroViewHolder>() {
 
+    /**
+     * ViewHolder que contiene las referencias a las vistas de un item de logro.
+     */
     class LogroViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvIcono: TextView = itemView.findViewById(R.id.tvIcono)
         val tvTitulo: TextView = itemView.findViewById(R.id.tvTitulo)
@@ -27,12 +38,19 @@ class LogroAdapter(private var logros: List<Logro>) :
         val cardLogro: MaterialCardView = itemView.findViewById(R.id.cardLogro)
     }
 
+    /**
+     * Infla el diseño del item de logro y crea el [LogroViewHolder].
+     */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LogroViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_logro, parent, false)
         return LogroViewHolder(view)
     }
 
+    /**
+     * Vincula los datos de un [Logro] con la vista, configurando el aspecto visual
+     * según si el logro está desbloqueado o bloqueado.
+     */
     override fun onBindViewHolder(holder: LogroViewHolder, position: Int) {
         val logro = logros[position]
         val info = LogroDefinicion.getInfo(logro.key)
@@ -92,8 +110,17 @@ class LogroAdapter(private var logros: List<Logro>) :
         }
     }
 
+    /**
+     * Devuelve la cantidad total de logros en la lista.
+     */
     override fun getItemCount() = logros.size
 
+    /**
+     * Actualiza la lista de logros, ordenándolos para que aparezcan primero los desbloqueados
+     * y, dentro de estos, los más recientes.
+     *
+     * @param nuevos Nueva lista de logros a mostrar.
+     */
     fun updateList(nuevos: List<Logro>) {
         logros = nuevos.sortedWith(
             compareByDescending<Logro> { it.desbloqueado }

@@ -18,12 +18,23 @@ import android.content.res.ColorStateList
 import android.util.TypedValue
 import com.example.gestor_colecciones.util.ImageUtils
 
-// Adapter para mostrar una lista de colecciones en RecyclerView
+/**
+ * Adaptador para mostrar una lista de [Coleccion] en un [RecyclerView].
+ *
+ * Cada elemento visualiza el nombre, descripción, imagen (vía Glide) y un indicador
+ * de color personalizado. También gestiona la visualización de estadísticas rápidas
+ * asociadas a cada colección.
+ *
+ * @property colecciones Lista de colecciones a mostrar.
+ * @property onClick Callback para gestionar el clic simple.
+ * @property onLongClick Callback para gestionar el clic prolongado.
+ * @property coleccionStats Mapa que vincula el ID de la colección con un texto de estadísticas (ej: "12 ítems").
+ */
 class ColeccionAdapter(
-    private var colecciones: List<Coleccion>,                     // Lista principal de colecciones
-    private val onClick: (Coleccion) -> Unit,                    // Click normal en una colección
-    private val onLongClick: (Coleccion) -> Unit,               // Click largo en una colección
-    private val coleccionStats: Map<Int, String> = emptyMap()    // Estadísticas asociadas a cada colección
+    private var colecciones: List<Coleccion>,
+    private val onClick: (Coleccion) -> Unit,
+    private val onLongClick: (Coleccion) -> Unit,
+    private val coleccionStats: Map<Int, String> = emptyMap()
 ) : RecyclerView.Adapter<ColeccionAdapter.ColeccionViewHolder>() {
 
     init {
@@ -31,7 +42,9 @@ class ColeccionAdapter(
         setHasStableIds(true)
     }
 
-    // ViewHolder que contiene las vistas de cada item de colección
+    /**
+     * ViewHolder que gestiona las referencias a las vistas del item de colección.
+     */
     inner class ColeccionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         val card: MaterialCardView = itemView.findViewById(R.id.cardColeccion)
@@ -160,7 +173,10 @@ class ColeccionAdapter(
     override fun getItemId(position: Int): Long =
         colecciones[position].id.toLong()
 
-    // Actualiza la lista usando DiffUtil para animaciones eficientes
+    /**
+     * Actualiza la lista de colecciones utilizando [DiffUtil] para animaciones eficientes.
+     * @param newList La nueva lista de [Coleccion].
+     */
     fun updateList(newList: List<Coleccion>) {
 
         val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {

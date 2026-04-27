@@ -16,10 +16,20 @@ import nl.dionsegijn.konfetti.core.models.Size
 import nl.dionsegijn.konfetti.xml.KonfettiView
 import java.util.concurrent.TimeUnit
 
+/**
+ * Actividad principal de la aplicación que actúa como punto de entrada y contenedor de fragmentos.
+ *
+ * Se encarga de la configuración global de la UI (edge-to-edge, temas), la navegación inicial
+ * y de proporcionar efectos visuales globales como el confeti.
+ */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var konfettiView: KonfettiView
 
+    /**
+     * Inicializa la actividad, aplica el tema, configura los insets del sistema
+     * y carga el fragmento de bienvenida si es la primera vez que se inicia.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         ThemeManager.apply(this)
         super.onCreate(savedInstanceState)
@@ -47,6 +57,9 @@ class MainActivity : AppCompatActivity() {
         ColeccionesWidgetProvider.refreshAllWidgets(this)
     }
 
+    /**
+     * Dispara una animación de confeti desde la parte superior central de la pantalla.
+     */
     fun lanzarConfeti() {
         val party = Party(
             emitter = Emitter(duration = 3000, TimeUnit.MILLISECONDS).max(120),

@@ -14,10 +14,19 @@ import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.util.ImageUtils
 
-// Adapter principal para mostrar la lista de Items en un RecyclerView
+/**
+ * Adaptador principal para mostrar una lista de [Item] en un [RecyclerView].
+ *
+ * Gestiona la visualización detallada de los elementos de una colección, incluyendo
+ * imágenes (vía Glide), calificaciones, etiquetas, estado de favorito y préstamos.
+ * Utiliza [DiffUtil] para actualizaciones eficientes de la lista.
+ *
+ * @property items Lista actual de items mostrados.
+ * @property categoriasMap Mapa que asocia IDs de categoría con sus nombres para mostrar.
+ */
 class ItemAdapter(
-    items: List<Item> = emptyList(),                  // Lista inicial de items
-    categoriasMap: Map<Int, String> = emptyMap()       // Mapa de categorías por ID
+    items: List<Item> = emptyList(),
+    categoriasMap: Map<Int, String> = emptyMap()
 ) : RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
 
     // Lista interna de items
@@ -28,27 +37,29 @@ class ItemAdapter(
         setHasStableIds(true)
     }
 
-    // Mapa de categorías (ID -> nombre), se actualiza dinámicamente
+    /** Mapa de categorías (ID -> nombre). Al actualizarse, refresca la lista completa. */
     var categoriasMap: Map<Int, String> = categoriasMap
         set(value) {
             field = value
             notifyDataSetChanged()
         }
 
-    // Mapa de tags asociados a cada item (itemId -> lista de tags)
+    /** Mapa de etiquetas asociadas a cada item (itemId -> lista de tags). Al actualizarse, refresca la lista completa. */
     var tagsByItemId: Map<Int, List<String>> = emptyMap()
         set(value) {
             field = value
             notifyDataSetChanged()
         }
 
-    // Callback cuando se hace click en un item
+    /** Callback invocado al realizar un clic simple sobre un item. */
     var onItemClick: ((Item) -> Unit)? = null
 
-    // Callback cuando se hace long click en un item
+    /** Callback invocado al realizar una pulsación larga sobre un item. */
     var onItemLongClick: ((Item) -> Unit)? = null
 
-    // ViewHolder que contiene las vistas del layout del item
+    /**
+     * ViewHolder que gestiona las referencias a las vistas del layout `item_row`.
+     */
     inner class ItemViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         val title: TextView = view.findViewById(R.id.tv_item_title)
@@ -160,7 +171,10 @@ class ItemAdapter(
     override fun getItemId(position: Int): Long =
         items[position].id.toLong()
 
-    // Actualización eficiente usando DiffUtil
+    /**
+     * Actualiza la lista de items de forma eficiente utilizando [DiffUtil].
+     * @param newItems La nueva lista de [Item] a mostrar.
+     */
     fun updateList(newItems: List<Item>) {
 
         val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
@@ -181,6 +195,8 @@ class ItemAdapter(
         diff.dispatchUpdatesTo(this)
     }
 
-    // Devuelve un item por posición
+    /**
+     * Devuelve el [Item] en la posición indicada.
+     */
     fun getItem(position: Int): Item = items[position]
 }

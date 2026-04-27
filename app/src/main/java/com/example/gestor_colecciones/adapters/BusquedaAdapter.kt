@@ -7,27 +7,45 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gestor_colecciones.R
 
-// Clase sellada que representa los distintos tipos de elementos en la búsqueda
+/**
+ * Representa los diferentes tipos de elementos que pueden aparecer en la lista de búsqueda.
+ */
 sealed class BusquedaItem {
 
-    // Elemento tipo encabezado (sección)
+    /**
+     * Elemento de cabecera para separar secciones (ej: "Colecciones", "Ítems").
+     * @property titulo Texto a mostrar en la cabecera.
+     */
     data class Header(val titulo: String) : BusquedaItem()
 
-    // Elemento tipo resultado (ítem clicable de búsqueda)
+    /**
+     * Resultado individual de búsqueda clicable.
+     * @property id Identificador único del elemento.
+     * @property icono Representación visual (emoji o símbolo).
+     * @property titulo Texto principal.
+     * @property subtitulo Información secundaria o descripción.
+     * @property tipo Categoría del resultado.
+     * @property esColeccion Verdadero si el resultado es una colección completa.
+     */
     data class Resultado(
-        val id: Int,               // ID del elemento
-        val icono: String,        // Icono representado como texto (emoji o símbolo)
-        val titulo: String,       // Título principal del resultado
-        val subtitulo: String,    // Descripción secundaria
-        val tipo: String,         // Tipo de elemento (ej: colección, item, etc.)
-        val esColeccion: Boolean  // Indica si pertenece a una colección
+        val id: Int,
+        val icono: String,
+        val titulo: String,
+        val subtitulo: String,
+        val tipo: String,
+        val esColeccion: Boolean
     ) : BusquedaItem()
 }
 
-// Adapter para RecyclerView que maneja headers y resultados
+/**
+ * Adaptador para [RecyclerView] que gestiona una lista mixta de cabeceras y resultados de búsqueda.
+ *
+ * @property items Lista de elementos ([BusquedaItem]) a visualizar.
+ * @property onClick Callback que se ejecuta al seleccionar un resultado.
+ */
 class BusquedaAdapter(
-    private var items: List<BusquedaItem>,                       // Lista de elementos a mostrar
-    private val onClick: (BusquedaItem.Resultado) -> Unit        // Callback al pulsar un resultado
+    private var items: List<BusquedaItem>,
+    private val onClick: (BusquedaItem.Resultado) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {

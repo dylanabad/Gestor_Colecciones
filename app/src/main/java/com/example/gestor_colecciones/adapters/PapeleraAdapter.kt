@@ -10,21 +10,39 @@ import com.example.gestor_colecciones.R
 import java.text.SimpleDateFormat
 import java.util.*
 
-// Data class que representa un elemento dentro de la papelera
+/**
+ * Representa un elemento que ha sido enviado a la papelera.
+ *
+ * @property id Identificador del elemento.
+ * @property icono Icono representativo (emoji o símbolo).
+ * @property nombre Nombre del elemento eliminado.
+ * @property meta Información adicional (ej: nombre de la colección original).
+ * @property fechaEliminacion Instante en el que se realizó el borrado.
+ * @property diasRestantes Tiempo de vida restante antes de la purga automática.
+ */
 data class PapeleraItem(
-    val id: Int,                    // ID del elemento eliminado
-    val icono: String,             // Icono representativo
-    val nombre: String,            // Nombre del elemento
-    val meta: String,              // Información adicional o descripción corta
-    val fechaEliminacion: Date,    // Fecha en la que fue eliminado
-    val diasRestantes: Int         // Días restantes antes de eliminación definitiva
+    val id: Int,
+    val icono: String,
+    val nombre: String,
+    val meta: String,
+    val fechaEliminacion: Date,
+    val diasRestantes: Int
 )
 
-// Adapter para mostrar elementos de la papelera en un RecyclerView
+/**
+ * Adaptador para visualizar y gestionar los elementos eliminados temporalmente.
+ *
+ * Permite la restauración de elementos o su gestión mediante pulsación larga.
+ * Muestra advertencias visuales si la eliminación definitiva es inminente.
+ *
+ * @property items Lista de [PapeleraItem] actualmente en la papelera.
+ * @property onRestaurar Callback para solicitar la recuperación de un elemento.
+ * @property onLongClick Callback para abrir opciones adicionales sobre un elemento.
+ */
 class PapeleraAdapter(
-    private var items: List<PapeleraItem>,               // Lista de elementos en papelera
-    private val onRestaurar: (PapeleraItem) -> Unit,    // Callback para restaurar elemento
-    private val onLongClick: (PapeleraItem) -> Unit     // Callback para acciones de click largo
+    private var items: List<PapeleraItem>,
+    private val onRestaurar: (PapeleraItem) -> Unit,
+    private val onLongClick: (PapeleraItem) -> Unit
 ) : RecyclerView.Adapter<PapeleraAdapter.ViewHolder>() {
 
     // Formateador de fecha para mostrar la fecha de eliminación
@@ -89,7 +107,9 @@ class PapeleraAdapter(
     // Número total de elementos en la papelera
     override fun getItemCount() = items.size
 
-    // Actualiza la lista de elementos
+    /**
+     * Actualiza la lista de elementos en la papelera y refresca la vista.
+     */
     fun updateList(nuevos: List<PapeleraItem>) {
         items = nuevos
         notifyDataSetChanged()

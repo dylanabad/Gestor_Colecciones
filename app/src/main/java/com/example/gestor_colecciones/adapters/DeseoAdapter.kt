@@ -13,15 +13,27 @@ import com.example.gestor_colecciones.R
 import androidx.recyclerview.widget.DiffUtil
 import com.example.gestor_colecciones.entities.ItemDeseo
 
-// Adapter para mostrar lista de deseos en un RecyclerView con soporte para completados colapsables
+/**
+ * Adaptador para mostrar una lista de deseos ([ItemDeseo]) en un [RecyclerView].
+ *
+ * Soporta la visualización de elementos pendientes y completados, permitiendo colapsar
+ * o expandir la sección de elementos ya conseguidos mediante una cabecera dinámica.
+ *
+ * @param allItems Lista completa original de deseos.
+ * @param onConseguido Callback invocado cuando un deseo se marca como conseguido.
+ * @param onLongClick Callback invocado al realizar una pulsación larga sobre un deseo.
+ */
 class DeseoAdapter(
-    private var allItems: List<ItemDeseo>,             // Lista completa original
-    private val onConseguido: (ItemDeseo) -> Unit,     // Callback cuando se marca como conseguido
-    private val onLongClick: (ItemDeseo) -> Unit        // Callback para click largo
+    private var allItems: List<ItemDeseo>,
+    private val onConseguido: (ItemDeseo) -> Unit,
+    private val onLongClick: (ItemDeseo) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-    private var displayItems: List<Any> = emptyList()  // Lista procesada para mostrar (Items + Headers)
-    private var isExpanded: Boolean = false            // Estado del desplegable de completados
+    /** Lista procesada que incluye tanto los elementos [ItemDeseo] como las cabeceras [HeaderCompletados]. */
+    private var displayItems: List<Any> = emptyList()
+
+    /** Determina si la sección de elementos completados está expandida o colapsada. */
+    private var isExpanded: Boolean = false
 
     companion object {
         private const val TYPE_ITEM = 0
@@ -32,6 +44,10 @@ class DeseoAdapter(
         processItems()
     }
 
+    /**
+     * Procesa la lista [allItems] para generar [displayItems], organizando los elementos
+     * en pendientes y completados, e insertando la cabecera si es necesario.
+     */
     private fun processItems() {
         val pendientes = allItems.filter { !it.conseguido }
         val completados = allItems.filter { it.conseguido }
@@ -48,8 +64,15 @@ class DeseoAdapter(
         displayItems = newList
     }
 
+    /**
+     * Clase de datos que representa la cabecera de la sección de elementos completados.
+     * @property count Número total de deseos completados.
+     */
     data class HeaderCompletados(val count: Int)
 
+    /**
+     * ViewHolder para los elementos de deseo individuales.
+     */
     inner class DeseoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val cardDeseo: com.google.android.material.card.MaterialCardView = itemView.findViewById(R.id.cardDeseo)
         val cvPrioridad: View = itemView.findViewById(R.id.cvPrioridad)
@@ -62,6 +85,9 @@ class DeseoAdapter(
         val btnConseguido: MaterialButton = itemView.findViewById(R.id.btnConseguido)
     }
 
+    /**
+     * ViewHolder para la cabecera de la sección de completados.
+     */
     inner class HeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvHeaderTitle: TextView = itemView.findViewById(R.id.tvHeaderTitle)
         val ivExpandIcon: android.widget.ImageView = itemView.findViewById(R.id.ivExpandIcon)
@@ -122,6 +148,10 @@ class DeseoAdapter(
         }
     }
 
+    /**
+     * Vincula los datos de un [ItemDeseo] con su vista correspondiente, aplicando
+     * estilos visuales según su prioridad y estado de "conseguido".
+     */
     private fun bindDeseo(holder: DeseoViewHolder, item: ItemDeseo) {
         // --- PRIORIDAD VISUAL ---
         when (item.prioridad) {
@@ -188,6 +218,10 @@ class DeseoAdapter(
 
     override fun getItemCount() = displayItems.size
 
+    /**
+     * Actualiza la lista de deseos utilizando [DiffUtil] para calcular los cambios de forma eficiente.
+     * @param nuevos Nueva lista de deseos a mostrar.
+     */
     fun updateList(nuevos: List<ItemDeseo>) {
         val oldDisplayItems = displayItems
         allItems = nuevos
@@ -227,6 +261,10 @@ class DeseoAdapter(
         diffResult.dispatchUpdatesTo(this)
     }
 
+    /**
+     * Obtiene el [ItemDeseo] en la posición especificada.
+     * @throws IllegalStateException Si el elemento en esa posición no es de tipo [ItemDeseo].
+     */
     fun getItem(position: Int): ItemDeseo {
         val data = displayItems[position]
         return if (data is ItemDeseo) data else throw IllegalStateException("Not an item")

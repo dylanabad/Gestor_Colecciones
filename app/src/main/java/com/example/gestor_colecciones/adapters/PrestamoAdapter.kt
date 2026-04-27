@@ -17,6 +17,21 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Adaptador para gestionar la visualización de préstamos en un [RecyclerView].
+ *
+ * Soporta dos modos: [Modo.PRESTADOS] (artículos del usuario prestados a otros)
+ * y [Modo.RECIBIDOS] (artículos de otros en posesión del usuario).
+ *
+ * Utiliza estados visuales (Activo, Vencido, Devuelto) con colores dinámicos
+ * basados en el tema de la aplicación.
+ *
+ * @param lista Lista de objetos [PrestamoDto] a mostrar.
+ * @param modo Define si se muestran préstamos realizados o recibidos.
+ * @param onDevolver Callback invocado al pulsar el botón de devolución (solo en modo prestados).
+ * @param onDelete Callback invocado al pulsar el botón de eliminar.
+ * @param currentUsername Nombre del usuario actual para determinar permisos de borrado.
+ */
 class PrestamoAdapter(
     private var lista: List<PrestamoDto>,
     private val modo: Modo,
@@ -25,10 +40,15 @@ class PrestamoAdapter(
     private val currentUsername: String? = null
 ) : RecyclerView.Adapter<PrestamoAdapter.ViewHolder>() {
 
+    /** Define el contexto del listado de préstamos. */
     enum class Modo { PRESTADOS, RECIBIDOS }
 
+    /** Categorización visual del estado de un préstamo para aplicar estilos. */
     private enum class EstadoVisual { ACTIVO, VENCIDO, DEVUELTO }
 
+    /**
+     * Define el estilo visual aplicado a un item de préstamo.
+     */
     private data class EstiloEstado(
         val accentColor: Int,
         val badgeBgColor: Int,
@@ -40,8 +60,9 @@ class PrestamoAdapter(
         private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     }
 
-    // ── ViewHolder ────────────────────────────────────────────────────────────
-
+    /**
+     * ViewHolder que gestiona las vistas de un item de préstamo y su vinculación.
+     */
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val viewAccent: View             = view.findViewById(R.id.viewAccent)
         val tvTituloItem: TextView       = view.findViewById(R.id.tvTituloItem)
@@ -152,7 +173,9 @@ class PrestamoAdapter(
 
     override fun getItemCount() = lista.size
 
-    // Actualiza la lista usando DiffUtil para animar solo los cambios reales
+    /**
+     * Actualiza la lista de préstamos de forma animada mediante [DiffUtil].
+     */
     fun updateList(nuevaLista: List<PrestamoDto>) {
         val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
             override fun getOldListSize() = lista.size
