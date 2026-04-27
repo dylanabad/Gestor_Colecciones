@@ -10,8 +10,6 @@ package com.example.gestor_colecciones.model
  * Campos:
  * - itemId: identificador del item al que pertenece el tag
  * - nombre: nombre legible del tag (se muestra en la UI)
- *
- * Nota: Solo se añaden comentarios explicativos en español; no se modifica la lógica.
  */
 data class ItemTagName(
     // ID del item asociado al tag

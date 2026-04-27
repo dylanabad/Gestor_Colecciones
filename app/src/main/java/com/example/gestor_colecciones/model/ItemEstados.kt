@@ -6,8 +6,6 @@ package com.example.gestor_colecciones.model
  * Objeto que expone una lista por defecto de estados que puede tener un Item
  * dentro de la aplicación. Se utiliza para inicializar selectores/AutoComplete
  * y para ofrecer valores por defecto al crear o editar items.
- *
- * Nota: Sólo se añaden comentarios explicativos en español; no se modifica la lógica.
  */
 object ItemEstados {
     // Lista de estados predefinidos (orden de presentación en la UI)

@@ -8,9 +8,6 @@
  * muestra en la UI. El objeto `LogroDefinicion` expone la lista `TODOS` con
  * todas las definiciones y una función helper `getInfo` para recuperar
  * información de un logro por su clave.
- *
- * Nota: Solo se han añadido comentarios explicativos en español; no se modifica
- * la lógica ni los valores de los logros.
  */
 
 // Información básica de un logro: clave, título, descripción y emoji
