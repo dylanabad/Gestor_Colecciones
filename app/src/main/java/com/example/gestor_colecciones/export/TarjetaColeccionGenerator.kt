@@ -7,6 +7,15 @@ import com.example.gestor_colecciones.entities.Item
 import java.io.File
 import kotlin.random.Random
 
+/**
+ * Generador de tarjetas visuales de colecciones para compartir en redes sociales.
+ *
+ * Esta clase crea una imagen cuadrada (1080x1080) de alta calidad con un diseño "gaming" o "futurista",
+ * que incluye gradientes dinámicos, efectos de ruido, desenfoque y una cuadrícula con los
+ * 4 ítems más representativos de una colección.
+ *
+ * @property context Contexto de la aplicación para acceder a directorios de caché.
+ */
 class TarjetaColeccionGenerator(private val context: Context) {
 
     private val size = 1080
@@ -33,6 +42,13 @@ class TarjetaColeccionGenerator(private val context: Context) {
         Color.parseColor("#6C63FF")
     )
 
+    /**
+     * Genera la tarjeta visual y la guarda como un archivo PNG en la caché.
+     *
+     * @param coleccion Colección cuyos datos se van a representar.
+     * @param items Lista de ítems pertenecientes a la colección (se tomarán los 4 primeros).
+     * @return El objeto [File] que apunta a la imagen generada.
+     */
     fun generate(coleccion: Coleccion, items: List<Item>): File {
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -50,6 +66,9 @@ class TarjetaColeccionGenerator(private val context: Context) {
         return file
     }
 
+    /**
+     * Dibuja el fondo base con un gradiente lineal oscuro.
+     */
     private fun drawBackground(canvas: Canvas) {
         val bgGradient = LinearGradient(
             0f, 0f, size.toFloat(), size.toFloat(),
@@ -61,6 +80,9 @@ class TarjetaColeccionGenerator(private val context: Context) {
         )
     }
 
+    /**
+     * Añade una textura de ruido sutil sobre el fondo para un acabado más orgánico.
+     */
     private fun drawNoise(canvas: Canvas) {
         val noiseBitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val random = Random(42)
@@ -77,6 +99,9 @@ class TarjetaColeccionGenerator(private val context: Context) {
         noiseBitmap.recycle()
     }
 
+    /**
+     * Dibuja "blobs" de color con desenfoque y líneas de acento decorativas.
+     */
     private fun drawDecorativeElements(canvas: Canvas) {
         val paintBlob1 = Paint().apply {
             color = colorAccent1
@@ -118,6 +143,9 @@ class TarjetaColeccionGenerator(private val context: Context) {
         )
     }
 
+    /**
+     * Renderiza la cabecera con el avatar circular de la colección y su nombre.
+     */
     private fun drawHeader(canvas: Canvas, coleccion: Coleccion, items: List<Item>) {
         val headerTop = padding + 20f
         var textStartX = padding
@@ -196,6 +224,10 @@ class TarjetaColeccionGenerator(private val context: Context) {
         )
     }
 
+    /**
+     * Genera la cuadrícula central con tarjetas individuales para los ítems.
+     * Incluye badges de estado, precios, valoraciones y tratamiento de imágenes.
+     */
     private fun drawItemsGrid(canvas: Canvas, items: List<Item>) {
         if (items.isEmpty()) return
 
@@ -467,6 +499,9 @@ class TarjetaColeccionGenerator(private val context: Context) {
         }
     }
 
+    /**
+     * Renderiza el pie de la tarjeta con estadísticas agregadas (valor total, promedio de estrellas).
+     */
     private fun drawFooter(canvas: Canvas, coleccion: Coleccion, items: List<Item>) {
         val footerTop = size * 0.895f
         val totalValor = items.sumOf { it.valor }

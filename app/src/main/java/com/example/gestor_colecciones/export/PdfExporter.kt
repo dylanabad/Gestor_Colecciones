@@ -10,42 +10,47 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * Clase encargada de exportar la información de las colecciones a un documento PDF sencillo.
+ *
+ * A diferencia del catálogo visual, este exportador genera un listado textual estructurado
+ * optimizado para la lectura rápida y la impresión, incluyendo metadatos detallados de cada ítem.
+ *
+ * @property context Contexto de la aplicación para acceder a directorios de almacenamiento.
+ */
 class PdfExporter(private val context: Context) {
 
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
     // ── Paleta de colores ────────────────────────────────────────────────────
-    // Cambiado de Color.BLACK / DKGRAY planos a una paleta más coherente
-    private val colorAccent  = Color.rgb(30, 90, 160)   // azul corporativo para títulos
-    private val colorHeading = Color.rgb(50, 50, 50)    // casi negro para secciones
-    private val colorBody    = Color.rgb(90, 90, 90)    // gris medio para cuerpo
-    private val colorMeta    = Color.rgb(130, 130, 130) // gris claro para metadatos
-    private val colorLine    = Color.rgb(210, 210, 210) // separador muy sutil
+    private val colorAccent  = Color.rgb(30, 90, 160)
+    private val colorHeading = Color.rgb(50, 50, 50)
+    private val colorBody    = Color.rgb(90, 90, 90)
+    private val colorMeta    = Color.rgb(130, 130, 130)
+    private val colorLine    = Color.rgb(210, 210, 210)
 
     // ── Tipografía ───────────────────────────────────────────────────────────
-    // Se usa Typeface explícito en lugar de isFakeBoldText (mejor renderizado)
     private val paintTitle = Paint().apply {
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        textSize = 20f        // era 18f — un poco más de presencia para el título
+        textSize = 20f
         color    = colorAccent
-        isAntiAlias = true    // suavizado: mejora legibilidad a cualquier escala
+        isAntiAlias = true
     }
 
     private val paintSection = Paint().apply {
         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        textSize = 13f        // era 14f — armoniza mejor con el cuerpo
+        textSize = 13f
         color    = colorHeading
         isAntiAlias = true
     }
 
     private val paintBody = Paint().apply {
         typeface = Typeface.DEFAULT
-        textSize = 10f        // era 11f — más compacto para listas largas
+        textSize = 10f
         color    = colorBody
         isAntiAlias = true
     }
 
-    // NUEVO: estilo diferenciado para metadatos (estado, valor, fecha…)
     private val paintMeta = Paint().apply {
         typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
         textSize = 9f
@@ -55,7 +60,7 @@ class PdfExporter(private val context: Context) {
 
     private val paintLine = Paint().apply {
         color       = colorLine
-        strokeWidth = 0.8f    // era 1f — línea más fina y elegante
+        strokeWidth = 0.8f
     }
 
     // ── Dimensiones de página (A4) ───────────────────────────────────────────
@@ -63,14 +68,19 @@ class PdfExporter(private val context: Context) {
     private val pageHeight = 842
 
     // ── Márgenes y espaciado ─────────────────────────────────────────────────
-    // Margen lateral aumentado para mayor aire visual
-    private val marginH      = 48f   // era 40f — horizontal
-    private val marginV      = 36f   // nuevo — vertical (top/bottom)
-    private val lineHeight   = 16f   // era 18f — más compacto
-    private val sectionGap   = 10f   // espacio antes de cada colección
-    private val itemIndent   = 14f   // sangría de ítems respecto a la colección
-    private val metaIndent   = 22f   // sangría extra para líneas de metadatos
+    private val marginH      = 48f
+    private val marginV      = 36f
+    private val lineHeight   = 16f
+    private val sectionGap   = 10f
+    private val itemIndent   = 14f
+    private val metaIndent   = 22f
 
+    /**
+     * Genera un archivo PDF con la lista de colecciones e ítems proporcionada.
+     *
+     * @param data Datos de las colecciones a exportar.
+     * @return Archivo PDF generado en el directorio de caché.
+     */
     fun export(data: List<ColeccionExportData>): File {
 
         val document  = PdfDocument()
@@ -97,10 +107,9 @@ class PdfExporter(private val context: Context) {
         // ── Cabecera del documento ───────────────────────────────────────────
         canvas.drawText("Gestor de Colecciones — Exportación", marginH, y, paintTitle)
         y += 6f
-        // Línea de acento bajo el título (más gruesa y del color corporativo)
         val accentLine = Paint().apply { color = colorAccent; strokeWidth = 2f }
         canvas.drawLine(marginH, y, pageWidth - marginH, y, accentLine)
-        y += 24f  // era 20f — más separación tras la cabecera
+        y += 24f
 
         // ── Colecciones ──────────────────────────────────────────────────────
         data.forEach { entry ->
@@ -114,18 +123,18 @@ class PdfExporter(private val context: Context) {
             canvas.drawText("■  ${c.nombre}", marginH, y, paintSection)
             y += lineHeight + 2f
 
-            // Descripción (si existe) — con sangría de ítems
+            // Descripción (si existe)
             c.descripcion?.takeIf { it.isNotBlank() }?.let {
                 canvas.drawText(it, marginH + itemIndent, y, paintBody)
                 y += lineHeight
             }
 
-            // Resumen de colección en línea de metadatos
+            // Resumen de colección
             canvas.drawText(
                 "Creada: ${dateFormat.format(c.fechaCreacion)}    " +
                         "Items: ${entry.items.size}    " +
                         "Valor total: ${"%.2f".format(entry.items.sumOf { it.valor })} €",
-                marginH + itemIndent, y, paintMeta   // era paintBody — diferenciado visualmente
+                marginH + itemIndent, y, paintMeta
             )
             y += lineHeight + 6f
 
@@ -145,7 +154,7 @@ class PdfExporter(private val context: Context) {
                     )
                     y += lineHeight
 
-                    // Metadatos del ítem en fuente mono (fácil de escanear)
+                    // Metadatos del ítem
                     canvas.drawText(
                         "Estado: ${item.estado}   " +
                                 "Valor: ${"%.2f".format(item.valor)} €   " +
@@ -155,7 +164,7 @@ class PdfExporter(private val context: Context) {
                     )
                     y += lineHeight
 
-                    // Descripción del ítem (opcional)
+                    // Descripción del ítem
                     item.descripcion?.takeIf { it.isNotBlank() }?.let {
                         canvas.drawText(it, marginH + metaIndent, y, paintBody)
                         y += lineHeight
@@ -166,9 +175,9 @@ class PdfExporter(private val context: Context) {
             }
 
             // Separador de sección
-            y += 8f   // era 10f — el espacio extra ya lo aporta sectionGap al inicio
+            y += 8f
             canvas.drawLine(marginH, y, pageWidth - marginH, y, paintLine)
-            y += 12f  // era 14f
+            y += 12f
         }
 
         document.finishPage(page)

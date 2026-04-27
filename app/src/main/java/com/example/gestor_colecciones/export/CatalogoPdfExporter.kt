@@ -14,6 +14,19 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * Clase encargada de generar un catálogo completo de las colecciones del usuario en formato PDF.
+ *
+ * El generador crea un documento profesional que incluye:
+ * - Portada con estadísticas generales.
+ * - Resumen métrico y un índice de colecciones.
+ * - Fichas detalladas por cada colección con sus respectivos ítems, incluyendo imágenes,
+ *   calificaciones por estrellas y estados.
+ *
+ * Utiliza la API nativa [PdfDocument] de Android y realiza un renderizado manual sobre [Canvas].
+ *
+ * @property context Contexto de la aplicación necesario para acceder a directorios de caché y recursos.
+ */
 class CatalogoPdfExporter(private val context: Context) {
 
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -21,20 +34,19 @@ class CatalogoPdfExporter(private val context: Context) {
     // ── Página ───────────────────────────────────────────────────────────────
     private val pageWidth    = 595
     private val pageHeight   = 842
-    private val margin       = 40f          // era 36f — más aire lateral
+    private val margin       = 40f
     private val contentWidth = pageWidth - margin * 2
 
     // ── Paleta ───────────────────────────────────────────────────────────────
-    // Se sustituye el azul Material puro por uno más sobrio y profesional
-    private val colorPrimary      = Color.parseColor("#1A3A5C")  // era #1976D2 — azul marino
-    private val colorPrimaryLight = Color.parseColor("#EBF2FA")  // era #E3F2FD — más cálido
-    private val colorAccent       = Color.parseColor("#2E86C1")  // nuevo — versión media del primario
+    private val colorPrimary      = Color.parseColor("#1A3A5C")
+    private val colorPrimaryLight = Color.parseColor("#EBF2FA")
+    private val colorAccent       = Color.parseColor("#2E86C1")
     private val colorDark         = Color.parseColor("#1A1A2E")
-    private val colorGray         = Color.parseColor("#6B6B6B")  // era #757575 — ligeramente más oscuro
-    private val colorLightGray    = Color.parseColor("#F7F7F7")  // era #F5F5F5
-    private val colorDivider      = Color.parseColor("#D8D8D8")  // era #E0E0E0 — más visible
+    private val colorGray         = Color.parseColor("#6B6B6B")
+    private val colorLightGray    = Color.parseColor("#F7F7F7")
+    private val colorDivider      = Color.parseColor("#D8D8D8")
     private val colorWhite        = Color.WHITE
-    private val colorGold         = Color.parseColor("#E8A800")  // era #FFC107 — oro más apagado
+    private val colorGold         = Color.parseColor("#E8A800")
 
     // ── Tipografía ───────────────────────────────────────────────────────────
     // Se elimina isFakeBoldText y se usan Typeface reales en todos los Paint
@@ -46,61 +58,60 @@ class CatalogoPdfExporter(private val context: Context) {
     // Portada
     private val paintCoverBg = Paint().apply { color = colorPrimary }
     private val paintCoverTitle = Paint().apply {
-        typeface = bold; color = colorWhite; textSize = 30f  // era 32f
+        typeface = bold; color = colorWhite; textSize = 30f
         isAntiAlias = true
     }
     private val paintCoverSubtitle = Paint().apply {
-        typeface = normal; color = colorWhite; textSize = 13f  // era 14f
+        typeface = normal; color = colorWhite; textSize = 13f
         isAntiAlias = true; alpha = 210
     }
     private val paintCoverDate = Paint().apply {
-        typeface = mono; color = colorWhite; textSize = 10f    // era 11f
+        typeface = mono; color = colorWhite; textSize = 10f
         isAntiAlias = true; alpha = 170
     }
 
     // Cabecera de colección
     private val paintColeccionBg = Paint().apply { color = colorPrimaryLight }
     private val paintColeccionTitle = Paint().apply {
-        typeface = bold; color = colorPrimary; textSize = 17f  // era 18f
+        typeface = bold; color = colorPrimary; textSize = 17f
         isAntiAlias = true
     }
     private val paintColeccionMeta = Paint().apply {
-        typeface = mono; color = colorGray; textSize = 9f      // era 10f — mono para datos
+        typeface = mono; color = colorGray; textSize = 9f
         isAntiAlias = true
     }
 
     // Ítems
     private val paintItemTitle = Paint().apply {
-        typeface = bold; color = colorDark; textSize = 12f     // era 13f
+        typeface = bold; color = colorDark; textSize = 12f
         isAntiAlias = true
     }
     private val paintItemBody = Paint().apply {
-        typeface = normal; color = colorGray; textSize = 9f    // era 10f
+        typeface = normal; color = colorGray; textSize = 9f
         isAntiAlias = true
     }
     private val paintItemDesc = Paint().apply {
-        typeface = italic; color = colorGray; textSize = 8f    // era 9f
+        typeface = italic; color = colorGray; textSize = 8f
         isAntiAlias = true
-        // Eliminado textSkewX — el italic del Typeface ya aplica inclinación correcta
     }
 
     // Badge de estado
-    private val paintBadgeBg = Paint().apply { color = colorAccent; isAntiAlias = true }  // era colorPrimary
+    private val paintBadgeBg = Paint().apply { color = colorAccent; isAntiAlias = true }
     private val paintBadgeText = Paint().apply {
-        typeface = bold; color = colorWhite; textSize = 8f     // era 9f
+        typeface = bold; color = colorWhite; textSize = 8f
         isAntiAlias = true
     }
 
     // Separadores y fondos
-    private val paintDivider   = Paint().apply { color = colorDivider; strokeWidth = 0.8f }  // era 1f
+    private val paintDivider   = Paint().apply { color = colorDivider; strokeWidth = 0.8f }
     private val paintCardBg    = Paint().apply { color = colorWhite; isAntiAlias = true }
     private val paintCardShadow = Paint().apply {
-        color = Color.parseColor("#18000000"); isAntiAlias = true  // era #1A000000 — sombra más sutil
+        color = Color.parseColor("#18000000"); isAntiAlias = true
     }
 
     // Número de página
     private val paintPageNumber = Paint().apply {
-        typeface = mono; color = colorGray; textSize = 8f      // era 9f
+        typeface = mono; color = colorGray; textSize = 8f
         isAntiAlias = true
     }
 
@@ -117,7 +128,7 @@ class CatalogoPdfExporter(private val context: Context) {
     // Resumen
     private val paintSummaryBg = Paint().apply { color = colorLightGray }
     private val paintSummaryValue = Paint().apply {
-        typeface = bold; color = colorPrimary; textSize = 18f  // era 20f
+        typeface = bold; color = colorPrimary; textSize = 18f
         isAntiAlias = true
     }
     private val paintSummaryLabel = Paint().apply {
@@ -132,6 +143,12 @@ class CatalogoPdfExporter(private val context: Context) {
     private lateinit var canvas: Canvas
     private var y = 0f
 
+    /**
+     * Inicia el proceso de exportación del catálogo.
+     *
+     * @param data Lista de datos estructurados ([ColeccionExportData]) que contienen las colecciones e ítems a exportar.
+     * @return Un objeto [File] que apunta al archivo PDF generado en el directorio de caché.
+     */
     fun export(data: List<ColeccionExportData>): File {
         document = PdfDocument()
         newPage(); drawCover(data)
@@ -144,6 +161,10 @@ class CatalogoPdfExporter(private val context: Context) {
         return file
     }
 
+    /**
+     * Crea una nueva página en el documento, finalizando la anterior si existe.
+     * Reinicia la posición vertical [y] al margen superior.
+     */
     private fun newPage() {
         if (pageNumber > 0) document.finishPage(page)
         pageNumber++
@@ -153,16 +174,29 @@ class CatalogoPdfExporter(private val context: Context) {
         y      = margin
     }
 
+    /**
+     * Verifica si hay espacio suficiente en la página actual para dibujar un bloque de contenido.
+     * Si no hay espacio, finaliza la página actual y comienza una nueva.
+     *
+     * @param needed Altura en píxeles necesaria para el siguiente bloque.
+     */
     private fun checkSpace(needed: Float) {
         if (y + needed > pageHeight - margin - 20f) { drawPageNumber(); newPage() }
     }
 
+    /**
+     * Dibuja el número de página actual en la parte inferior central.
+     */
     private fun drawPageNumber() {
         val text = "$pageNumber"
         val x = pageWidth / 2f - paintPageNumber.measureText(text) / 2f
         canvas.drawText(text, x, pageHeight - 16f, paintPageNumber)
     }
 
+    /**
+     * Renderiza la portada del catálogo con el título de la app, fecha de generación
+     * y un resumen visual rápido.
+     */
     private fun drawCover(data: List<ColeccionExportData>) {
         canvas.drawRect(0f, 0f, pageWidth.toFloat(), pageHeight.toFloat(), paintCoverBg)
 
@@ -174,7 +208,7 @@ class CatalogoPdfExporter(private val context: Context) {
         canvas.drawCircle(0f, pageHeight.toFloat(), 160f, c1)
 
         // Icono
-        val iconSize = 60f          // era 64f
+        val iconSize = 60f
         val iconX    = margin
         val iconY    = pageHeight / 2f - 110f
         val paintIconBg = Paint().apply { color = Color.parseColor("#2AFFFFFF"); isAntiAlias = true }
@@ -187,7 +221,7 @@ class CatalogoPdfExporter(private val context: Context) {
         canvas.drawText("Gestor de", margin, titleY, paintCoverTitle)
         canvas.drawText("Colecciones", margin, titleY + 38f, paintCoverTitle)
 
-        // Línea de acento — más corta y fina para mayor elegancia
+        // Línea de acento
         val accentLine = Paint().apply { color = colorWhite; strokeWidth = 3f; alpha = 160 }
         canvas.drawLine(margin, titleY + 50f, margin + 50f, titleY + 50f, accentLine)
 
@@ -196,19 +230,23 @@ class CatalogoPdfExporter(private val context: Context) {
         // Estadísticas
         val totalItems = data.sumOf { it.items.size }
         val totalValor = data.sumOf { entry -> entry.items.sumOf { it.valor } }
-        val statsY     = titleY + 106f  // era +110f
+        val statsY     = titleY + 106f
         listOf(
             "📚 ${data.size} colecciones",
             "🗂 $totalItems items",
             "💰 ${"%.2f".format(totalValor)} €"
         ).forEachIndexed { i, text ->
-            canvas.drawText(text, margin, statsY + i * 22f, paintCoverSubtitle)  // era *20f
+            canvas.drawText(text, margin, statsY + i * 22f, paintCoverSubtitle)
         }
 
         val fechaText = "Generado el ${SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())}"
-        canvas.drawText(fechaText, margin, pageHeight - 44f, paintCoverDate)  // era -40f
+        canvas.drawText(fechaText, margin, pageHeight - 44f, paintCoverDate)
     }
 
+    /**
+     * Renderiza la página de resumen que contiene métricas globales (valor total, conteos)
+     * y el índice de contenidos del catálogo.
+     */
     private fun drawSummary(data: List<ColeccionExportData>) {
         y = margin
         drawSectionTitle("Resumen general")
@@ -220,7 +258,7 @@ class CatalogoPdfExporter(private val context: Context) {
 
         // Tarjetas de métricas
         val cardW = (contentWidth - 12f) / 3f
-        val cardH = 68f  // era 72f — más compactas
+        val cardH = 68f
         listOf(
             Triple("${data.size}", "Colecciones", "📚"),
             Triple("$totalItems", "Items totales", "🗂"),
@@ -239,7 +277,7 @@ class CatalogoPdfExporter(private val context: Context) {
             canvas.drawText(label, cx + 10f, y + 58f, paintSummaryLabel)
         }
 
-        y += cardH + 18f  // era +20f
+        y += cardH + 18f
 
         // Ítem destacado
         itemMasValioso?.let { item ->
@@ -250,7 +288,7 @@ class CatalogoPdfExporter(private val context: Context) {
                 "${item.titulo}  —  ${"%.2f".format(item.valor)} €  |  ★ ${"%.1f".format(item.calificacion)}",
                 margin + 12f, y + 34f, paintColeccionMeta.apply { typeface = mono }
             )
-            y += 58f  // era 60f
+            y += 58f
         }
 
         y += 8f
@@ -258,8 +296,8 @@ class CatalogoPdfExporter(private val context: Context) {
         y += 8f
 
         data.forEachIndexed { index, entry ->
-            checkSpace(26f)  // era 28f
-            val rowBg = if (index % 2 == 0) colorWhite else Color.parseColor("#F9F9F9")  // era #FAFAFA
+            checkSpace(26f)
+            val rowBg = if (index % 2 == 0) colorWhite else Color.parseColor("#F9F9F9")
             canvas.drawRect(margin, y - 14f, margin + contentWidth, y + 8f,
                 Paint().apply { color = rowBg })
             canvas.drawText("${index + 1}.", margin + 4f, y, paintItemBody)
@@ -274,6 +312,12 @@ class CatalogoPdfExporter(private val context: Context) {
         drawPageNumber()
     }
 
+    /**
+     * Genera una o más páginas detalladas para una colección específica.
+     * Dibuja la cabecera de la colección y una cuadrícula de 2 columnas para sus ítems.
+     *
+     * @param entry Datos de la colección y sus ítems asociados.
+     */
     private fun drawColeccionPage(entry: ColeccionExportData) {
         y = margin
         val headerH = 60f  // era 64f — cabecera más compacta
@@ -409,6 +453,13 @@ class CatalogoPdfExporter(private val context: Context) {
         y += 16f  // era 14f
     }
 
+    /**
+     * Dibuja el sistema de calificación por estrellas para un ítem.
+     *
+     * @param x Coordenada X inicial.
+     * @param y Coordenada Y (línea base).
+     * @param rating Calificación numérica del 0 al 5.
+     */
     private fun drawStars(x: Float, y: Float, rating: Float) {
         val starSize = 9f
         val gap      = 3f
@@ -449,6 +500,10 @@ class CatalogoPdfExporter(private val context: Context) {
         BitmapFactory.decodeFile(path)
     } catch (e: Exception) { null }
 
+    /**
+     * Escala y recorta un [Bitmap] para que encaje exactamente en las dimensiones indicadas
+     * manteniendo el aspecto (Center Crop).
+     */
     private fun scaleBitmap(bitmap: Bitmap, targetW: Int, targetH: Int): Bitmap {
         val scale   = maxOf(targetW / bitmap.width.toFloat(), targetH / bitmap.height.toFloat())
         val scaledW = (bitmap.width  * scale).toInt()
