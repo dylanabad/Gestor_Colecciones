@@ -36,8 +36,12 @@ import java.io.File
 
 /**
  * Pantalla de perfil del coleccionista.
- * 
- * Muestra informacion editable del usuario, avatar y estadisticas agregadas de su actividad.
+ *
+ * Permite al usuario visualizar y editar su información personal (nombre, biografía)
+ * y su imagen de avatar. También muestra estadísticas agregadas de su actividad,
+ * como el número total de colecciones, ítems y logros obtenidos.
+ *
+ * Gestiona permisos de cámara y almacenamiento para la actualización de la foto de perfil.
  */
 class PerfilFragment : Fragment() {
 
@@ -107,6 +111,9 @@ class PerfilFragment : Fragment() {
         }
     }
 
+    /**
+     * Infla el diseño del fragmento utilizando ViewBinding.
+     */
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -116,6 +123,10 @@ class PerfilFragment : Fragment() {
         return binding.root
     }
 
+    /**
+     * Inicializa el ViewModel, configura los listeners de la UI y comienza la observación
+     * de los flujos de datos (perfil, estadísticas y estados).
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -221,6 +232,10 @@ class PerfilFragment : Fragment() {
         viewModel.cargarPerfil()
     }
 
+    /**
+     * Controla el estado de carga de la interfaz, habilitando o deshabilitando botones
+     * y mostrando el indicador de progreso.
+     */
     private fun setLoading(loading: Boolean) {
         binding.btnGuardar.isEnabled = !loading
         binding.btnCambiarFoto.isEnabled = !loading
@@ -232,6 +247,10 @@ class PerfilFragment : Fragment() {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
 
+    /**
+     * Muestra un diálogo para que el usuario elija entre tomar una foto con la cámara
+     * o seleccionar una imagen de la galería.
+     */
     private fun showImageSourceDialog() {
         val options = arrayOf(getString(R.string.galeria), getString(R.string.camara))
         MaterialAlertDialogBuilder(requireContext())
@@ -263,12 +282,23 @@ class PerfilFragment : Fragment() {
             .show()
     }
 
+    /**
+     * Prepara el entorno para abrir la cámara, creando un URI temporal en la galería
+     * para almacenar la fotografía capturada.
+     */
     private fun openCameraForAvatar() {
         val uri = createGalleryImageUri("avatar")
         cameraImageUri = uri
         takeImageLauncher.launch(uri)
     }
 
+    /**
+     * Crea una entrada en [MediaStore] para una nueva imagen, permitiendo que la cámara
+     * guarde el archivo directamente en la galería del sistema.
+     *
+     * @param prefix Prefijo para el nombre del archivo generado.
+     * @return URI de la ubicación donde se guardará la imagen.
+     */
     private fun createGalleryImageUri(prefix: String): Uri {
         val fileName = "${prefix}_${System.currentTimeMillis()}.jpg"
         val resolver = requireContext().contentResolver
@@ -289,6 +319,10 @@ class PerfilFragment : Fragment() {
             ?: throw IllegalStateException("No se pudo crear la imagen en la galeria")
     }
 
+    /**
+     * Notifica al sistema que una imagen que estaba en estado "pendiente" ya ha sido
+     * escrita completamente en el almacenamiento.
+     */
     private fun finalizePendingImage(uri: Uri) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val resolver = requireContext().contentResolver
@@ -303,6 +337,10 @@ class PerfilFragment : Fragment() {
         }
     }
 
+    /**
+     * Guarda un objeto [Bitmap] en la galería del dispositivo y devuelve su [Uri].
+     * Útil para capturas rápidas o previsualizaciones de cámara.
+     */
     private fun saveBitmapToGallery(bitmap: Bitmap, prefix: String): Uri? {
         val fileName = "${prefix}_${System.currentTimeMillis()}.jpg"
         val resolver = requireContext().contentResolver
