@@ -23,7 +23,7 @@ interface LogroDao {
     fun getAllLogros(): Flow<List<Logro>>
 
     // Obtiene un logro específico por su clave
-    @Query("SELECT * FROM Logro WHERE key = :key LIMIT 1")
+    @Query("SELECT * FROM Logro WHERE `key` = :key LIMIT 1")
     suspend fun getByKey(key: String): Logro?
 
     // Cuenta cuántos logros han sido desbloqueados

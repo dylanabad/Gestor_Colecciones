@@ -54,7 +54,18 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 /**
- * Presenta el catalogo global de items del usuario fuera del contexto de una sola coleccion.
+ * Fragmento que presenta el catálogo global de todos los ítems del usuario.
+ *
+ * A diferencia de [ItemListByCollectionFragment], este fragmento muestra ítems
+ * independientemente de la colección a la que pertenecen, proporcionando una vista
+ * de "inventario general".
+ *
+ * Características principales:
+ * - Búsqueda global por título.
+ * - Filtrado y ordenación persistente entre sesiones.
+ * - Gestión centralizada de categorías.
+ * - Soporte para gestos (swipe to delete) para enviar ítems a la papelera.
+ * - Integración con cámara y galería para la actualización de imágenes de ítems.
  */
 class ItemListFragment : Fragment() {
 
@@ -138,6 +149,10 @@ class ItemListFragment : Fragment() {
         return binding.root
     }
 
+    /**
+     * Inicializa los repositorios, el ViewModel y configura el RecyclerView con su
+     * adaptador y comportamiento de deslizamiento (swipe) para borrado.
+     */
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -286,6 +301,10 @@ class ItemListFragment : Fragment() {
         }
     }
 
+    /**
+     * Aplica los criterios de búsqueda, filtrado (categoría, estado, rating) y ordenación
+     * definidos en [filterSortState] sobre la lista completa de ítems.
+     */
     private fun applyFiltersAndSort() {
         val query = searchQuery.trim().lowercase(Locale.getDefault())
         var list = fullItemList
@@ -398,6 +417,10 @@ class ItemListFragment : Fragment() {
 
     // --- Edición de Item ---
 
+    /**
+     * Muestra un diálogo modal para editar los detalles de un ítem existente.
+     * Permite modificar metadatos y actualizar la imagen desde cámara o galería.
+     */
     private fun showEditItemDialog(item: Item) {
         selectedItemImageUri = null
         val categoriasList = categoriasMap.entries.toList()

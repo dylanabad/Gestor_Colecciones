@@ -51,10 +51,16 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Lista los items pertenecientes a una coleccion concreta.
- * 
- * Es la pantalla operativa principal para navegar, crear, editar y reorganizar el
- * contenido interno de una coleccion.
+ * Fragmento encargado de listar los ítems pertenecientes a una colección específica.
+ *
+ * Es la pantalla operativa principal para la gestión de ítems, permitiendo:
+ * - Visualización y búsqueda de ítems en tiempo real.
+ * - Filtrado avanzado (categoría, estado, etiquetas, calificación) y ordenación.
+ * - Creación y edición de ítems mediante diálogos modales con soporte para imágenes y metadatos.
+ * - Gestión dinámica de categorías asociadas.
+ * - Eliminación lógica de ítems enviándolos a la papelera (vía gestos de deslizamiento).
+ *
+ * Utiliza [ItemViewModel] para la persistencia de datos y [ItemAdapter] para la representación en lista.
  */
 class ItemListByCollectionFragment : Fragment() {
 
