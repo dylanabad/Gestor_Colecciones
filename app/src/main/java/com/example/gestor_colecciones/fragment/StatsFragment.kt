@@ -23,8 +23,6 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.google.android.material.transition.MaterialFadeThrough
-import com.example.gestor_colecciones.R
-import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentStatsBinding
 import com.example.gestor_colecciones.repository.ColeccionExportData
 import com.example.gestor_colecciones.repository.ExportRepository
@@ -44,10 +42,6 @@ import android.widget.Toast
 import androidx.core.content.FileProvider
 import java.io.File
 import java.io.FileOutputStream
-import java.io.OutputStream
-import android.R.attr.colorPrimary
-import android.graphics.Paint
-import android.graphics.Rect
 import java.util.Locale
 import com.github.mikephil.charting.animation.Easing
 

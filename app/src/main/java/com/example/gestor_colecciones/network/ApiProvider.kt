@@ -1,4 +1,4 @@
-package com.example.gestor_colecciones.network
+﻿package com.example.gestor_colecciones.network
 
 import android.content.Context
 import com.example.gestor_colecciones.auth.AuthStore
@@ -10,47 +10,55 @@ import retrofit2.converter.gson.GsonConverterFactory
 /**
  * Construye y expone la instancia compartida de Retrofit para toda la aplicacion.
  *
- * Configura autenticacion por token, logging de peticiones y la URL base usada
- * por el emulador Android para acceder al backend local.
+ * La instancia se invalida automaticamente cuando cambia la URL base del backend.
  */
 object ApiProvider {
-    // URL base de la API (usar 10.0.2.2 para acceder al host desde el emulador Android)
-    private const val BASE_URL = "http://10.0.2.2:8080/"
-
-    // Instancia volátil de ApiService para acceso singleton thread-safe
     @Volatile
     private var api: ApiService? = null
 
-    // Devuelve la instancia compartida de ApiService; la crea si no existe.
-    // Se sincroniza sobre el objeto para asegurar que sólo se construye una vez
-    // incluso en entornos multihilo.
-    fun getApi(context: Context): ApiService {
-        return api ?: synchronized(this) {
-            // AuthStore para obtener el token actual de la sesión
-            val authStore = AuthStore(context.applicationContext)
+    @Volatile
+    private var configuredBaseUrl: String? = null
 
-            // Interceptor de logging (útil en desarrollo para ver peticiones/respuestas)
+    /** Devuelve la instancia compartida de [ApiService], recreandola si cambia la URL base. */
+    fun getApi(context: Context): ApiService {
+        val desiredBaseUrl = BackendConfig.getBaseUrl(context)
+        val currentApi = api
+        if (currentApi != null && configuredBaseUrl == desiredBaseUrl) {
+            return currentApi
+        }
+
+        return synchronized(this) {
+            val alreadyBuilt = api
+            if (alreadyBuilt != null && configuredBaseUrl == desiredBaseUrl) {
+                return@synchronized alreadyBuilt
+            }
+
+            val authStore = AuthStore(context.applicationContext)
             val logging = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
 
-            // OkHttp client con interceptor de autenticación y logging
             val client = OkHttpClient.Builder()
                 .addInterceptor(AuthInterceptor(authStore))
                 .addInterceptor(logging)
                 .build()
 
-            // Construcción del cliente Retrofit con Gson como converter
             val retrofit = Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(desiredBaseUrl)
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
 
-            // Crear el servicio API y cachearlo en la variable `api`
             val service = retrofit.create(ApiService::class.java)
+            configuredBaseUrl = desiredBaseUrl
             api = service
             service
         }
+    }
+
+    /** Fuerza la recreacion del cliente en la siguiente llamada a [getApi]. */
+    fun invalidate() {
+        api = null
+        configuredBaseUrl = null
     }
 }

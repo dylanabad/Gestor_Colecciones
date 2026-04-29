@@ -12,4 +12,12 @@
     <string name="galeria">Galería</string>
     <string name="camara">Cámara</string>
     <string name="seleccionar_avatar">Seleccionar avatar</string>
+    <string name="servidor_desarrollo">Servidor de desarrollo</string>
+    <string name="url_backend_actual">URL actual del backend</string>
+    <string name="configurar_servidor">Configurar servidor</string>
+    <string name="restablecer_servidor">Restablecer por defecto</string>
+    <string name="hint_url_backend">http://192.168.0.110:8080/</string>
+    <string name="servidor_actualizado">Servidor actualizado</string>
+    <string name="servidor_restablecido">Servidor restablecido al valor por defecto</string>
+    <string name="servidor_invalido">Introduce una URL valida que empiece por http:// o https://</string>
 </resources>
