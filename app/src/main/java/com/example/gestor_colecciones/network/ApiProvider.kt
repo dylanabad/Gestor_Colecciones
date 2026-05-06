@@ -10,28 +10,23 @@ import retrofit2.converter.gson.GsonConverterFactory
 /**
  * Construye y expone la instancia compartida de Retrofit para toda la aplicacion.
  *
- * La instancia se invalida automaticamente cuando cambia la URL base del backend.
+ * Usa 10.0.2.2 porque, desde el emulador Android, esa direccion apunta al
+ * localhost del equipo donde se ejecuta Spring Boot.
  */
 object ApiProvider {
+    private const val BASE_URL = "http://10.0.2.2:8080/"
+
     @Volatile
     private var api: ApiService? = null
 
-    @Volatile
-    private var configuredBaseUrl: String? = null
-
-    /** Devuelve la instancia compartida de [ApiService], recreandola si cambia la URL base. */
+    /** Devuelve la instancia compartida de [ApiService]. */
     fun getApi(context: Context): ApiService {
-        val desiredBaseUrl = BackendConfig.getBaseUrl(context)
         val currentApi = api
-        if (currentApi != null && configuredBaseUrl == desiredBaseUrl) {
-            return currentApi
-        }
+        if (currentApi != null) return currentApi
 
         return synchronized(this) {
             val alreadyBuilt = api
-            if (alreadyBuilt != null && configuredBaseUrl == desiredBaseUrl) {
-                return@synchronized alreadyBuilt
-            }
+            if (alreadyBuilt != null) return@synchronized alreadyBuilt
 
             val authStore = AuthStore(context.applicationContext)
             val logging = HttpLoggingInterceptor().apply {
@@ -44,13 +39,12 @@ object ApiProvider {
                 .build()
 
             val retrofit = Retrofit.Builder()
-                .baseUrl(desiredBaseUrl)
+                .baseUrl(BASE_URL)
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
 
             val service = retrofit.create(ApiService::class.java)
-            configuredBaseUrl = desiredBaseUrl
             api = service
             service
         }
@@ -59,6 +53,5 @@ object ApiProvider {
     /** Fuerza la recreacion del cliente en la siguiente llamada a [getApi]. */
     fun invalidate() {
         api = null
-        configuredBaseUrl = null
     }
 }
