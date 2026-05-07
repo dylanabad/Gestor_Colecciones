@@ -5,6 +5,7 @@ import android.graphics.*
 import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.entities.Item
 import java.io.File
+import kotlin.math.ceil
 import kotlin.random.Random
 
 /**
@@ -654,25 +655,27 @@ class TarjetaColeccionGenerator(private val context: Context) {
 
     private fun loadAndCropBitmap(path: String, targetW: Int, targetH: Int): Bitmap? {
         return try {
-            val bmp = BitmapFactory.decodeFile(path) ?: return null
+            val bmp = ExportImageLoader.loadBitmap(path) ?: return null
             val srcW = bmp.width.toFloat()
             val srcH = bmp.height.toFloat()
 
             val scale = maxOf(targetW / srcW, targetH / srcH)
-            val scaledW = (srcW * scale).toInt()
-            val scaledH = (srcH * scale).toInt()
+            val scaledW = ceil(srcW * scale).toInt().coerceAtLeast(targetW)
+            val scaledH = ceil(srcH * scale).toInt().coerceAtLeast(targetH)
 
             val scaled = Bitmap.createScaledBitmap(bmp, scaledW, scaledH, true)
 
-            val offsetX = (scaledW - targetW) / 2
-            val offsetY = (scaledH - targetH) / 2
+            val cropW = targetW.coerceAtMost(scaled.width)
+            val cropH = targetH.coerceAtMost(scaled.height)
+            val offsetX = ((scaled.width - cropW) / 2).coerceAtLeast(0)
+            val offsetY = ((scaled.height - cropH) / 2).coerceAtLeast(0)
 
             return Bitmap.createBitmap(
                 scaled,
-                offsetX.coerceAtLeast(0),
-                offsetY.coerceAtLeast(0),
-                targetW,
-                targetH
+                offsetX,
+                offsetY,
+                cropW,
+                cropH
             )
         } catch (e: Exception) {
             null

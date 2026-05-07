@@ -2,7 +2,6 @@ package com.example.gestor_colecciones.export
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -13,6 +12,7 @@ import com.example.gestor_colecciones.repository.ColeccionExportData
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.ceil
 
 /**
  * Clase encargada de generar un catálogo completo de las colecciones del usuario en formato PDF.
@@ -496,9 +496,8 @@ class CatalogoPdfExporter(private val context: Context) {
     // Helper para calcular y+offset sin alterar y
     private fun cy(offset: Float) = y + offset
 
-    private fun loadBitmap(path: String): Bitmap? = try {
-        BitmapFactory.decodeFile(path)
-    } catch (e: Exception) { null }
+    private fun loadBitmap(path: String): Bitmap? =
+        ExportImageLoader.loadBitmap(path)
 
     /**
      * Escala y recorta un [Bitmap] para que encaje exactamente en las dimensiones indicadas
@@ -506,10 +505,16 @@ class CatalogoPdfExporter(private val context: Context) {
      */
     private fun scaleBitmap(bitmap: Bitmap, targetW: Int, targetH: Int): Bitmap {
         val scale   = maxOf(targetW / bitmap.width.toFloat(), targetH / bitmap.height.toFloat())
-        val scaledW = (bitmap.width  * scale).toInt()
-        val scaledH = (bitmap.height * scale).toInt()
+        val scaledW = ceil(bitmap.width * scale).toInt().coerceAtLeast(targetW)
+        val scaledH = ceil(bitmap.height * scale).toInt().coerceAtLeast(targetH)
         val scaled  = Bitmap.createScaledBitmap(bitmap, scaledW, scaledH, true)
+        val cropW   = targetW.coerceAtMost(scaled.width)
+        val cropH   = targetH.coerceAtMost(scaled.height)
         return Bitmap.createBitmap(scaled,
-            (scaledW - targetW) / 2, (scaledH - targetH) / 2, targetW, targetH)
+            ((scaled.width - cropW) / 2).coerceAtLeast(0),
+            ((scaled.height - cropH) / 2).coerceAtLeast(0),
+            cropW,
+            cropH
+        )
     }
 }

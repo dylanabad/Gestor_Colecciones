@@ -8,7 +8,9 @@ import com.example.gestor_colecciones.export.CsvExporter
 import com.example.gestor_colecciones.repository.ExportRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import com.example.gestor_colecciones.export.CatalogoPdfExporter
 
@@ -57,9 +59,10 @@ class ExportViewModel(
         _exportState.value = ExportState.Loading
 
         runCatching {
-
-            val data = exportRepository.getDataForExport(ids)
-            CsvExporter(context).export(data)
+            withContext(Dispatchers.IO) {
+                val data = exportRepository.getDataForExport(ids)
+                CsvExporter(context).export(data)
+            }
 
         }.onSuccess {
 
@@ -84,9 +87,10 @@ class ExportViewModel(
         _exportState.value = ExportState.Loading
 
         runCatching {
-
-            val data = exportRepository.getDataForExport(ids)
-            PdfExporter(context).export(data)
+            withContext(Dispatchers.IO) {
+                val data = exportRepository.getDataForExport(ids)
+                PdfExporter(context).export(data)
+            }
 
         }.onSuccess {
 
@@ -111,9 +115,10 @@ class ExportViewModel(
         _exportState.value = ExportState.Loading
 
         runCatching {
-
-            val data = exportRepository.getDataForExport(ids)
-            CatalogoPdfExporter(context).export(data)
+            withContext(Dispatchers.IO) {
+                val data = exportRepository.getDataForExport(ids)
+                CatalogoPdfExporter(context).export(data)
+            }
 
         }.onSuccess {
 
