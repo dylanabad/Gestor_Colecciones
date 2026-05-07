@@ -10,7 +10,7 @@
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBar"
         android:layout_width="match_parent"
-        android:layout_height="320dp"
+        android:layout_height="420dp"
         android:background="?attr/colorSurface">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
@@ -25,13 +25,19 @@
                 android:id="@+id/ivImagen"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:scaleType="centerCrop"
+                android:background="@android:color/black"
+                android:contentDescription="Imagen del item"
+                android:padding="12dp"
+                android:scaleType="fitCenter"
                 android:src="@drawable/ic_no_image"
                 app:layout_collapseMode="parallax" />
 
             <View
+                android:id="@+id/imageOverlay"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:clickable="true"
+                android:focusable="false"
                 android:background="@drawable/bg_header_overlay"
                 app:layout_collapseMode="parallax" />
 

@@ -1,5 +1,6 @@
 package com.example.gestor_colecciones.fragment
 
+import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -30,11 +31,9 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.textview.MaterialTextView
 import com.google.android.material.transition.MaterialSharedAxis
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -62,6 +61,25 @@ class ItemDetailFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? = inflater.inflate(R.layout.fragment_item_detail, container, false)
+
+    private fun showImagePreview(model: Any) {
+        val dialog = Dialog(requireContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_image_preview, null)
+        val previewImage = dialogView.findViewById<ImageView>(R.id.ivPreviewFull)
+        val closeButton = dialogView.findViewById<View>(R.id.btnClosePreview)
+
+        Glide.with(this)
+            .load(model)
+            .fitCenter()
+            .transition(DrawableTransitionOptions.withCrossFade(180))
+            .into(previewImage)
+
+        dialog.setContentView(dialogView)
+        closeButton.setOnClickListener { dialog.dismiss() }
+        dialogView.setOnClickListener { dialog.dismiss() }
+        previewImage.setOnClickListener { }
+        dialog.show()
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -95,6 +113,7 @@ class ItemDetailFragment : Fragment() {
         val tvHistoryEmpty = view.findViewById<TextView>(R.id.tvHistoryEmpty)
         val llItemHistory = view.findViewById<LinearLayout>(R.id.llItemHistory)
         val toolbar = view.findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
+        val imageOverlay = view.findViewById<View>(R.id.imageOverlay)
 
         toolbar.setNavigationOnClickListener {
             requireActivity().onBackPressedDispatcher.onBackPressed()
@@ -384,8 +403,13 @@ class ItemDetailFragment : Fragment() {
                         .placeholder(R.drawable.ic_no_image)
                         .error(R.drawable.ic_no_image)
                         .into(ivImagen)
+                    val openPreview = View.OnClickListener { showImagePreview(model) }
+                    ivImagen.setOnClickListener(openPreview)
+                    imageOverlay.setOnClickListener(openPreview)
                 } else {
                     ivImagen.setImageResource(R.drawable.ic_no_image)
+                    ivImagen.setOnClickListener(null)
+                    imageOverlay.setOnClickListener(null)
                 }
 
                 val categoriaDao = db.categoriaDao()
