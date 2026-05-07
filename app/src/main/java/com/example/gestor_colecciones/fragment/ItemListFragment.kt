@@ -2,6 +2,7 @@ package com.example.gestor_colecciones.fragment
 
 import android.Manifest
 import android.content.ContentValues
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
@@ -17,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -36,12 +38,17 @@ import com.example.gestor_colecciones.entities.Item
 import com.example.gestor_colecciones.model.ItemEstados
 import com.example.gestor_colecciones.model.ItemFilterSortState
 import com.example.gestor_colecciones.model.ItemSortField
+import com.example.gestor_colecciones.repository.ColeccionRepository
 import com.example.gestor_colecciones.repository.CategoriaRepository
+import com.example.gestor_colecciones.repository.ExportRepository
 import com.example.gestor_colecciones.repository.ItemHistoryRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.repository.TagRepository
 import com.example.gestor_colecciones.util.ImageUtils
+import com.example.gestor_colecciones.viewmodel.ExportState
+import com.example.gestor_colecciones.viewmodel.ExportViewModel
+import com.example.gestor_colecciones.viewmodel.ExportViewModelFactory
 import com.example.gestor_colecciones.viewmodel.ItemViewModel
 import com.example.gestor_colecciones.viewmodel.ItemViewModelFactory
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
@@ -65,7 +72,8 @@ import java.util.*
  * - Filtrado y ordenación persistente entre sesiones.
  * - Gestión centralizada de categorías.
  * - Soporte para gestos (swipe to delete) para enviar ítems a la papelera.
- * - Integración con cámara y galería para la actualización de imágenes de ítems.
+ * - I
+ * ntegración con cámara y galería para la actualización de imágenes de ítems.
  */
 class ItemListFragment : Fragment() {
 
@@ -84,9 +92,11 @@ class ItemListFragment : Fragment() {
     private var tagIdsByItemId: Map<Int, Set<Int>> = emptyMap()
 
     private lateinit var itemRepo: ItemRepository
+    private lateinit var coleccionRepo: ColeccionRepository
     private lateinit var categoriaRepo: CategoriaRepository
     private lateinit var tagRepo: TagRepository
     private lateinit var historyRepo: ItemHistoryRepository
+    private lateinit var exportViewModel: ExportViewModel
 
     // Manejo de imágenes (similar a ItemListByCollectionFragment para consistencia en edición)
     private var selectedItemImageUri: Uri? = null
@@ -158,11 +168,17 @@ class ItemListFragment : Fragment() {
 
         val db = DatabaseProvider.getDatabase(requireContext())
         itemRepo = RepositoryProvider.itemRepository(requireContext())
+        coleccionRepo = RepositoryProvider.coleccionRepository(requireContext())
         categoriaRepo = RepositoryProvider.categoriaRepository(requireContext())
         tagRepo = RepositoryProvider.tagRepository(requireContext())
         historyRepo = ItemHistoryRepository(db.itemHistoryDao())
+        val exportRepo = ExportRepository(coleccionRepo, itemRepo)
 
         viewModel = ViewModelProvider(this, ItemViewModelFactory(itemRepo, categoriaRepo, historyRepo))[ItemViewModel::class.java]
+        exportViewModel = ViewModelProvider(
+            this,
+            ExportViewModelFactory(exportRepo)
+        )[ExportViewModel::class.java]
 
         adapter = ItemAdapter(emptyList(), categoriasMap)
         binding.rvItems.layoutManager = LinearLayoutManager(requireContext())
@@ -257,6 +273,9 @@ class ItemListFragment : Fragment() {
         binding.fabAddCategory.setOnClickListener {
             showCreateCategoriaDialog()
         }
+        binding.fabTarjeta.setOnClickListener {
+            showExportDialog()
+        }
 
         binding.searchItems.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
@@ -268,6 +287,30 @@ class ItemListFragment : Fragment() {
         })
 
         binding.btnFilterSort.setOnClickListener { openFilterSort() }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            exportViewModel.exportState.collect { state ->
+                when (state) {
+                    is ExportState.Loading -> {
+                        binding.fabTarjeta.isEnabled = false
+                    }
+                    is ExportState.Success -> {
+                        binding.fabTarjeta.isEnabled = true
+                        if (state.share) shareFile(state.file)
+                        else saveFileToDownloads(state.file)
+                        exportViewModel.resetState()
+                    }
+                    is ExportState.Error -> {
+                        binding.fabTarjeta.isEnabled = true
+                        showSnackbar("Error al exportar: ${state.message}")
+                        exportViewModel.resetState()
+                    }
+                    else -> {
+                        binding.fabTarjeta.isEnabled = true
+                    }
+                }
+            }
+        }
     }
 
     override fun onResume() {
@@ -334,6 +377,111 @@ class ItemListFragment : Fragment() {
         binding.fabAddItem.isEnabled = true
         binding.fabAddItem.alpha = 0.6f
         adapter.categoriasMap = categoriasMap
+    }
+
+    private fun showExportDialog() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val colecciones = coleccionRepo.getAllOnce()
+            if (colecciones.isEmpty()) {
+                showSnackbar("No hay colecciones para exportar")
+                return@launch
+            }
+
+            val nombres = colecciones.map { it.nombre }.toTypedArray()
+            val seleccionadas = BooleanArray(colecciones.size) { true }
+
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Seleccionar colecciones")
+                .setMultiChoiceItems(nombres, seleccionadas) { _, which, isChecked ->
+                    seleccionadas[which] = isChecked
+                }
+                .setPositiveButton("Siguiente") { _, _ ->
+                    val idsSeleccionados = colecciones
+                        .filterIndexed { index, _ -> seleccionadas[index] }
+                        .map { it.id }
+
+                    if (idsSeleccionados.isEmpty()) {
+                        showSnackbar("Selecciona al menos una colección")
+                        return@setPositiveButton
+                    }
+
+                    showExportFormatDialog(idsSeleccionados)
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+        }
+    }
+
+    private fun showExportFormatDialog(ids: List<Int>) {
+        val opciones = arrayOf(
+            "Guardar Catálogo PDF en Descargas",
+            "Compartir Catálogo PDF",
+            "Guardar CSV en Descargas",
+            "Compartir CSV"
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Exportar como")
+            .setItems(opciones) { _, which ->
+                when (which) {
+                    0 -> exportViewModel.exportCatalogoPdf(requireContext(), share = false, ids = ids)
+                    1 -> exportViewModel.exportCatalogoPdf(requireContext(), share = true, ids = ids)
+                    2 -> exportViewModel.exportCsv(requireContext(), share = false, ids = ids)
+                    3 -> exportViewModel.exportCsv(requireContext(), share = true, ids = ids)
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun shareFile(file: File) {
+        val mimeType = if (file.extension == "pdf") "application/pdf" else "text/csv"
+        val uri = FileProvider.getUriForFile(
+            requireContext(),
+            "${requireContext().packageName}.fileprovider",
+            file
+        )
+
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = mimeType
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        startActivity(Intent.createChooser(intent, "Compartir catálogo"))
+    }
+
+    private fun saveFileToDownloads(file: File) {
+        val mimeType = if (file.extension == "pdf") "application/pdf" else "text/csv"
+        val fileName = "catalogo_export_${System.currentTimeMillis()}.${file.extension}"
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val resolver = requireContext().contentResolver
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                    put(MediaStore.Downloads.MIME_TYPE, mimeType)
+                    put(MediaStore.Downloads.IS_PENDING, 1)
+                }
+
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                uri?.let {
+                    resolver.openOutputStream(it)?.use { output ->
+                        file.inputStream().copyTo(output)
+                    }
+                    contentValues.clear()
+                    contentValues.put(MediaStore.Downloads.IS_PENDING, 0)
+                    resolver.update(it, contentValues, null, null)
+                }
+            } else {
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                file.copyTo(File(downloadsDir, fileName), overwrite = true)
+            }
+
+            showSnackbar("Guardado en Descargas: $fileName")
+        } catch (e: Exception) {
+            showSnackbar("Error al guardar: ${e.message}")
+        }
     }
 
     private fun showSnackbar(message: String) {

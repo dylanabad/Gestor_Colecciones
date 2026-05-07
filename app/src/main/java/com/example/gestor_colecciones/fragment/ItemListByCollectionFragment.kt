@@ -1,8 +1,13 @@
 package com.example.gestor_colecciones.fragment
 
 import android.app.DatePickerDialog
+import android.content.ContentValues
+import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +18,7 @@ import android.widget.RatingBar
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -25,7 +31,9 @@ import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ItemAdapter
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
 import com.example.gestor_colecciones.entities.Categoria
+import com.example.gestor_colecciones.entities.Coleccion
 import com.example.gestor_colecciones.entities.Item
+import com.example.gestor_colecciones.export.TarjetaColeccionGenerator
 import com.example.gestor_colecciones.model.ItemEstados
 import com.example.gestor_colecciones.model.ItemFilterSortState
 import com.example.gestor_colecciones.model.ItemSortField
@@ -43,8 +51,11 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textview.MaterialTextView
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -62,7 +73,9 @@ import java.util.Locale
  *
  * Utiliza [ItemViewModel] para la persistencia de datos y [ItemAdapter] para la representación en lista.
  */
-class ItemListByCollectionFragment : Fragment() {
+class
+
+ItemListByCollectionFragment : Fragment() {
 
     private var _binding: FragmentItemListBinding? = null
     private val binding get() = _binding!!
@@ -77,6 +90,7 @@ class ItemListByCollectionFragment : Fragment() {
 
     private val categoriasMap = mutableMapOf<Int, String>()
     private var fullItemList: List<Item> = emptyList()
+    private var currentColeccion: Coleccion? = null
     private var searchQuery: String = ""
     private var filterSortState: ItemFilterSortState = ItemFilterSortState()
     private var tagIdsByItemId: Map<Int, Set<Int>> = emptyMap()
@@ -174,6 +188,7 @@ class ItemListByCollectionFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             val coleccion = coleccionRepo.getById(collectionId)
             if (coleccion != null) {
+                currentColeccion = coleccion
                 binding.tvCollectionName.visibility = View.VISIBLE
                 binding.tvCollectionName.text = coleccion.nombre
 
@@ -226,6 +241,9 @@ class ItemListByCollectionFragment : Fragment() {
         // Gestionar categorías
         binding.fabAddCategory.setOnClickListener {
             showCreateCategoriaDialog()
+        }
+        binding.fabTarjeta.setOnClickListener {
+            showTarjetaDialog()
         }
 
         // Filtros avanzados: mismo BottomSheet que en ItemListFragment
@@ -329,6 +347,93 @@ class ItemListByCollectionFragment : Fragment() {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
             .setAnchorView(binding.fabAddItem)
             .show()
+    }
+
+    private fun showTarjetaDialog() {
+        val coleccion = currentColeccion
+        if (coleccion == null) {
+            showSnackbar("La colección aún se está cargando")
+            return
+        }
+
+        val opciones = arrayOf(
+            "Compartir tarjeta visual",
+            "Guardar tarjeta en Descargas"
+        )
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Tarjeta visual")
+            .setItems(opciones) { _, which ->
+                generateTarjeta(coleccion, share = which == 0)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun generateTarjeta(coleccion: Coleccion, share: Boolean) {
+        binding.fabTarjeta.isEnabled = false
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    TarjetaColeccionGenerator(requireContext()).generate(coleccion, fullItemList)
+                }
+            }.onSuccess { file ->
+                if (share) shareTarjeta(file) else saveTarjetaToDownloads(file)
+            }.onFailure { error ->
+                showSnackbar("Error al generar la tarjeta: ${error.message}")
+            }
+
+            binding.fabTarjeta.isEnabled = true
+        }
+    }
+
+    private fun shareTarjeta(file: File) {
+        val uri = FileProvider.getUriForFile(
+            requireContext(),
+            "${requireContext().packageName}.fileprovider",
+            file
+        )
+
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        startActivity(Intent.createChooser(intent, "Compartir tarjeta visual"))
+    }
+
+    private fun saveTarjetaToDownloads(file: File) {
+        val fileName = "tarjeta_coleccion_${System.currentTimeMillis()}.png"
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val resolver = requireContext().contentResolver
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                    put(MediaStore.Downloads.MIME_TYPE, "image/png")
+                    put(MediaStore.Downloads.IS_PENDING, 1)
+                }
+
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                uri?.let {
+                    resolver.openOutputStream(it)?.use { output ->
+                        file.inputStream().copyTo(output)
+                    }
+                    contentValues.clear()
+                    contentValues.put(MediaStore.Downloads.IS_PENDING, 0)
+                    resolver.update(it, contentValues, null, null)
+                }
+            } else {
+                val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                file.copyTo(File(downloadsDir, fileName), overwrite = true)
+            }
+
+            showSnackbar("Guardado en Descargas: $fileName")
+        } catch (e: Exception) {
+            showSnackbar("Error al guardar: ${e.message}")
+        }
     }
 
     // -------------------------------------------------------------------------
