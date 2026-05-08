@@ -50,6 +50,15 @@ class WelcomeFragment : Fragment() {
                 .getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
                 .getBoolean("onboarding_completed", false)
 
+            if (!onboardingCompleted) {
+                parentFragmentManager.beginTransaction()
+                    .setReorderingAllowed(true)
+                    .replace(R.id.fragment_container, OnboardingFragment())
+                    .addToBackStack(null)
+                    .commit()
+                return@setOnClickListener
+            }
+
             val authStore = AuthStore(requireContext())
             // Si no hay token, navegar al fragment de autenticación
             if (authStore.getToken().isNullOrBlank()) {
@@ -67,8 +76,7 @@ class WelcomeFragment : Fragment() {
                         ColeccionesWidgetProvider.refreshAllWidgets(requireContext())
 
                         // Elegir destino: colecciones o onboarding según el flag
-                        val destino = if (onboardingCompleted) ColeccionesFragment()
-                        else OnboardingFragment()
+                        val destino = ColeccionesFragment()
 
                         parentFragmentManager.beginTransaction()
                             .setReorderingAllowed(true)

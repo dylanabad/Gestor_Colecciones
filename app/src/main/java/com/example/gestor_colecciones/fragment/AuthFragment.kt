@@ -276,18 +276,9 @@ class AuthFragment : Fragment() {
      * Usa SharedPreferences para leer el flag guardado en el primer uso de la app.
      */
     private fun navigateToNext() {
-        val onboardingCompleted = requireContext()
-            .getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            .getBoolean("onboarding_completed", false)
-
-        // Si ya vio el onboarding va a colecciones; si no, al onboarding primero
-        val destino =
-            if (onboardingCompleted) ColeccionesFragment()
-            else OnboardingFragment()
-
         parentFragmentManager.beginTransaction()
             .setReorderingAllowed(true)
-            .replace((view?.parent as ViewGroup).id, destino)
+            .replace((view?.parent as ViewGroup).id, ColeccionesFragment())
             .commit()
     }
 
