@@ -1,5 +1,9 @@
 package com.example.gestor_colecciones.network
 
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
@@ -25,6 +29,20 @@ object DateMapper {
 
         // Si el valor es nulo o vacío, devuelve null directamente
         if (value.isNullOrBlank()) return null
+
+        runCatching {
+            return Date.from(
+                OffsetDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME).toInstant()
+            )
+        }
+
+        runCatching {
+            return Date.from(
+                LocalDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+            )
+        }
 
         // Recorre todos los patrones disponibles hasta encontrar uno válido
         for (pattern in parsePatterns) {

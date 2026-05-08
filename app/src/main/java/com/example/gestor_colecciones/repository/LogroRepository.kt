@@ -69,19 +69,22 @@ class LogroRepository(
                     // Si no existe, lo inserta directamente
                     logroDao.insert(dto.toEntity())
 
-                } else if (dto.desbloqueado && !existing.desbloqueado) {
+                } else if (dto.desbloqueado) {
 
                     // Si está desbloqueado en remoto pero no en local, actualiza estado
-                    logroDao.update(
-                        existing.copy(
-                            desbloqueado = true,
+                    val remoteDate = DateMapper.parse(dto.fechaDesbloqueo)
+                    val shouldUpdate =
+                        !existing.desbloqueado ||
+                            (existing.fechaDesbloqueo == null && remoteDate != null)
 
-                            // Convierte fecha del backend a Date local
-                            fechaDesbloqueo =
-                                DateMapper.parse(dto.fechaDesbloqueo)
-                                    ?: existing.fechaDesbloqueo
+                    if (shouldUpdate) {
+                        logroDao.update(
+                            existing.copy(
+                                desbloqueado = true,
+                                fechaDesbloqueo = remoteDate ?: existing.fechaDesbloqueo
+                            )
                         )
-                    )
+                    }
                 }
             }
         }

@@ -85,6 +85,9 @@ class LogroAdapter(private var logros: List<Logro>) :
                 val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
                 holder.tvFecha.text = "DESBLOQUEADO EL ${sdf.format(it).uppercase()}"
                 holder.tvFecha.visibility = View.VISIBLE
+            } ?: run {
+                holder.tvFecha.text = "DESBLOQUEADO"
+                holder.tvFecha.visibility = View.VISIBLE
             }
         } else {
             // ESTADO: BLOQUEADO (Efecto desactivado/gris)
