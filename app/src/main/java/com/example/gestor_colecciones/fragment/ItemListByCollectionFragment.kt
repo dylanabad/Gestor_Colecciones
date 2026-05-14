@@ -29,6 +29,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.gestor_colecciones.R
 import com.example.gestor_colecciones.adapters.ItemAdapter
+import com.example.gestor_colecciones.database.DatabaseProvider
 import com.example.gestor_colecciones.databinding.FragmentItemListBinding
 import com.example.gestor_colecciones.entities.Categoria
 import com.example.gestor_colecciones.entities.Coleccion
@@ -40,6 +41,7 @@ import com.example.gestor_colecciones.model.ItemSortField
 import com.example.gestor_colecciones.network.ApiProvider
 import com.example.gestor_colecciones.network.UploadUtils
 import com.example.gestor_colecciones.repository.ColeccionRepository
+import com.example.gestor_colecciones.repository.ItemHistoryRepository
 import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.repository.RepositoryProvider
 import com.example.gestor_colecciones.repository.TagRepository
@@ -83,6 +85,7 @@ ItemListByCollectionFragment : Fragment() {
     private lateinit var itemRepo: ItemRepository
     private lateinit var coleccionRepo: ColeccionRepository
     private lateinit var tagRepo: TagRepository
+    private lateinit var historyRepo: ItemHistoryRepository
     private val categoriaRepo by lazy { RepositoryProvider.categoriaRepository(requireContext()) }
 
     private lateinit var viewModel: ItemViewModel
@@ -122,13 +125,15 @@ ItemListByCollectionFragment : Fragment() {
 
         val collectionId = requireArguments().getInt(ARG_COLLECTION_ID)
 
+        val db = DatabaseProvider.getDatabase(requireContext())
         itemRepo = RepositoryProvider.itemRepository(requireContext())
         coleccionRepo = RepositoryProvider.coleccionRepository(requireContext())
         tagRepo = RepositoryProvider.tagRepository(requireContext())
+        historyRepo = ItemHistoryRepository(db.itemHistoryDao())
 
         viewModel = ViewModelProvider(
             this,
-            ItemViewModelFactory(itemRepo, categoriaRepo, null)
+            ItemViewModelFactory(itemRepo, categoriaRepo, historyRepo)
         )[ItemViewModel::class.java]
 
         adapter = ItemAdapter(emptyList(), categoriasMap)

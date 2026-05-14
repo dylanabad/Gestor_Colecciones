@@ -312,10 +312,35 @@ class ItemDetailFragment : Fragment() {
                     .setNegativeButton("Cancelar", null)
                     .setPositiveButton("Guardar") { _, _ ->
                         viewLifecycleOwner.lifecycleScope.launch {
-                            val tagIds = allTags.mapIndexedNotNull { index, tag ->
-                                tag.id.takeIf { checked[index] }
+                            val oldTagNames = allTags
+                                .filter { it.id in selectedIds }
+                                .map { it.nombre }
+                                .sortedBy { it.lowercase(Locale.getDefault()) }
+
+                            val selectedTags = allTags.mapIndexedNotNull { index, tag ->
+                                tag.takeIf { checked[index] }
                             }
+                            val tagIds = selectedTags.map { it.id }
+                            val newTagNames = selectedTags
+                                .map { it.nombre }
+                                .sortedBy { it.lowercase(Locale.getDefault()) }
+
                             itemTagRepository.replaceTagsForItem(itemId, tagIds)
+
+                            if (oldTagNames != newTagNames) {
+                                val oldText = if (oldTagNames.isEmpty()) "Sin etiquetas" else oldTagNames.joinToString(", ")
+                                val newText = if (newTagNames.isEmpty()) "Sin etiquetas" else newTagNames.joinToString(", ")
+
+                                historyRepository.insert(
+                                    ItemHistory(
+                                        itemId = itemId,
+                                        tipo = "EDITED",
+                                        fecha = Date(),
+                                        descripcion = "Etiquetas: $oldText -> $newText"
+                                    )
+                                )
+                            }
+
                             Snackbar.make(view, "Etiquetas actualizadas", Snackbar.LENGTH_SHORT).show()
                         }
                     }

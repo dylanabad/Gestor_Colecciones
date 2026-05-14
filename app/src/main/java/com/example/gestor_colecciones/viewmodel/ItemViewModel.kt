@@ -10,7 +10,9 @@ import com.example.gestor_colecciones.repository.ItemRepository
 import com.example.gestor_colecciones.repository.CategoriaRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 
 /**
  * ViewModel encargado de la lógica de Items y su historial
@@ -20,6 +22,9 @@ class ItemViewModel(
     private val categoriaRepository: CategoriaRepository? = null, // opcional: gestión de categorías
     private val historyRepository: ItemHistoryRepository? = null  // opcional: historial de cambios
 ) : ViewModel() {
+
+    private val historyDateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    private val historyNumberFormat = "%.1f"
 
     /**
      * Lista reactiva de items
@@ -135,10 +140,21 @@ class ItemViewModel(
                             val fields = buildList {
                                 if (old.titulo != item.titulo) add("Titulo")
                                 if (old.valor != item.valor) add("Valor")
+                                if (old.fechaAdquisicion != item.fechaAdquisicion) {
+                                    add(
+                                        "Fecha: ${historyDateFormat.format(old.fechaAdquisicion)} -> " +
+                                            historyDateFormat.format(item.fechaAdquisicion)
+                                    )
+                                }
                                 if (old.descripcion != item.descripcion) add("Descripcion")
                                 if (old.categoriaId != item.categoriaId) add("Categoria")
                                 if (old.imagenPath != item.imagenPath) add("Imagen")
-                                if (old.calificacion != item.calificacion) add("Calificacion")
+                                if (old.calificacion != item.calificacion) {
+                                    add(
+                                        "Calificacion: ${historyNumberFormat.format(Locale.getDefault(), old.calificacion)} -> " +
+                                            historyNumberFormat.format(Locale.getDefault(), item.calificacion)
+                                    )
+                                }
                                 if (old.favorito != item.favorito) add("Favorito")
                             }
 
